@@ -1,144 +1,202 @@
 import { defineStore } from 'pinia'
-import axiosInstance from '@/lib/axios'
+import axios from '@/lib/axios'
 
 export const useAuthStore = defineStore('auth', {
-  // State represents the data in the store
+  // State
   state: () => ({
     user: null,
     loading: false,
     error: null,
-    isInitialized: false,
+    initialized: false,
   }),
 
-  // Getters compute derived state based on store state
+  // Getters
   getters: {
     isAuthenticated: (state) => !!state.user,
+    currentUser: (state) => state.user,
     isLoading: (state) => state.loading,
-    getError: (state) => state.error,
+    authError: (state) => state.error,
+    isInitialized: (state) => state.initialized,
   },
 
-  // Actions are methods used to mutate state and handle business logic
+  // Actions
   actions: {
-    // Register a new user
-    async register(userData, redirectPath = '/dashboard') {
+    /**
+     * Initialize auth state by checking if user is logged in
+     */
+    async init() {
+      // Don't re-initialize if already done
+      if (this.initialized && this.user !== null) {
+        console.log('Auth already initialized, skipping')
+        return
+      }
+
+      console.log('Initializing auth store')
+      this.loading = true
+
+      try {
+        await this.checkAuth()
+        this.initialized = true
+        console.log('Auth initialization successful, user:', this.user)
+      } catch (err) {
+        console.error('Failed to initialize auth state', err)
+        this.user = null
+        this.initialized = true
+      } finally {
+        this.loading = false
+      }
+    },
+
+    /**
+     * Check if user is authenticated by fetching user data
+     */
+    async checkAuth() {
+      if (this.loading) return
+
       this.loading = true
       this.error = null
 
       try {
-        // Get CSRF cookie
-        await axiosInstance.get('/sanctum/csrf-cookie')
+        // Add cache-busting parameter to avoid browser caching
+        const timestamp = new Date().getTime()
+        const response = await axios.get(`/api/user?t=${timestamp}`)
 
-        // Register the user
-        const response = await axiosInstance.post('/api/register', userData)
-
-        // Set the user if successful
-        this.user = response.data.user
-
-        // Use the injected router for navigation
-        if (redirectPath) {
-          this.router.push(redirectPath)
+        if (response.status === 200) {
+          this.user = response.data
+          return response.data
+        } else {
+          this.user = null
+          throw new Error('Authentication check failed')
         }
+      } catch (err) {
+        this.user = null
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
 
-        return {
-          success: true,
-          data: response.data,
+    /**
+     * Register a new user
+     */
+    async register(userData) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const response = await axios.post('/api/register', userData)
+
+        if (response.data.status === 'success') {
+          this.user = response.data.user
+
+          // Navigate to dashboard on success
+          this.router.push({ name: 'dashboard' })
+          return { success: true, data: response.data }
+        } else {
+          throw new Error(response.data.message || 'Registration failed')
         }
       } catch (err) {
         this.error = err.response?.data?.message || 'Registration failed'
-        return {
-          success: false,
-          errors: err.response?.data?.errors || { general: ['An unexpected error occurred'] },
+
+        // Format errors to match form expectations
+        const errors = err.response?.data?.errors || {}
+        if (!Object.keys(errors).length && this.error) {
+          errors.general = [this.error]
         }
+
+        return { success: false, errors }
       } finally {
         this.loading = false
       }
     },
 
-    // Login an existing user
-    async login(credentials, redirectPath = '/dashboard') {
+    /**
+     * Login user with email and password
+     */
+    async login(credentials) {
       this.loading = true
       this.error = null
 
       try {
-        await axiosInstance.get('/sanctum/csrf-cookie')
+        const response = await axios.post('/api/login', credentials)
 
-        const response = await axiosInstance.post('/api/login', credentials)
+        if (response.data.status === 'success') {
+          this.user = response.data.user
 
-        this.user = response.data.user
-
-        // Use the injected router for navigation
-        if (redirectPath) {
-          this.router.push(redirectPath)
-        }
-
-        return {
-          success: true,
-          data: response.data,
+          // Navigate to dashboard on success
+          this.router.push({ name: 'dashboard' })
+          return { success: true, data: response.data }
+        } else {
+          throw new Error(response.data.message || 'Login failed')
         }
       } catch (err) {
         this.error = err.response?.data?.message || 'Login failed'
-        return {
-          success: false,
-          errors: err.response?.data?.errors || { general: ['Invalid credentials'] },
+
+        // Format errors to match form expectations
+        const errors = err.response?.data?.errors || {}
+        if (!Object.keys(errors).length && this.error) {
+          errors.general = [this.error]
         }
+
+        return { success: false, errors }
       } finally {
         this.loading = false
       }
     },
 
-    // Logout the current user
-    async logout(redirectPath = '/login') {
+    /**
+     * Logout the current user
+     */
+    async logout() {
       this.loading = true
 
       try {
-        await axiosInstance.post('/api/logout')
+        await axios.post('/api/logout')
         this.user = null
 
-        // Use the injected router for navigation
-        if (redirectPath) {
-          this.router.push(redirectPath)
-        }
-
+        // Navigate to login page after logout
+        this.router.push('/login')
         return { success: true }
       } catch (err) {
-        this.error = 'Logout failed'
+        console.error('Logout failed', err)
+        this.error = err.response?.data?.message || 'Logout failed'
         return { success: false, error: this.error }
       } finally {
         this.loading = false
       }
     },
 
-    // Check if the user is authenticated
-    async checkAuth() {
-      if (this.isInitialized && this.user) {
-        return true
-      }
-
-      this.loading = true
-
+    /**
+     * Refresh the JWT token
+     */
+    async refreshToken() {
       try {
-        const response = await axiosInstance.get('/api/user')
-        this.user = response.data
-        this.isInitialized = true
-        return true
+        const response = await axios.post('/api/refresh')
+
+        if (response.data.status === 'success') {
+          this.user = response.data.user
+          return { success: true, data: response.data }
+        } else {
+          throw new Error(response.data.message || 'Token refresh failed')
+        }
       } catch (err) {
         this.user = null
-        this.isInitialized = true
-        return false
-      } finally {
-        this.loading = false
+        this.error = err.response?.data?.message || 'Token refresh failed'
+        return { success: false, error: this.error }
       }
     },
 
-    // Initialize the auth state
-    async init() {
-      if (!this.isInitialized) {
-        await this.checkAuth()
-      }
+    /**
+     * Set error message
+     */
+    setError(message) {
+      this.error = message
     },
 
-    // Clear all errors
-    clearErrors() {
+    /**
+     * Clear error message
+     */
+    clearError() {
       this.error = null
     },
   },

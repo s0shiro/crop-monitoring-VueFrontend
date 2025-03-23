@@ -24,34 +24,43 @@ const passwordConfirmation = ref('')
 // Form state
 const formErrors = ref({})
 const generalError = ref('')
+const isSubmitting = ref(false)
 
 // Get auth store and router
 const authStore = useAuthStore()
-const router = useRouter()
 
 // Handle form submission
 const handleSubmit = async () => {
   formErrors.value = {}
   generalError.value = ''
+  isSubmitting.value = true
 
-  const userData = {
-    name: name.value,
-    email: email.value,
-    password: password.value,
-    password_confirmation: passwordConfirmation.value,
-  }
-
-  const result = await authStore.register(userData)
-
-  if (!result.success) {
-    // Handle errors
-    formErrors.value = result.errors || {}
-
-    if (result.errors?.general) {
-      generalError.value = result.errors.general[0]
-    } else if (result.errors?.email || result.errors?.password) {
-      generalError.value = 'Invalid email or password'
+  try {
+    const userData = {
+      name: name.value,
+      email: email.value,
+      password: password.value,
+      password_confirmation: passwordConfirmation.value,
     }
+
+    const result = await authStore.register(userData)
+
+    if (!result.success) {
+      // Handle errors
+      formErrors.value = result.errors || {}
+
+      if (result.errors?.general) {
+        generalError.value = result.errors.general[0]
+      } else if (result.errors?.email || result.errors?.password) {
+        generalError.value = 'Invalid email or password'
+      }
+    }
+    // No need for navigation here - it's handled in the auth store
+  } catch (err) {
+    generalError.value = 'An unexpected error occurred. Please try again.'
+    console.error('Registration error:', err)
+  } finally {
+    isSubmitting.value = false
   }
 }
 </script>
@@ -131,8 +140,30 @@ const handleSubmit = async () => {
           </div>
 
           <!-- Submit Button -->
-          <Button type="submit" class="w-full" :disabled="authStore.isLoading">
-            <span v-if="authStore.isLoading">Creating account...</span>
+          <Button type="submit" class="w-full" :disabled="authStore.loading || isSubmitting">
+            <span v-if="authStore.loading || isSubmitting" class="flex items-center justify-center">
+              <svg
+                class="animate-spin -ml-1 mr-2 h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Creating account...
+            </span>
             <span v-else>Create Account</span>
           </Button>
         </form>

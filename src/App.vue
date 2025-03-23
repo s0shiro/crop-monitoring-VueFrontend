@@ -1,8 +1,9 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onBeforeMount, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
+import { initializeAuth } from '@/router' // Import the auth initialization function
 
 // Menu state
 const isMenuOpen = ref(false)
@@ -36,19 +37,23 @@ const handleLogout = async () => {
     await authStore.logout()
   } finally {
     isLoggingOut.value = false
+    isMenuOpen.value = false // Close mobile menu after logout
   }
 }
 
-// Initialize
-onMounted(async () => {
+// Initialize app
+onBeforeMount(async () => {
+  console.log('App initializing')
+
   // Check for dark mode preference
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     isDarkMode.value = true
     document.documentElement.classList.add('dark')
   }
 
-  // Initialize auth state
-  await authStore.init()
+  // Initialize auth state using the shared initialization function
+  await initializeAuth()
+  console.log('App initialization complete')
 })
 </script>
 
