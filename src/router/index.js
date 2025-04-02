@@ -1,100 +1,129 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import NotFound from '../views/NotFound.vue'
 import Register from '@/views/auth/Register.vue'
 import Login from '@/views/auth/Login.vue'
 import Dashboard from '@/views/auth/Dashboard.vue'
+import AdminDashboard from '@/views/auth/AdminDashboard.vue'
+import UserManagement from '@/views/admin/UserManagement.vue'
 import { useAuthStore } from '@/stores/auth'
-
-// Create a flag to track initialization status
-let isAuthInitialized = false
+import { authApi } from '@/api/authApi'
+import DashboardLayout from '@/layouts/DashboardLayout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      redirect: (to) => {
+        const authStore = useAuthStore()
+        return authStore.isAuthenticated ? '/dashboard' : '/login'
+      },
     },
     {
       path: '/login',
       name: 'login',
       component: Login,
-      meta: { requiresGuest: true }, // Only for non-authenticated users
+      meta: { requiresGuest: true },
     },
     {
       path: '/register',
       name: 'register',
       component: Register,
-      meta: { requiresGuest: true }, // Only for non-authenticated users
+      meta: { requiresGuest: true },
     },
     {
       path: '/dashboard',
-      name: 'dashboard',
-      component: Dashboard,
-      meta: { requiresAuth: true }, // Protected route
+      component: DashboardLayout,
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'dashboard',
+          component: Dashboard,
+        },
+        {
+          path: 'admin',
+          name: 'admin',
+          component: AdminDashboard,
+          meta: {
+            requiredRoles: ['admin'],
+          },
+        },
+      ],
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: NotFound,
     },
   ],
 })
 
-// Function to initialize auth
-export async function initializeAuth() {
-  if (isAuthInitialized) return
+// Remove initializeAuth function
 
-  const authStore = useAuthStore()
-
-  try {
-    await authStore.init()
-    console.log('Router auth initialization complete')
-    isAuthInitialized = true
-  } catch (error) {
-    console.error('Failed to initialize auth in router', error)
-  }
-}
-
-// Global navigation guard
-router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
-
-  // Wait for auth to be initialized before making any routing decisions
-  if (!isAuthInitialized) {
-    console.log('Auth not initialized yet, initializing...')
-    await initializeAuth()
+async function checkAuthAndRoles(authStore, to) {
+  if (!authStore.isAuthenticated) {
+    await authStore.checkAuth()
   }
 
-  // Always refresh auth state if going to a protected route or guest route
-  if ((to.meta.requiresAuth || to.meta.requiresGuest) && !authStore.loading) {
-    try {
-      await authStore.checkAuth()
-    } catch (err) {
-      console.log('Auth check failed:', err)
-      authStore.user = null
+  if (to.meta.requiredRoles && authStore.roles.length === 0) {
+    const response = await authApi.getCurrentUser()
+    if (response.data) {
+      authStore.updateUserRolesAndPermissions(response.data)
     }
   }
 
-  // Get authentication status
-  const isAuthenticated = authStore.isAuthenticated
-
-  console.log(
-    'Route:',
-    to.path,
-    'Auth State:',
-    isAuthenticated ? 'Authenticated' : 'Not authenticated',
-  )
-
-  // First check if route is for guests only and user is authenticated
-  if (to.meta.requiresGuest && isAuthenticated) {
-    console.log('Redirecting authenticated user from guest route to dashboard')
-    return next({ name: 'dashboard' })
+  if (to.meta.requiredRoles) {
+    return to.meta.requiredRoles.some((role) => authStore.hasRole(role))
   }
-  // Then check if route requires auth but user is not authenticated
-  else if (to.meta.requiresAuth && !isAuthenticated) {
-    console.log('Redirecting unauthenticated user from protected route to login')
-    return next({ name: 'login' })
-  }
-  // Otherwise proceed normally
-  else {
-    console.log('Proceeding normally to', to.path)
+
+  return true
+}
+
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+
+  try {
+    // First check authentication status for all routes
+    if (!authStore.isAuthenticated) {
+      await authStore.checkAuth()
+    }
+
+    // Now handle guest routes (login/register)
+    if (to.meta.requiresGuest) {
+      if (authStore.isAuthenticated) {
+        return next({ name: 'dashboard' })
+      }
+      return next()
+    }
+
+    // Handle protected routes
+    if (to.meta.requiresAuth) {
+      try {
+        const hasAccess = await checkAuthAndRoles(authStore, to)
+
+        if (!authStore.isAuthenticated) {
+          return next({ name: 'login' })
+        }
+
+        if (!hasAccess) {
+          console.log('Access denied: insufficient privileges')
+          return next({ name: 'dashboard' })
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err)
+        return next({ name: 'login' })
+      }
+    }
+
+    return next()
+  } catch (error) {
+    console.error('Navigation guard error:', error)
+    // Only redirect to login if it's not already a guest route
+    if (!to.meta.requiresGuest) {
+      return next({ name: 'login' })
+    }
     return next()
   }
 })
