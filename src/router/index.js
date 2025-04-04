@@ -6,6 +6,7 @@ import Login from '@/views/auth/Login.vue'
 import Dashboard from '@/views/auth/Dashboard.vue'
 import AdminDashboard from '@/views/auth/AdminDashboard.vue'
 import UserManagement from '@/views/admin/UserManagement.vue'
+import UserDetails from '@/views/admin/UserDetails.vue'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/api/authApi'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
@@ -50,6 +51,22 @@ const router = createRouter({
             requiredRoles: ['admin'],
           },
         },
+        {
+          path: 'users',
+          name: 'user-management',
+          component: UserManagement,
+          meta: {
+            requiredRoles: ['admin'],
+          },
+        },
+        {
+          path: 'users/:id',
+          name: 'user-details',
+          component: UserDetails,
+          meta: {
+            requiredRoles: ['admin'],
+          },
+        },
       ],
     },
     {
@@ -59,8 +76,6 @@ const router = createRouter({
     },
   ],
 })
-
-// Remove initializeAuth function
 
 async function checkAuthAndRoles(authStore, to) {
   if (!authStore.isAuthenticated) {

@@ -63,16 +63,16 @@ const data = {
       isActive: true,
       items: [
         {
-          title: 'History',
-          url: '/dashboard/admin',
-        },
-        {
-          title: 'Starred',
+          title: 'Dashboard',
           url: '/dashboard',
         },
         {
-          title: 'Settings',
-          url: '#',
+          title: 'Admin Only',
+          url: '/dashboard/admin',
+        },
+        {
+          title: 'User Management',
+          url: '/dashboard/users',
         },
       ],
     },

@@ -5,13 +5,13 @@ import AppSidebar from '@/components/AppSidebar.vue'
 
 <template>
   <SidebarProvider>
-    <div class="relative flex min-h-screen">
+ 
       <!-- Sidebar - Only show when not loading -->
       <AppSidebar v-if="!isLoading" />
 
       <!-- Main Content -->
       <div class="flex-1 overflow-hidden">
-        <div class="h-full overflow-y-auto">
+        <div class="h-full">
           <!-- Show loading spinner while loading -->
           <div v-if="isLoading" class="flex justify-center items-center min-h-screen">
             <div
@@ -20,11 +20,10 @@ import AppSidebar from '@/components/AppSidebar.vue'
           </div>
 
           <!-- Page Content -->
-          <div v-else class="container p-6">
+          <div v-else class="p-6">
             <RouterView />
           </div>
         </div>
       </div>
-    </div>
   </SidebarProvider>
 </template>
