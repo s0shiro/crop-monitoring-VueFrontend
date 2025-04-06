@@ -14,7 +14,7 @@ export function useUserManagement() {
     queryFn: async () => {
       const { data } = await axiosInstance.get('/api/users')
       return data
-    }
+    },
   })
 
   // Get user details query
@@ -36,7 +36,7 @@ export function useUserManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
-    }
+    },
   })
 
   // Update user mutation
@@ -52,7 +52,7 @@ export function useUserManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
-    }
+    },
   })
 
   // Delete user mutation
@@ -68,7 +68,23 @@ export function useUserManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
-    }
+    },
+  })
+
+  // Update user permissions mutation
+  const {
+    mutateAsync: updateUserPermissions,
+    isPending: isUpdatingPermissions,
+    isError: isUpdatePermissionsError,
+    error: updatePermissionsError,
+  } = useMutation({
+    mutationFn: async ({ id, permissions }) => {
+      const { data } = await axiosInstance.patch(`/api/users/${id}/permissions`, { permissions })
+      return data
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['user', variables.id] })
+    },
   })
 
   return {
@@ -95,5 +111,11 @@ export function useUserManagement() {
     isDeleting,
     isDeleteError,
     deleteError,
+
+    // Update Permissions mutation
+    updateUserPermissions,
+    isUpdatingPermissions,
+    isUpdatePermissionsError,
+    updatePermissionsError,
   }
 }
