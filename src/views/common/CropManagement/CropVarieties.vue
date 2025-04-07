@@ -1,7 +1,8 @@
 <script setup>
 import { useRoute } from 'vue-router'
-import { useQuery } from '@tanstack/vue-query'
+import { useInfiniteQuery } from '@tanstack/vue-query'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import axiosInstance from '@/lib/axios'
 import { useToast } from '@/components/ui/toast/use-toast'
 
@@ -9,16 +10,24 @@ const route = useRoute()
 const cropId = route.params.cropId
 const { toast } = useToast()
 
+const fetchVarieties = async ({ pageParam = 0 }) => {
+  const response = await axiosInstance.get(`/api/crops/${cropId}/varieties`, {
+    params: { cursor: pageParam },
+  })
+  return response.data
+}
+
 const {
-  data: varieties,
-  isLoading,
+  data: varietiesData,
   error,
-} = useQuery({
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  isLoading,
+} = useInfiniteQuery({
   queryKey: ['varieties', cropId],
-  queryFn: async () => {
-    const response = await axiosInstance.get(`/api/crops/${cropId}/varieties`)
-    return response.data
-  },
+  queryFn: fetchVarieties,
+  getNextPageParam: (lastPage) => lastPage.nextCursor,
   onError: (error) => {
     toast({
       variant: 'destructive',
@@ -31,7 +40,11 @@ const {
 
 <template>
   <div class="space-y-8">
-    <h1 class="text-3xl font-extrabold text-primary">Varieties</h1>
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-extrabold text-primary">Varieties</h1>
+      <Button @click="$router.back()" variant="default">Back to Crops</Button>
+    </div>
+
     <div v-if="isLoading" class="text-center text-muted-foreground py-4 italic">
       Loading varieties...
     </div>
@@ -39,22 +52,26 @@ const {
       Failed to load varieties.
     </div>
     <div v-else>
-      <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <li
-          v-for="variety in varieties"
-          :key="variety.id"
-          class="p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200"
-        >
-          <h3 class="text-lg font-semibold text-primary">{{ variety.name }}</h3>
-          <p class="text-sm text-muted-foreground">Maturity Days: {{ variety.maturity_days }}</p>
-        </li>
-      </ul>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <template v-for="page in varietiesData.pages" :key="page.id">
+          <Card
+            v-for="variety in page.data"
+            :key="variety.id"
+            class="flex flex-col items-start p-4 shadow-md hover:shadow-lg transition-shadow rounded-lg"
+          >
+            <div class="flex justify-between w-full">
+              <h3 class="text-lg font-semibold text-primary">{{ variety.name }}</h3>
+            </div>
+            <p class="text-sm text-muted-foreground">Maturity Days: {{ variety.maturity_days }}</p>
+          </Card>
+        </template>
+      </div>
+      <div class="text-center mt-6">
+        <Button v-if="hasNextPage && !isFetchingNextPage" @click="fetchNextPage" variant="default">
+          Load More
+        </Button>
+        <div v-else-if="isFetchingNextPage" class="text-muted-foreground italic">Loading...</div>
+      </div>
     </div>
-    <Button
-      @click="$router.back()"
-      class="mt-6 bg-secondary text-white hover:bg-secondary/90 rounded-lg shadow-md"
-    >
-      Back to Crops
-    </Button>
   </div>
 </template>

@@ -20,7 +20,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { RouterLink } from 'vue-router'
+import { MoreHorizontal } from 'lucide-vue-next'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const cropName = ref('')
 const categoryId = ref('')
@@ -142,31 +148,38 @@ const addVariety = () => {
     maturity_days: maturityDays.value,
   })
 }
+
+const openAddVarietyDialog = (cropId) => {
+  selectedCropId.value = cropId
+  showAddVarietyDialog.value = true
+}
 </script>
 
 <template>
   <div class="space-y-8">
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-extrabold text-primary">Crop Management</h1>
-      <Button
-        @click="showAddCropDialog = true"
-        class="bg-primary text-white hover:bg-primary/90 rounded-lg shadow-md"
-      >
-        Add Crop
-      </Button>
+      <Button @click="showAddCropDialog = true" variant="default"> Add Crop </Button>
     </div>
 
     <Tabs default-value="">
       <TabsList>
-        <TabsTrigger
-          v-for="category in categories"
-          :key="category.id"
-          :value="category.id"
-          @click="selectedCategoryId = category.id"
-          class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary focus:text-primary"
-        >
-          {{ category.name }}
-        </TabsTrigger>
+        <template v-if="isLoadingCategories">
+          <div class="flex space-x-4">
+            <div v-for="n in 3" :key="n" class="h-8 w-20 bg-muted animate-pulse rounded"></div>
+          </div>
+        </template>
+        <template v-else>
+          <TabsTrigger
+            v-for="category in categories"
+            :key="category.id"
+            :value="category.id"
+            @click="selectedCategoryId = category.id"
+            class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary focus:text-primary"
+          >
+            {{ category.name }}
+          </TabsTrigger>
+        </template>
       </TabsList>
     </Tabs>
 
@@ -182,49 +195,52 @@ const addVariety = () => {
     <div v-else>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <template v-for="page in cropsData.pages" :key="page.id">
-          <div
+          <Card
             v-for="crop in page.data"
             :key="crop.id"
-            class="p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 bg-white"
+            class="flex flex-col items-start p-4 shadow-md hover:shadow-lg transition-shadow"
           >
-            <h3 class="text-lg font-semibold text-primary">{{ crop.name }}</h3>
-            <p class="text-sm text-muted-foreground">Category: {{ crop.category_id }}</p>
-            <div class="flex justify-between mt-4">
-              <Button
-                @click="
-                  () => {
-                    selectedCropId = crop.id
-                    showAddVarietyDialog = true
-                  }
-                "
-                class="bg-secondary text-white hover:bg-secondary/90 rounded-lg shadow-md"
-              >
-                Add Variety
-              </Button>
-              <RouterLink :to="{ name: 'crop-varieties', params: { cropId: crop.id } }">
-                <Button
-                  class="bg-primary text-white hover:bg-primary/90 rounded-lg shadow-md"
-                  asChild
-                >
-                  <span>View Varieties</span>
-                </Button>
-              </RouterLink>
+            <div class="flex justify-between w-full">
+              <h2 class="text-xl font-bold text-primary">{{ crop.name }}</h2>
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button variant="ghost" class="p-2">
+                    <MoreHorizontal class="h-5 w-5 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent class="w-56">
+                  <DropdownMenuItem @click="() => openAddVarietyDialog(crop.id)">
+                    Add Variety
+                  </DropdownMenuItem>
+                  <RouterLink :to="{ name: 'crop-varieties', params: { cropId: crop.id } }">
+                    <DropdownMenuItem> View Varieties </DropdownMenuItem>
+                  </RouterLink>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </div>
+            <p class="text-sm text-muted-foreground">{{ crop.varieties_count }} varieties</p>
+            <p class="text-xs text-muted-foreground mt-2">
+              Added on
+              {{
+                new Date(crop.created_at).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+              }}
+            </p>
+          </Card>
         </template>
       </div>
       <div class="text-center mt-6">
-        <Button
-          v-if="hasNextPage && !isFetchingNextPage"
-          @click="fetchNextPage"
-          class="bg-primary text-white hover:bg-primary/90 rounded-lg shadow-md"
-        >
+        <Button v-if="hasNextPage && !isFetchingNextPage" @click="fetchNextPage" variant="default">
           Load More
         </Button>
         <div v-else-if="isFetchingNextPage" class="text-muted-foreground italic">Loading...</div>
       </div>
     </div>
 
+    <!-- Add Crop Dialog -->
     <Dialog :open="showAddCropDialog" @update:open="showAddCropDialog = $event">
       <DialogContent>
         <DialogHeader>
@@ -274,6 +290,7 @@ const addVariety = () => {
       </DialogContent>
     </Dialog>
 
+    <!-- Add Variety Dialog -->
     <Dialog :open="showAddVarietyDialog" @update:open="showAddVarietyDialog = $event">
       <DialogContent>
         <DialogHeader>
