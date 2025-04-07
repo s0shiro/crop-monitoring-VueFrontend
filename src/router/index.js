@@ -5,11 +5,13 @@ import Register from '@/views/auth/Register.vue'
 import Login from '@/views/auth/Login.vue'
 import Dashboard from '@/views/auth/Dashboard.vue'
 import AdminDashboard from '@/views/auth/AdminDashboard.vue'
-import UserManagement from '@/views/admin/UserManagement.vue'
-import UserDetails from '@/views/admin/UserDetails.vue'
+import UserManagement from '@/views/admin/ManageUsers/UserManagement.vue'
+import UserDetails from '@/views/admin/ManageUsers/UserDetails.vue'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/api/authApi'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
+import CropManagement from '@/views/common/CropManagement/CropManagement.vue'
+import CropVarieties from '@/views/common/CropManagement/CropVarieties.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -63,6 +65,22 @@ const router = createRouter({
           path: 'users/:id',
           name: 'user-details',
           component: UserDetails,
+          meta: {
+            requiredRoles: ['admin'],
+          },
+        },
+        {
+          path: 'crops',
+          name: 'crop-management',
+          component: CropManagement,
+          meta: {
+            requiredRoles: ['admin'],
+          },
+        },
+        {
+          path: 'crops/:cropId/varieties',
+          name: 'crop-varieties',
+          component: CropVarieties,
           meta: {
             requiredRoles: ['admin'],
           },

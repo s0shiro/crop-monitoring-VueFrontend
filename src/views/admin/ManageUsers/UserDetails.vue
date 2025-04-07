@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
+import axiosInstance from '@/lib/axios'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserManagement } from '@/composables/useUserManagement'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -57,28 +58,25 @@ const permissionsForm = ref({
   direct_permissions: [], // Direct permissions managed separately
 })
 
-// Static list of available permissions from your seeder.
-const availablePermissions = [
-  'manage_users',
-  'create_crops',
-  'update_crops',
-  'delete_crops',
-  'view_reports',
-  'create_farmers',
-  'update_farmers',
-  'delete_farmers',
-  'view_farmers',
-  'create_associations',
-  'update_associations',
-  'delete_associations',
-  'view_associations',
-  'view_crop_planting',
-  'manage_crop_planting',
-  'view_inspections',
-  'create_inspections',
-  'update_inspections',
-  'delete_inspections',
-]
+// Use TanStack Query for fetching permissions dynamically
+const {
+  data: availablePermissions,
+  isLoading: isLoadingPermissions,
+  error: permissionsError,
+} = useQuery({
+  queryKey: ['permissions'],
+  queryFn: async () => {
+    const response = await axiosInstance.get('/api/permissions')
+    return response.data
+  },
+  onError: (error) => {
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: error.response?.data?.message || 'Failed to load permissions',
+    })
+  },
+})
 
 // Use TanStack Query for fetching user details
 const {

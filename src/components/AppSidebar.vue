@@ -74,6 +74,11 @@ const data = {
           title: 'User Management',
           url: '/dashboard/users',
         },
+        {
+          title: 'Crop Management',
+          url: '/dashboard/crops',
+          icon: BookOpen,
+        },
       ],
     },
     {
