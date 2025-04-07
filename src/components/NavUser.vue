@@ -1,9 +1,5 @@
 <script setup>
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import {
   DropdownMenu,
@@ -13,27 +9,46 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu'
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '@/components/ui/sidebar';
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
-} from 'lucide-vue-next';
+} from '@/components/ui/sidebar'
+import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/components/ui/toast/use-toast'
 
 const props = defineProps({
   user: { type: Object, required: true },
-});
+})
 
-const { isMobile } = useSidebar();
+const { isMobile } = useSidebar()
+const authStore = useAuthStore()
+const { toast } = useToast()
+
+function logout() {
+  toast({
+    title: 'Logging out',
+    description: 'Please wait while we log you out.',
+  })
+
+  authStore
+    .logout()
+    .then(() => {
+      toast({
+        title: 'Logged out',
+        description: 'You have been successfully logged out.',
+      })
+    })
+    .catch(() => {
+      toast({
+        title: 'Logout failed',
+        description: 'An error occurred while logging out. Please try again.',
+      })
+    })
+}
 </script>
 
 <template>
@@ -75,29 +90,7 @@ const { isMobile } = useSidebar();
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem>
-              <Sparkles />
-              Upgrade to Pro
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem>
-              <BadgeCheck />
-              Account
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <CreditCard />
-              Billing
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Bell />
-              Notifications
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem @click="logout">
             <LogOut />
             Log out
           </DropdownMenuItem>

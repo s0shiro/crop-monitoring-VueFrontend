@@ -57,7 +57,7 @@ const data = {
   ],
   navMain: [
     {
-      title: 'Playground',
+      title: 'Management',
       url: '#',
       icon: SquareTerminal,
       isActive: true,
@@ -65,10 +65,6 @@ const data = {
         {
           title: 'Dashboard',
           url: '/dashboard',
-        },
-        {
-          title: 'Admin Only',
-          url: '/dashboard/admin',
         },
         {
           title: 'User Management',

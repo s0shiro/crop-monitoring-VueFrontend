@@ -1,10 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import NotFound from '../views/NotFound.vue'
 import Register from '@/views/auth/Register.vue'
 import Login from '@/views/auth/Login.vue'
 import Dashboard from '@/views/auth/Dashboard.vue'
-import AdminDashboard from '@/views/auth/AdminDashboard.vue'
 import UserManagement from '@/views/admin/ManageUsers/UserManagement.vue'
 import UserDetails from '@/views/admin/ManageUsers/UserDetails.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -44,14 +42,6 @@ const router = createRouter({
           path: '',
           name: 'dashboard',
           component: Dashboard,
-        },
-        {
-          path: 'admin',
-          name: 'admin',
-          component: AdminDashboard,
-          meta: {
-            requiredRoles: ['admin'],
-          },
         },
         {
           path: 'users',
