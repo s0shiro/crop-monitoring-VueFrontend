@@ -10,6 +10,7 @@ import { authApi } from '@/api/authApi'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import CropManagement from '@/views/common/CropManagement/CropManagement.vue'
 import CropVarieties from '@/views/common/CropManagement/CropVarieties.vue'
+import AssociationsManagement from '@/views/common/AssociationsManagement/AssociationsManagement.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -71,6 +72,14 @@ const router = createRouter({
           path: 'crops/:cropId/varieties',
           name: 'crop-varieties',
           component: CropVarieties,
+          meta: {
+            requiredRoles: ['admin'],
+          },
+        },
+        {
+          path: 'associations',
+          name: 'associations-management',
+          component: AssociationsManagement,
           meta: {
             requiredRoles: ['admin'],
           },

@@ -75,6 +75,11 @@ const data = {
           url: '/dashboard/crops',
           icon: BookOpen,
         },
+        {
+          title: 'Associations Management',
+          url: '/dashboard/associations',
+          icon: BookOpen,
+        },
       ],
     },
     {
