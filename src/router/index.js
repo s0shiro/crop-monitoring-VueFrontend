@@ -65,7 +65,7 @@ const router = createRouter({
           name: 'crop-management',
           component: CropManagement,
           meta: {
-            requiredRoles: ['admin'],
+            requiredRoles: ['admin', 'technician'],
           },
         },
         {

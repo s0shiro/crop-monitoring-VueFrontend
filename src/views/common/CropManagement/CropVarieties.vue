@@ -52,7 +52,16 @@ const {
       Failed to load varieties.
     </div>
     <div v-else>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        v-if="
+          varietiesData.pages.length === 0 ||
+          varietiesData.pages.every((page) => page.data.length === 0)
+        "
+        class="text-center text-muted-foreground py-4 italic"
+      >
+        No varieties available.
+      </div>
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <template v-for="page in varietiesData.pages" :key="page.id">
           <Card
             v-for="variety in page.data"

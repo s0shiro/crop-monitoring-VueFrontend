@@ -40,9 +40,9 @@ const data = {
   },
   teams: [
     {
-      name: 'Acme Inc',
+      name: 'Provincial Agriculture Office',
       logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
+      plan: 'Goverment Agency',
     },
     {
       name: 'Acme Corp.',

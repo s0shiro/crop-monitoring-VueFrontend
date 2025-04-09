@@ -6,7 +6,7 @@ import Toaster from '@/components/ui/toast/Toaster.vue'
 <template>
   <Toaster />
   <VueQueryDevtools />
-  <div class="min-h-screen bg-background text-foreground">
+  <div class="min-h-screen bg-background text-foreground dark">
     <RouterView />
   </div>
 </template>
