@@ -11,6 +11,8 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import CropManagement from '@/views/common/CropManagement/CropManagement.vue'
 import CropVarieties from '@/views/common/CropManagement/CropVarieties.vue'
 import AssociationsManagement from '@/views/common/AssociationsManagement/AssociationsManagement.vue'
+import FarmerManagement from '@/views/common/FarmerManagement/FarmerManagement.vue'
+import FarmerDetails from '@/views/common/FarmerManagement/FarmerDetails.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -82,6 +84,22 @@ const router = createRouter({
           component: AssociationsManagement,
           meta: {
             requiredRoles: ['admin'],
+          },
+        },
+        {
+          path: 'farmers',
+          name: 'farmer-management',
+          component: FarmerManagement,
+          meta: {
+            requiredRoles: ['admin', 'technician'],
+          },
+        },
+        {
+          path: 'farmers/:id',
+          name: 'farmer-details',
+          component: FarmerDetails,
+          meta: {
+            requiredRoles: ['admin', 'technician'],
           },
         },
       ],

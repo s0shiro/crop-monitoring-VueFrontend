@@ -22,6 +22,7 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  Users,
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -74,6 +75,11 @@ const data = {
           title: 'Crop Management',
           url: '/dashboard/crops',
           icon: BookOpen,
+        },
+        {
+          title: 'Farmer Management',
+          url: '/dashboard/farmers',
+          icon: Users,
         },
         {
           title: 'Associations Management',
