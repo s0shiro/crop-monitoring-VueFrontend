@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -97,16 +97,21 @@ const createAssociation = () => {
         >
           <h2 class="text-xl font-bold text-primary">{{ association.name }}</h2>
           <p class="text-sm text-muted-foreground">{{ association.description }}</p>
-          <p class="text-xs text-muted-foreground mt-2">
-            Added on
-            {{
-              new Date(association.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })
-            }}
-          </p>
+          <div class="flex items-center mt-2 space-x-2">
+            <p class="text-xs text-muted-foreground">
+              Added on
+              {{
+                new Date(association.created_at).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+              }}
+            </p>
+            <span class="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+              {{ association.farmers_count }} Farmer{{ association.farmers_count !== 1 ? 's' : '' }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
