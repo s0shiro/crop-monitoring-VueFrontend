@@ -16,8 +16,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from 'lucide-vue-next'
+import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Moon, Sun } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 import { useToast } from '@/components/ui/toast/use-toast'
 
 const props = defineProps({
@@ -26,6 +27,7 @@ const props = defineProps({
 
 const { isMobile } = useSidebar()
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 const { toast } = useToast()
 
 function logout() {
@@ -90,8 +92,12 @@ function logout() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem @click="themeStore.toggleDarkMode">
+            <component :is="themeStore.isDark ? Sun : Moon" class="mr-2 h-4 w-4" />
+            <span>{{ themeStore.isDark ? 'Light Mode' : 'Dark Mode' }}</span>
+          </DropdownMenuItem>
           <DropdownMenuItem @click="logout">
-            <LogOut />
+            <LogOut class="mr-2 h-4 w-4" />
             Log out
           </DropdownMenuItem>
         </DropdownMenuContent>
