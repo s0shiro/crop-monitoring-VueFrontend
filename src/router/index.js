@@ -11,6 +11,7 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 import CropManagement from '@/views/common/CropManagement/CropManagement.vue'
 import CropVarieties from '@/views/common/CropManagement/CropVarieties.vue'
 import AssociationsManagement from '@/views/common/AssociationsManagement/AssociationsManagement.vue'
+import AssociationDetails from '@/views/common/AssociationsManagement/AssociationDetails.vue'
 import FarmerManagement from '@/views/common/FarmerManagement/FarmerManagement.vue'
 import FarmerDetails from '@/views/common/FarmerManagement/FarmerDetails.vue'
 
@@ -82,6 +83,14 @@ const router = createRouter({
           path: 'associations',
           name: 'associations-management',
           component: AssociationsManagement,
+          meta: {
+            requiredRoles: ['admin'],
+          },
+        },
+        {
+          path: 'associations/:id',
+          name: 'association-details',
+          component: AssociationDetails,
           meta: {
             requiredRoles: ['admin'],
           },
