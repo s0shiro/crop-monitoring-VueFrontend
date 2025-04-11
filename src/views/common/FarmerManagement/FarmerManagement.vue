@@ -46,13 +46,13 @@ const queryClient = useQueryClient()
 
 // Fetch associations for the dropdown
 const {
-  data: associations,
+  data: associationsData,
   isLoading: isLoadingAssociations,
 } = useQuery({
-  queryKey: ['associations'],
+  queryKey: ['associations-dropdown'],
   queryFn: async () => {
     const response = await axiosInstance.get('/api/associations')
-    return response.data
+    return response.data.data // Access the data array from the new structure
   },
 })
 
@@ -323,7 +323,7 @@ const resetForm = () => {
                 <SelectValue placeholder="Select association" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="assoc in associations" :key="assoc.id" :value="assoc.id">
+                <SelectItem v-for="assoc in associationsData" :key="assoc.id" :value="assoc.id">
                   {{ assoc.name }}
                 </SelectItem>
               </SelectContent>
