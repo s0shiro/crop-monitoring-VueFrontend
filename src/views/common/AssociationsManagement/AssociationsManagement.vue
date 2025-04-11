@@ -9,9 +9,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { MoreHorizontal } from 'lucide-vue-next'
 import { useToast } from '@/components/ui/toast/use-toast'
 import axiosInstance from '@/lib/axios'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/vue-query'
 
 const associationName = ref('')
 const associationDescription = ref('')
@@ -20,16 +27,25 @@ const showAddAssociationDialog = ref(false)
 const { toast } = useToast()
 const queryClient = useQueryClient()
 
+const fetchAssociations = async ({ pageParam = 0 }) => {
+  const response = await axiosInstance.get('/api/associations', {
+    params: { cursor: pageParam },
+  })
+  return response.data
+}
+
 const {
-  data: associations,
-  isLoading,
-  isError,
-} = useQuery({
+  data: associationsData,
+  error: associationsError,
+  fetchNextPage,
+  hasNextPage,
+  isFetching,
+  isFetchingNextPage,
+  isPending: isLoadingAssociations,
+} = useInfiniteQuery({
   queryKey: ['associations'],
-  queryFn: async () => {
-    const response = await axiosInstance.get('/api/associations')
-    return response.data
-  },
+  queryFn: fetchAssociations,
+  getNextPageParam: (lastPage) => lastPage.nextCursor,
   onError: (error) => {
     toast({
       variant: 'destructive',
@@ -77,41 +93,73 @@ const createAssociation = () => {
       <Button @click="showAddAssociationDialog = true" variant="default"> Add Association </Button>
     </div>
 
-    <div v-if="isLoading" class="text-center py-8">
+    <div v-if="isLoadingAssociations" class="text-center py-8">
       <div
         class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"
       ></div>
       <p class="mt-2 text-muted-foreground">Loading associations...</p>
     </div>
 
-    <div v-else-if="isError" class="text-center py-8 text-destructive">
+    <div v-else-if="associationsError" class="text-center py-8 text-destructive">
       Failed to load associations. Please try again later.
     </div>
 
     <div v-else>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-          v-for="association in associations"
-          :key="association.id"
-          class="flex flex-col items-start p-4 shadow-md hover:shadow-lg transition-shadow"
-        >
-          <h2 class="text-xl font-bold text-primary">{{ association.name }}</h2>
-          <p class="text-sm text-muted-foreground">{{ association.description }}</p>
-          <div class="flex items-center mt-2 space-x-2">
-            <p class="text-xs text-muted-foreground">
-              Added on
-              {{
-                new Date(association.created_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })
-              }}
-            </p>
-            <span class="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
-              {{ association.farmers_count }} Farmer{{ association.farmers_count !== 1 ? 's' : '' }}
-            </span>
+        <template v-for="page in associationsData.pages" :key="page.nextCursor">
+          <div
+            v-for="association in page.data"
+            :key="association.id"
+            class="flex flex-col items-start p-4 shadow-md hover:shadow-lg transition-shadow rounded-lg border border-border"
+          >
+            <div class="flex justify-between w-full">
+              <h2 class="text-xl font-bold text-primary">{{ association.name }}</h2>
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button variant="ghost" class="p-2">
+                    <MoreHorizontal class="h-5 w-5 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent class="w-56">
+                  <RouterLink :to="{ name: 'association-details', params: { id: association.id } }">
+                    <DropdownMenuItem>
+                      View Details
+                    </DropdownMenuItem>
+                  </RouterLink>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <p class="text-sm text-muted-foreground mt-2">{{ association.description }}</p>
+            <div class="flex items-center mt-2 space-x-2">
+              <p class="text-xs text-muted-foreground">
+                Added on
+                {{
+                  new Date(association.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                }}
+              </p>
+              <span class="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+                {{ association.farmers_count }} Farmer{{ association.farmers_count !== 1 ? 's' : '' }}
+              </span>
+            </div>
           </div>
+        </template>
+      </div>
+
+      <div class="text-center mt-6">
+        <Button
+          v-if="hasNextPage && !isFetchingNextPage"
+          @click="fetchNextPage"
+          variant="default"
+          class="rounded-lg"
+        >
+          Load More
+        </Button>
+        <div v-else-if="isFetchingNextPage" class="text-muted-foreground italic">
+          Loading more...
         </div>
       </div>
     </div>
