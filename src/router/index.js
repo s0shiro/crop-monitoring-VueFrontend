@@ -14,6 +14,9 @@ import AssociationsManagement from '@/views/common/AssociationsManagement/Associ
 import AssociationDetails from '@/views/common/AssociationsManagement/AssociationDetails.vue'
 import FarmerManagement from '@/views/common/FarmerManagement/FarmerManagement.vue'
 import FarmerDetails from '@/views/common/FarmerManagement/FarmerDetails.vue'
+import CropPlantingManagement from '@/views/technician/CropPlanting/CropPlantingManagement.vue'
+import CropPlantingDetails from '@/views/technician/CropPlanting/CropPlantingDetails.vue'
+import CropPlantingForm from '@/views/technician/CropPlanting/CropPlantingForm.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -109,6 +112,30 @@ const router = createRouter({
           component: FarmerDetails,
           meta: {
             requiredRoles: ['admin', 'technician'],
+          },
+        },
+        {
+          path: 'crop-plantings',
+          name: 'crop-planting-management',
+          component: CropPlantingManagement,
+          meta: {
+            requiredRoles: ['technician', 'admin'],
+          },
+        },
+        {
+          path: 'crop-plantings/new',
+          name: 'crop-planting-form',
+          component: CropPlantingForm,
+          meta: {
+            requiredRoles: ['technician', 'admin'],
+          },
+        },
+        {
+          path: 'crop-plantings/:id',
+          name: 'crop-planting-details',
+          component: CropPlantingDetails,
+          meta: {
+            requiredRoles: ['technician', 'admin'],
           },
         },
       ],
