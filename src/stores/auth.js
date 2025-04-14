@@ -6,6 +6,8 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     loading: false,
     error: null,
+    accessToken: null,
+    refreshToken: null,
     userRoles: [],
     userPermissions: [],
   }),
@@ -55,6 +57,8 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.userRoles = []
       this.userPermissions = []
+      this.accessToken = null
+      this.refreshToken = null
     },
 
     /**
@@ -70,6 +74,8 @@ export const useAuthStore = defineStore('auth', {
 
         if (response.data.status === 'success') {
           this.user = response.data.user
+          this.accessToken = response.data.authorization.access_token
+          this.refreshToken = response.data.authorization.refresh_token
           this.updateUserRolesAndPermissions(response.data.user)
           this.router.push({ name: 'dashboard' })
           return { success: true, data: response.data }
@@ -84,6 +90,22 @@ export const useAuthStore = defineStore('auth', {
         return { success: false, errors }
       } finally {
         this.loading = false
+      }
+    },
+
+    async refreshToken() {
+      try {
+        const response = await authApi.refresh()
+
+        if (response.data.status === 'success') {
+          this.accessToken = response.data.authorization.access_token
+          return { success: true, data: response.data }
+        }
+        throw new Error('Token refresh failed')
+      } catch (err) {
+        // If refresh fails, logout the user
+        await this.logout()
+        throw err
       }
     },
 

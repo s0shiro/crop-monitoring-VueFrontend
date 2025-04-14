@@ -17,6 +17,7 @@ import FarmerDetails from '@/views/common/FarmerManagement/FarmerDetails.vue'
 import CropPlantingManagement from '@/views/technician/CropPlanting/CropPlantingManagement.vue'
 import CropPlantingDetails from '@/views/technician/CropPlanting/CropPlantingDetails.vue'
 import CropPlantingForm from '@/views/technician/CropPlanting/CropPlantingForm.vue'
+import CropPlantingEditForm from '@/views/technician/CropPlanting/CropPlantingEditForm.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -138,6 +139,14 @@ const router = createRouter({
             requiredRoles: ['technician', 'admin'],
           },
         },
+        {
+          path: 'crop-plantings/:id/edit',
+          name: 'crop-planting-edit',
+          component: CropPlantingEditForm,
+          meta: {
+            requiredRoles: ['technician', 'admin'],
+          },
+        },
       ],
     },
     {
@@ -171,14 +180,15 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
   try {
-    // First check authentication status for all routes
+    // Check auth status if not already checked
     if (!authStore.isAuthenticated) {
       await authStore.checkAuth()
     }
 
-    // Now handle guest routes (login/register)
+    // Prevent authenticated users from accessing guest routes
     if (to.meta.requiresGuest) {
       if (authStore.isAuthenticated) {
+        console.log('Authenticated user redirected from guest route')
         return next({ name: 'dashboard' })
       }
       return next()
@@ -186,28 +196,22 @@ router.beforeEach(async (to, from, next) => {
 
     // Handle protected routes
     if (to.meta.requiresAuth) {
-      try {
-        const hasAccess = await checkAuthAndRoles(authStore, to)
-
-        if (!authStore.isAuthenticated) {
-          return next({ name: 'login' })
-        }
-
-        if (!hasAccess) {
-          console.log('Access denied: insufficient privileges')
-          return next({ name: 'dashboard' })
-        }
-      } catch (err) {
-        console.error('Auth check failed:', err)
+      if (!authStore.isAuthenticated) {
+        console.log('Unauthenticated user redirected to login')
         return next({ name: 'login' })
+      }
+
+      const hasAccess = await checkAuthAndRoles(authStore, to)
+      if (!hasAccess) {
+        console.log('Access denied: insufficient privileges')
+        return next({ name: 'dashboard' })
       }
     }
 
     return next()
-  } catch (error) {
-    console.error('Navigation guard error:', error)
-    // Only redirect to login if it's not already a guest route
-    if (!to.meta.requiresGuest) {
+  } catch (err) {
+    console.error('Navigation guard error:', err)
+    if (to.meta.requiresAuth) {
       return next({ name: 'login' })
     }
     return next()
