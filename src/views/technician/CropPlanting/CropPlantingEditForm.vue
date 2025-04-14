@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, onBeforeUnmount, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -30,16 +30,16 @@ const fixLeafletIcon = () => {
   })
 }
 
-onMounted(() => {
-  fixLeafletIcon()
-})
-
+const route = useRoute()
 const router = useRouter()
 const { toast } = useToast()
 const queryClient = useQueryClient()
 
-// Form errors
+const plantingId = route.params.id
+
+// Form errors and data
 const formErrors = ref({})
+const markerLatLng = ref(null)
 
 // Form data
 const formData = ref({
@@ -52,7 +52,7 @@ const formData = ref({
   quantity: '',
   expenses: '',
   remarks: '',
-  status: 'standing',
+  status: '',
   latitude: '',
   longitude: '',
   municipality: '',
@@ -64,35 +64,49 @@ const formData = ref({
   land_type: '',
 })
 
-// Lifecycle hooks
-onMounted(() => {
-  // Initialize form data with default values
-  formData.value = {
-    farmer_id: '',
-    category_id: '',
-    crop_id: '',
-    variety_id: '',
-    planting_date: '',
-    area_planted: '',
-    quantity: '',
-    expenses: '',
-    remarks: '',
-    status: 'standing',
-    latitude: '',
-    longitude: '',
-    municipality: '',
-    barangay: '',
-    hvc_classification: '',
-    rice_classification: '',
-    water_supply: '',
-    land_type: '',
-  }
+// Data fetching and state management
+const { data: planting, isLoading: isLoadingPlanting } = useQuery({
+  queryKey: ['planting', plantingId],
+  queryFn: async () => {
+    const response = await axiosInstance.get(`/api/crop-plantings/${plantingId}`)
+    return response.data.data
+  },
 })
 
-onBeforeUnmount(() => {
-  // Clear form data and refs before unmounting
-  formData.value = null
-})
+// Watch planting data changes to initialize form
+watch(
+  () => planting.value,
+  (newPlanting) => {
+    if (newPlanting) {
+      formData.value = {
+        farmer_id: newPlanting.farmer_id,
+        category_id: newPlanting.category_id,
+        crop_id: newPlanting.crop_id,
+        variety_id: newPlanting.variety_id,
+        planting_date: newPlanting.planting_date,
+        area_planted: newPlanting.area_planted.toString(),
+        quantity: newPlanting.quantity.toString(),
+        expenses: newPlanting.expenses?.toString() || '',
+        remarks: newPlanting.remarks || '',
+        status: newPlanting.status,
+        latitude: newPlanting.latitude?.toString() || '',
+        longitude: newPlanting.longitude?.toString() || '',
+        municipality: newPlanting.municipality || '',
+        barangay: newPlanting.barangay || '',
+        hvc_classification: newPlanting.hvc_detail?.classification || '',
+        rice_classification: newPlanting.rice_detail?.classification || '',
+        water_supply: newPlanting.rice_detail?.water_supply || '',
+        land_type: newPlanting.rice_detail?.land_type || '',
+      }
+
+      // Update marker position if coordinates exist
+      if (newPlanting.latitude && newPlanting.longitude) {
+        markerLatLng.value = [parseFloat(newPlanting.latitude), parseFloat(newPlanting.longitude)]
+      }
+    }
+  },
+  { immediate: true },
+)
 
 // Fetch farmers for dropdown
 const { data: farmers } = useQuery({
@@ -129,9 +143,6 @@ const { data: crops, isFetching: isLoadingCrops } = useQuery({
     return response.data.data
   },
   enabled: computed(() => !!formData.value?.category_id),
-  staleTime: 0, // Always fetch fresh data
-  cacheTime: 0, // Don't cache the results
-  refetchOnWindowFocus: false,
 })
 
 // Fetch varieties when crop is selected
@@ -144,13 +155,18 @@ const { data: varieties } = useQuery({
   enabled: computed(() => !!formData.value?.crop_id),
 })
 
-// Watch category_id changes to invalidate crops query
+// Watch category_id changes to reset dependent fields
 watch(
   () => formData.value.category_id,
   () => {
-    // Reset dependent fields when category changes
+    // Only reset crop and variety IDs when category changes
     formData.value.crop_id = ''
     formData.value.variety_id = ''
+    // Reset category-specific fields
+    formData.value.hvc_classification = ''
+    formData.value.rice_classification = ''
+    formData.value.water_supply = ''
+    formData.value.land_type = ''
     // Invalidate crops query for the new category
     queryClient.invalidateQueries(['crops', formData.value.category_id])
   },
@@ -160,22 +176,22 @@ watch(
 const statusOptions = [
   { value: 'standing', label: 'Standing' },
   { value: 'harvest', label: 'Ready for Harvest' },
+  { value: 'partially harvested', label: 'Partially Harvested' },
   { value: 'harvested', label: 'Harvested' },
 ]
 
-// Create planting mutation
-const { mutate: createPlanting, isPending: isCreating } = useMutation({
-  mutationFn: async (plantingData) => {
-    const response = await axiosInstance.post('/api/crop-plantings', plantingData)
+// Update planting mutation
+const { mutate: updatePlanting, isPending: isUpdating } = useMutation({
+  mutationFn: async (updateData) => {
+    const response = await axiosInstance.put(`/api/crop-plantings/${plantingId}`, updateData)
     return response.data
   },
   onSuccess: () => {
-    formErrors.value = {}
     toast({
       title: 'Success',
-      description: 'Crop planting record created successfully.',
+      description: 'Crop planting record updated successfully.',
     })
-    router.push({ name: 'crop-planting-management' })
+    router.push({ name: 'crop-planting-details', params: { id: plantingId } })
   },
   onError: (error) => {
     if (error.response?.data?.errors) {
@@ -184,7 +200,7 @@ const { mutate: createPlanting, isPending: isCreating } = useMutation({
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to create crop planting record.',
+        description: error.response?.data?.message || 'Failed to update crop planting record.',
       })
     }
   },
@@ -192,7 +208,6 @@ const { mutate: createPlanting, isPending: isCreating } = useMutation({
 
 // Form submission handler
 const handleSubmit = () => {
-  // Convert numeric strings to numbers
   const submitData = {
     ...formData.value,
     area_planted: parseFloat(formData.value.area_planted),
@@ -202,16 +217,33 @@ const handleSubmit = () => {
     longitude: parseFloat(formData.value.longitude),
   }
 
-  createPlanting(submitData)
+  updatePlanting(submitData)
 }
 
-// Get current location
+// Map-related data and methods
+const zoom = ref(13)
+const center = computed(() => {
+  if (formData.value?.latitude && formData.value?.longitude) {
+    return [parseFloat(formData.value.latitude), parseFloat(formData.value.longitude)]
+  }
+  return [13.4417, 121.9032] // Default center (Marinduque)
+})
+
+const handleMapClick = async (event) => {
+  const { lat, lng } = event.latlng
+  formData.value.latitude = lat.toString()
+  formData.value.longitude = lng.toString()
+  markerLatLng.value = [lat, lng]
+  await fetchLocationDetails(lat, lng)
+}
+
 const getCurrentLocation = () => {
   if ('geolocation' in navigator) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         formData.value.latitude = position.coords.latitude.toString()
         formData.value.longitude = position.coords.longitude.toString()
+        markerLatLng.value = [position.coords.latitude, position.coords.longitude]
       },
       (error) => {
         toast({
@@ -224,7 +256,6 @@ const getCurrentLocation = () => {
   }
 }
 
-// Function to fetch municipality and barangay using reverse geocoding
 const fetchLocationDetails = async (lat, lng) => {
   try {
     const response = await axios.get('https://nominatim.openstreetmap.org/reverse', {
@@ -243,82 +274,40 @@ const fetchLocationDetails = async (lat, lng) => {
   }
 }
 
-// Map-related data and methods
-const center = ref([13.4417, 121.9032]) // Center the map on Marinduque, Philippines
-const zoom = ref(11) // Adjust zoom level to ensure Marinduque is perfectly centered
-
-const markerLatLng = ref(null) // Store the marker's position
-
-const handleMapClick = async (event) => {
-  const { lat, lng } = event.latlng
-  formData.value.latitude = lat.toString()
-  formData.value.longitude = lng.toString()
-  markerLatLng.value = [lat, lng] // Update the marker's position
-
-  // Fetch municipality and barangay
-  await fetchLocationDetails(lat, lng)
-}
-
 const resetMap = () => {
-  markerLatLng.value = null
-  formData.value.latitude = ''
-  formData.value.longitude = ''
-  formData.value.municipality = ''
-  formData.value.barangay = ''
+  if (planting.value) {
+    formData.value.latitude = planting.value.latitude.toString()
+    formData.value.longitude = planting.value.longitude.toString()
+    formData.value.municipality = planting.value.municipality
+    formData.value.barangay = planting.value.barangay
+    markerLatLng.value = [parseFloat(planting.value.latitude), parseFloat(planting.value.longitude)]
+  }
 }
 
 const handleMarkerDrag = async (event) => {
   const { lat, lng } = event.target.getLatLng()
   formData.value.latitude = lat.toString()
   formData.value.longitude = lng.toString()
-
-  // Fetch municipality and barangay
   await fetchLocationDetails(lat, lng)
 }
 
-const resetForm = () => {
-  formData.value = {
-    farmer_id: '',
-    category_id: '',
-    crop_id: '',
-    variety_id: '',
-    planting_date: '',
-    area_planted: '',
-    quantity: '',
-    expenses: '',
-    remarks: '',
-    status: 'standing',
-    latitude: '',
-    longitude: '',
-    municipality: '',
-    barangay: '',
-    hvc_classification: '',
-    rice_classification: '',
-    water_supply: '',
-    land_type: '',
-  }
-}
+onMounted(() => {
+  fixLeafletIcon()
+})
 </script>
 
 <template>
   <!-- Sticky Header -->
-
   <div class="container flex h-16 items-center">
     <div class="flex items-center gap-4 flex-1">
       <Button @click="router.back()" variant="ghost" size="icon" class="rounded-full">
         <ArrowLeftIcon class="h-5 w-5" />
       </Button>
-      <h1 class="text-xl font-semibold">New Crop Planting</h1>
-    </div>
-    <div class="flex items-center gap-4">
-      <Button type="button" variant="outline" @click="resetForm" class="gap-2">
-        <XIcon class="h-4 w-4" />
-        Reset Form
-      </Button>
+      <h1 class="text-xl font-semibold">Edit Crop Planting</h1>
     </div>
   </div>
 
-  <div class="container py-6 space-y-6 max-w-7xl mx-auto">
+  <div class="">
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <!-- Basic Information Section -->
       <Card>
@@ -328,7 +317,7 @@ const resetForm = () => {
             Basic Information
           </CardTitle>
           <p class="text-sm text-muted-foreground">
-            Select the farmer and crop details for this planting
+            Update the farmer and crop details for this planting
           </p>
         </CardHeader>
         <CardContent>
@@ -440,11 +429,11 @@ const resetForm = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem
-                      v-for="option in statusOptions"
-                      :key="option.value"
-                      :value="option.value"
+                      v-for="status in statusOptions"
+                      :key="status.value"
+                      :value="status.value"
                     >
-                      {{ option.label }}
+                      {{ status.label }}
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -454,7 +443,7 @@ const resetForm = () => {
               </div>
             </div>
 
-            <!-- Planting Details -->
+            <!-- Details and Location -->
             <div class="space-y-6">
               <div class="space-y-2">
                 <label class="text-sm font-medium text-muted-foreground">Planting Date</label>
@@ -693,9 +682,9 @@ const resetForm = () => {
 
       <!-- Submit Button -->
       <div class="flex justify-end pb-8">
-        <Button type="submit" :disabled="isCreating" class="gap-2 w-full md:w-auto">
+        <Button type="submit" :disabled="isUpdating" class="gap-2 w-full md:w-auto">
           <SaveIcon class="h-4 w-4" />
-          {{ isCreating ? 'Creating...' : 'Create Planting' }}
+          {{ isUpdating ? 'Saving Changes...' : 'Save Changes' }}
         </Button>
       </div>
     </form>
