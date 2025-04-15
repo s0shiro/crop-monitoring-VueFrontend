@@ -80,7 +80,7 @@ const router = createRouter({
           name: 'crop-varieties',
           component: CropVarieties,
           meta: {
-            requiredRoles: ['admin'],
+            requiredRoles: ['admin', 'technician'],
           },
         },
         {
