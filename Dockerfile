@@ -1,8 +1,11 @@
-# Stage 1: Build Vue app
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 COPY . .
+
+# Pass environment variable to the build process
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm install
 RUN npm run build
