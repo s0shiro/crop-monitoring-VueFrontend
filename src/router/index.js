@@ -57,6 +57,7 @@ const router = createRouter({
           component: UserManagement,
           meta: {
             requiredRoles: ['admin'],
+            title: 'User Management',
           },
         },
         {
@@ -65,6 +66,7 @@ const router = createRouter({
           component: UserDetails,
           meta: {
             requiredRoles: ['admin'],
+            title: 'User Details',
           },
         },
         {
@@ -73,6 +75,7 @@ const router = createRouter({
           component: CropManagement,
           meta: {
             requiredRoles: ['admin', 'technician'],
+            title: 'Crop Management',
           },
         },
         {
@@ -81,6 +84,7 @@ const router = createRouter({
           component: CropVarieties,
           meta: {
             requiredRoles: ['admin', 'technician'],
+            title: 'Crop Varieties',
           },
         },
         {
@@ -89,6 +93,7 @@ const router = createRouter({
           component: AssociationsManagement,
           meta: {
             requiredRoles: ['admin'],
+            title: 'Associations Management',
           },
         },
         {
@@ -97,6 +102,7 @@ const router = createRouter({
           component: AssociationDetails,
           meta: {
             requiredRoles: ['admin'],
+            title: 'Association Details',
           },
         },
         {
@@ -105,6 +111,7 @@ const router = createRouter({
           component: FarmerManagement,
           meta: {
             requiredRoles: ['admin', 'technician'],
+            title: 'Farmer Management',
           },
         },
         {
@@ -113,6 +120,7 @@ const router = createRouter({
           component: FarmerDetails,
           meta: {
             requiredRoles: ['admin', 'technician'],
+            title: 'Farmer Details',
           },
         },
         {
@@ -121,6 +129,7 @@ const router = createRouter({
           component: CropPlantingManagement,
           meta: {
             requiredRoles: ['technician', 'admin'],
+            title: 'Crop Planting Management',
           },
         },
         {
@@ -129,6 +138,7 @@ const router = createRouter({
           component: CropPlantingForm,
           meta: {
             requiredRoles: ['technician', 'admin'],
+            title: 'New Crop Planting',
           },
         },
         {
@@ -137,6 +147,7 @@ const router = createRouter({
           component: CropPlantingDetails,
           meta: {
             requiredRoles: ['technician', 'admin'],
+            title: 'Crop Planting Details',
           },
         },
         {
@@ -145,6 +156,7 @@ const router = createRouter({
           component: CropPlantingEditForm,
           meta: {
             requiredRoles: ['technician', 'admin'],
+            title: 'Edit Crop Planting',
           },
         },
       ],
