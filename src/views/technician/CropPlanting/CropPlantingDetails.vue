@@ -33,7 +33,7 @@ import {
 } from 'lucide-vue-next'
 import { format } from 'date-fns'
 import axiosInstance from '@/lib/axios'
-import { useMutation, useQuery } from '@tanstack/vue-query'
+import { useQuery, useMutation } from '@tanstack/vue-query'
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,7 @@ import {
 import 'leaflet/dist/leaflet.css'
 import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet'
 import L from 'leaflet'
+import InspectionSection from './components/InspectionSection.vue'
 
 // Fix Leaflet's default icon path issues
 const fixLeafletIcon = () => {
@@ -479,6 +480,9 @@ onMounted(() => {
           </div>
         </CardContent>
       </Card>
+
+      <!-- Inspections Section -->
+      <InspectionSection v-if="planting" :planting-id="plantingId" :planting="planting" />
     </div>
 
     <!-- Delete Confirmation Dialog -->
