@@ -354,16 +354,51 @@ const { mutate: createDevPlanting, isPending: isCreatingPlanting } = useMutation
   },
 })
 
+// Add delay helper function
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 // Handler functions
 const handleCreateAssociations = async () => {
-  for (let i = 0; i < associationCount.value; i++) {
-    await createDevAssociation()
+  try {
+    for (let i = 0; i < associationCount.value; i++) {
+      await createDevAssociation()
+      // Add 500ms delay between requests if there are many items
+      if (associationCount.value > 10) {
+        await delay(500)
+      }
+    }
+    toast({
+      title: 'Success',
+      description: `Created ${associationCount.value} associations successfully`,
+    })
+  } catch (error) {
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to create all associations',
+    })
   }
 }
 
 const handleCreateFarmers = async () => {
-  for (let i = 0; i < farmerCount.value; i++) {
-    await createDevFarmer()
+  try {
+    for (let i = 0; i < farmerCount.value; i++) {
+      await createDevFarmer()
+      // Add 500ms delay between requests if there are many items
+      if (farmerCount.value > 10) {
+        await delay(500)
+      }
+    }
+    toast({
+      title: 'Success',
+      description: `Created ${farmerCount.value} farmers successfully`,
+    })
+  } catch (error) {
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to create all farmers',
+    })
   }
 }
 
@@ -377,8 +412,24 @@ const handleCreateCrops = async () => {
     return
   }
 
-  for (let i = 0; i < cropCount.value; i++) {
-    await createDevCrop()
+  try {
+    for (let i = 0; i < cropCount.value; i++) {
+      await createDevCrop()
+      // Add 500ms delay between requests if there are many items
+      if (cropCount.value > 10) {
+        await delay(500)
+      }
+    }
+    toast({
+      title: 'Success',
+      description: `Created ${cropCount.value} crops successfully`,
+    })
+  } catch (error) {
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to create all crops',
+    })
   }
 }
 
@@ -392,8 +443,24 @@ const handleCreateVarieties = async () => {
     return
   }
 
-  for (let i = 0; i < varietyCount.value; i++) {
-    await createDevVariety()
+  try {
+    for (let i = 0; i < varietyCount.value; i++) {
+      await createDevVariety()
+      // Add 500ms delay between requests if there are many items
+      if (varietyCount.value > 10) {
+        await delay(500)
+      }
+    }
+    toast({
+      title: 'Success',
+      description: `Created ${varietyCount.value} varieties successfully`,
+    })
+  } catch (error) {
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to create all varieties',
+    })
   }
 }
 
@@ -411,8 +478,24 @@ const handleCreatePlantings = async () => {
     return
   }
 
-  for (let i = 0; i < plantingCount.value; i++) {
-    await createDevPlanting()
+  try {
+    for (let i = 0; i < plantingCount.value; i++) {
+      await createDevPlanting()
+      // Add 500ms delay between requests if there are many items
+      if (plantingCount.value > 10) {
+        await delay(500)
+      }
+    }
+    toast({
+      title: 'Success',
+      description: `Created ${plantingCount.value} plantings successfully`,
+    })
+  } catch (error) {
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to create all plantings',
+    })
   }
 }
 
