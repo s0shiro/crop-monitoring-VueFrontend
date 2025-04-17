@@ -1,6 +1,8 @@
 <script setup>
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
+import DevSettingsModal from '@/components/DevSettingsModal.vue'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,9 +13,13 @@ import {
 } from '@/components/ui/breadcrumb'
 import AppSidebar from '@/components/AppSidebar.vue'
 import { useRoute, RouterLink } from 'vue-router'
+import { Settings } from 'lucide-vue-next'
+import { ref } from 'vue'
 
+const isDevelopment = import.meta.env.VITE_MODE === 'development'
 const route = useRoute()
 const isLoading = false // You might want to control this with your actual loading state
+const showDevSettings = ref(false)
 </script>
 
 <template>
@@ -26,25 +32,38 @@ const isLoading = false // You might want to control this with your actual loadi
       <header
         class="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear"
       >
-        <div class="flex items-center gap-2 px-4">
-          <SidebarTrigger class="-ml-1" />
-          <Separator orientation="vertical" class="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <RouterLink
-                  :to="{ name: 'dashboard' }"
-                  class="transition-colors hover:text-foreground"
-                >
-                  Dashboard
-                </RouterLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{{ route.meta.title || 'Current Page' }}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+        <div class="flex items-center justify-between w-full px-4">
+          <div class="flex items-center gap-2">
+            <SidebarTrigger class="-ml-1" />
+            <Separator orientation="vertical" class="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <RouterLink
+                    :to="{ name: 'dashboard' }"
+                    class="transition-colors hover:text-foreground"
+                  >
+                    Dashboard
+                  </RouterLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{{ route.meta.title || 'Current Page' }}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+
+          <!-- Dev Settings Button -->
+          <Button
+            v-if="isDevelopment"
+            variant="ghost"
+            size="icon"
+            @click="showDevSettings = true"
+            class="rounded-full"
+          >
+            <Settings class="h-5 w-5" />
+          </Button>
         </div>
       </header>
 
@@ -63,4 +82,11 @@ const isLoading = false // You might want to control this with your actual loadi
       </div>
     </SidebarInset>
   </SidebarProvider>
+
+  <!-- Dev Settings Modal -->
+  <DevSettingsModal
+    v-if="isDevelopment && showDevSettings"
+    :open="showDevSettings"
+    @close="showDevSettings = false"
+  />
 </template>
