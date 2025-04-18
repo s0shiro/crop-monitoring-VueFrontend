@@ -46,6 +46,8 @@ import 'leaflet/dist/leaflet.css'
 import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet'
 import L from 'leaflet'
 import InspectionSection from './components/InspectionSection.vue'
+import HarvestSection from './components/HarvestSection.vue'
+import SummarySection from './components/SummarySection.vue'
 
 // Fix Leaflet's default icon path issues
 const fixLeafletIcon = () => {
@@ -481,8 +483,18 @@ onMounted(() => {
         </CardContent>
       </Card>
 
+      <!-- Summary Section -->
+      <SummarySection
+        v-if="planting.status === 'harvested'"
+        :planting-id="plantingId"
+        :planting="planting"
+      />
+
       <!-- Inspections Section -->
       <InspectionSection v-if="planting" :planting-id="plantingId" :planting="planting" />
+
+      <!-- Harvest Reports Section -->
+      <HarvestSection :planting-id="plantingId" :planting="planting" />
     </div>
 
     <!-- Delete Confirmation Dialog -->

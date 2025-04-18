@@ -132,20 +132,27 @@ const handleInspectionSubmit = () => {
 <template>
   <Card class="lg:col-span-3 group hover:shadow-md transition-shadow">
     <CardHeader class="border-b">
-      <div class="flex items-center justify-between">
-        <CardTitle class="flex items-center gap-2 text-lg">
-          <ClipboardListIcon class="w-5 h-5 text-primary" />
-          Inspections
-        </CardTitle>
-        <Button
-          v-if="planting?.status === 'standing'"
-          @click="showInspectionDialog = true"
-          variant="default"
-          class="gap-2"
-        >
-          <PlusIcon class="w-4 h-4" />
-          Add Inspection
-        </Button>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <ClipboardListIcon class="w-5 h-5 text-primary" />
+            <CardTitle class="text-lg">Inspections</CardTitle>
+          </div>
+          <Button
+            v-if="planting?.status === 'standing'"
+            @click="showInspectionDialog = true"
+            variant="default"
+            class="gap-2"
+          >
+            <PlusIcon class="w-4 h-4" />
+            Add Inspection
+          </Button>
+        </div>
+        <div v-if="planting?.damaged_area > 0" class="flex items-center gap-2">
+          <Badge variant="outline" class="bg-destructive/10 text-destructive">
+            Total damaged area: {{ planting?.damaged_area }} ha
+          </Badge>
+        </div>
       </div>
     </CardHeader>
 
