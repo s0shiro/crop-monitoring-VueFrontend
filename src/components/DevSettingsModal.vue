@@ -45,6 +45,40 @@ const selectedCropForPlanting = ref('')
 const selectedVarietyForPlanting = ref('')
 const plantingCount = ref(1)
 
+const remarksOptions = [
+  'newly planted/seedling',
+  'vegetative',
+  'reproductive',
+  'maturing',
+]
+
+const hvcClassificationOptions = [
+  'lowland vegetable',
+  'upland vegetable',
+  'legumes',
+  'spice',
+  'rootcrop',
+  'fruit',
+]
+
+const riceClassificationOptions = [
+  'farmer saved seeds',
+  'hybrid',
+  'registered',
+  'certified',
+  'good quality',
+]
+
+const waterSupplyOptions = [
+  'irrigated',
+  'rainfed',
+]
+
+const landTypeOptions = [
+  'lowland',
+  'upland',
+]
+
 // Form states for other tabs
 const farmerCount = ref(1)
 const associationCount = ref(1)
@@ -313,7 +347,7 @@ const { mutate: createDevPlanting, isPending: isCreatingPlanting } = useMutation
       area_planted: (Math.random() * 5 + 0.5).toFixed(2),
       quantity: Math.floor(Math.random() * 1000) + 100,
       expenses: Math.floor(Math.random() * 10000) + 1000,
-      remarks: `Test planting for ${selectedCategory.name}`,
+      remarks: remarksOptions[Math.floor(Math.random() * remarksOptions.length)],
       status: 'standing',
       municipality: randomFarmer.municipality,
       barangay: randomFarmer.barangay,
@@ -325,14 +359,12 @@ const { mutate: createDevPlanting, isPending: isCreatingPlanting } = useMutation
     // Add category-specific details based on the category name
     if (selectedCategory.name === 'Rice') {
       // Rice specific details
-      plantingData.rice_classification = ['inbred', 'hybrid'][Math.floor(Math.random() * 2)]
-      plantingData.water_supply = ['irrigated', 'rainfed'][Math.floor(Math.random() * 2)]
-      plantingData.land_type = ['upland', 'lowland'][Math.floor(Math.random() * 2)]
+      plantingData.rice_classification = riceClassificationOptions[Math.floor(Math.random() * riceClassificationOptions.length)]
+      plantingData.water_supply = waterSupplyOptions[Math.floor(Math.random() * waterSupplyOptions.length)]
+      plantingData.land_type = landTypeOptions[Math.floor(Math.random() * landTypeOptions.length)]
     } else if (selectedCategory.name === 'High Value') {
       // HVC specific details
-      plantingData.hvc_classification = ['fruit', 'vegetable', 'root crop', 'spice'][
-        Math.floor(Math.random() * 4)
-      ]
+      plantingData.hvc_classification = hvcClassificationOptions[Math.floor(Math.random() * hvcClassificationOptions.length)]
     }
 
     const response = await axiosInstance.post('/api/crop-plantings', plantingData)

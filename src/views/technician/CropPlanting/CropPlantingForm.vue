@@ -41,6 +41,43 @@ const queryClient = useQueryClient()
 // Form errors
 const formErrors = ref({})
 
+// Remarks options
+const remarksOptions = [
+  { value: 'newly planted/seedling', label: 'Newly Planted/Seedling' },
+  { value: 'vegetative', label: 'Vegetative' },
+  { value: 'reproductive', label: 'Reproductive' },
+  { value: 'maturing', label: 'Maturing' },
+]
+
+// HVC Classification options
+const hvcClassificationOptions = [
+  { value: 'lowland vegetable', label: 'Lowland Vegetable' },
+  { value: 'upland vegetable', label: 'Upland Vegetable' },
+  { value: 'legumes', label: 'Legumes' },
+  { value: 'spice', label: 'Spice' },
+  { value: 'rootcrop', label: 'Rootcrop' },
+  { value: 'fruit', label: 'Fruit' },
+]
+
+// Rice specific options
+const waterSupplyOptions = [
+  { value: 'irrigated', label: 'Irrigated' },
+  { value: 'rainfed', label: 'Rainfed' },
+]
+
+const landTypeOptions = [
+  { value: 'lowland', label: 'Lowland' },
+  { value: 'upland', label: 'Upland' },
+]
+
+const riceClassificationOptions = [
+  { value: 'farmer saved seeds', label: 'Farmer Saved Seeds' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'registered', label: 'Registered' },
+  { value: 'certified', label: 'Certified' },
+  { value: 'good quality', label: 'Good Quality' },
+]
+
 // Form data
 const formData = ref({
   farmer_id: '',
@@ -51,17 +88,17 @@ const formData = ref({
   area_planted: '',
   quantity: '',
   expenses: '',
-  remarks: '',
+  remarks: 'newly planted/seedling', // Set default value
   status: 'standing',
   latitude: '',
   longitude: '',
   municipality: '',
   barangay: '',
   // Category-specific fields
-  hvc_classification: '',
-  rice_classification: '',
-  water_supply: '',
-  land_type: '',
+  hvc_classification: 'lowland vegetable', // Set default value
+  rice_classification: 'farmer saved seeds', // Set default value
+  water_supply: 'irrigated', // Set default value
+  land_type: 'lowland', // Set default value
 })
 
 // Lifecycle hooks
@@ -76,16 +113,16 @@ onMounted(() => {
     area_planted: '',
     quantity: '',
     expenses: '',
-    remarks: '',
+    remarks: 'newly planted/seedling', // Set default value
     status: 'standing',
     latitude: '',
     longitude: '',
     municipality: '',
     barangay: '',
-    hvc_classification: '',
-    rice_classification: '',
-    water_supply: '',
-    land_type: '',
+    hvc_classification: 'lowland vegetable', // Set default value
+    rice_classification: 'farmer saved seeds', // Set default value
+    water_supply: 'irrigated', // Set default value
+    land_type: 'lowland', // Set default value
   }
 })
 
@@ -286,24 +323,22 @@ const resetForm = () => {
     area_planted: '',
     quantity: '',
     expenses: '',
-    remarks: '',
+    remarks: 'newly planted/seedling', // Set default value
     status: 'standing',
     latitude: '',
     longitude: '',
     municipality: '',
     barangay: '',
-    hvc_classification: '',
-    rice_classification: '',
-    water_supply: '',
-    land_type: '',
+    hvc_classification: 'lowland vegetable', // Set default value
+    rice_classification: 'farmer saved seeds', // Set default value
+    water_supply: 'irrigated', // Set default value
+    land_type: 'lowland', // Set default value
   }
 }
 </script>
 
 <template>
-  <!-- Sticky Header -->
-
-  <div class="container flex h-16 items-center">
+  <div class="flex h-16 items-center">
     <div class="flex items-center gap-4 flex-1">
       <Button @click="router.back()" variant="ghost" size="icon" class="rounded-full">
         <ArrowLeftIcon class="h-5 w-5" />
@@ -318,7 +353,7 @@ const resetForm = () => {
     </div>
   </div>
 
-  <div class="container py-6 space-y-6 max-w-7xl mx-auto">
+  <div class="max-w-7xl mx-auto">
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <!-- Basic Information Section -->
       <Card>
@@ -514,11 +549,23 @@ const resetForm = () => {
 
               <div class="space-y-2">
                 <label class="text-sm font-medium text-muted-foreground">Remarks</label>
-                <Input
+                <Select
                   v-model="formData.remarks"
-                  placeholder="Optional notes about this planting"
                   :class="{ 'border-destructive': formErrors.remarks }"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select remarks" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="option in remarksOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
                 <p v-if="formErrors.remarks" class="text-sm text-destructive mt-1">
                   {{ formErrors.remarks[0] }}
                 </p>
@@ -540,11 +587,23 @@ const resetForm = () => {
           <div v-if="selectedCategory === 'High Value'" class="space-y-4">
             <div class="space-y-2">
               <label class="text-sm font-medium text-muted-foreground">HVC Classification</label>
-              <Input
+              <Select
                 v-model="formData.hvc_classification"
-                placeholder="Enter HVC classification"
                 :class="{ 'border-destructive': formErrors.hvc_classification }"
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select HVC classification" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in hvcClassificationOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="formErrors.hvc_classification" class="text-sm text-destructive mt-1">
                 {{ formErrors.hvc_classification[0] }}
               </p>
@@ -554,11 +613,23 @@ const resetForm = () => {
           <div v-if="selectedCategory === 'Rice'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="space-y-2">
               <label class="text-sm font-medium text-muted-foreground">Rice Classification</label>
-              <Input
+              <Select
                 v-model="formData.rice_classification"
-                placeholder="Enter rice classification"
                 :class="{ 'border-destructive': formErrors.rice_classification }"
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select rice classification" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in riceClassificationOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="formErrors.rice_classification" class="text-sm text-destructive mt-1">
                 {{ formErrors.rice_classification[0] }}
               </p>
@@ -566,11 +637,23 @@ const resetForm = () => {
 
             <div class="space-y-2">
               <label class="text-sm font-medium text-muted-foreground">Water Supply</label>
-              <Input
+              <Select
                 v-model="formData.water_supply"
-                placeholder="Enter water supply"
                 :class="{ 'border-destructive': formErrors.water_supply }"
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select water supply" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in waterSupplyOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="formErrors.water_supply" class="text-sm text-destructive mt-1">
                 {{ formErrors.water_supply[0] }}
               </p>
@@ -578,11 +661,23 @@ const resetForm = () => {
 
             <div class="space-y-2">
               <label class="text-sm font-medium text-muted-foreground">Land Type</label>
-              <Input
+              <Select
                 v-model="formData.land_type"
-                placeholder="Enter land type"
                 :class="{ 'border-destructive': formErrors.land_type }"
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select land type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in landTypeOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <p v-if="formErrors.land_type" class="text-sm text-destructive mt-1">
                 {{ formErrors.land_type[0] }}
               </p>
