@@ -45,12 +45,9 @@ const selectedCropForPlanting = ref('')
 const selectedVarietyForPlanting = ref('')
 const plantingCount = ref(1)
 
-const remarksOptions = [
-  'newly planted/seedling',
-  'vegetative',
-  'reproductive',
-  'maturing',
-]
+const remarksOptions = ['newly planted/seedling', 'vegetative', 'reproductive', 'maturing']
+
+const municipalities = ['Boac', 'Buenavista', 'Gasan', 'Mogpog', 'Santa Cruz', 'Torrijos']
 
 const hvcClassificationOptions = [
   'lowland vegetable',
@@ -69,15 +66,9 @@ const riceClassificationOptions = [
   'good quality',
 ]
 
-const waterSupplyOptions = [
-  'irrigated',
-  'rainfed',
-]
+const waterSupplyOptions = ['irrigated', 'rainfed']
 
-const landTypeOptions = [
-  'lowland',
-  'upland',
-]
+const landTypeOptions = ['lowland', 'upland']
 
 // Form states for other tabs
 const farmerCount = ref(1)
@@ -200,13 +191,14 @@ const { mutate: createDevAssociation, isPending: isCreatingAssociation } = useMu
 const { mutate: createDevFarmer, isPending: isCreatingFarmer } = useMutation({
   mutationFn: async () => {
     const randomNum = Math.floor(Math.random() * 10000)
+    const randomMunicipality = municipalities[Math.floor(Math.random() * municipalities.length)]
     const response = await axiosInstance.post('/api/farmers', {
       name: `Test Farmer ${randomNum}`,
       gender: Math.random() > 0.5 ? 'male' : 'female',
       rsbsa: `RSBSA-${randomNum}`,
       landsize: (Math.random() * 10).toFixed(2),
       association_id: selectedAssociation.value || null,
-      municipality: 'Test Municipality',
+      municipality: randomMunicipality,
       barangay: 'Test Barangay',
       technician_id: 2, // Make sure this matches an existing technician ID
     })
@@ -315,6 +307,7 @@ const { mutate: createDevPlanting, isPending: isCreatingPlanting } = useMutation
 
     const randomFarmer = farmers[Math.floor(Math.random() * farmers.length)]
     const plantingDate = new Date()
+    const randomMunicipality = municipalities[Math.floor(Math.random() * municipalities.length)]
 
     // Find the selected variety to get its maturity days
     const selectedVarietyData = varietiesForPlanting.value?.find(
@@ -349,7 +342,7 @@ const { mutate: createDevPlanting, isPending: isCreatingPlanting } = useMutation
       expenses: Math.floor(Math.random() * 10000) + 1000,
       remarks: remarksOptions[Math.floor(Math.random() * remarksOptions.length)],
       status: 'standing',
-      municipality: randomFarmer.municipality,
+      municipality: randomMunicipality,
       barangay: randomFarmer.barangay,
       technician_id: randomFarmer.technician_id,
       latitude: (13.4417 + (Math.random() - 0.5) * 0.1).toFixed(6),
@@ -359,12 +352,15 @@ const { mutate: createDevPlanting, isPending: isCreatingPlanting } = useMutation
     // Add category-specific details based on the category name
     if (selectedCategory.name === 'Rice') {
       // Rice specific details
-      plantingData.rice_classification = riceClassificationOptions[Math.floor(Math.random() * riceClassificationOptions.length)]
-      plantingData.water_supply = waterSupplyOptions[Math.floor(Math.random() * waterSupplyOptions.length)]
+      plantingData.rice_classification =
+        riceClassificationOptions[Math.floor(Math.random() * riceClassificationOptions.length)]
+      plantingData.water_supply =
+        waterSupplyOptions[Math.floor(Math.random() * waterSupplyOptions.length)]
       plantingData.land_type = landTypeOptions[Math.floor(Math.random() * landTypeOptions.length)]
     } else if (selectedCategory.name === 'High Value') {
       // HVC specific details
-      plantingData.hvc_classification = hvcClassificationOptions[Math.floor(Math.random() * hvcClassificationOptions.length)]
+      plantingData.hvc_classification =
+        hvcClassificationOptions[Math.floor(Math.random() * hvcClassificationOptions.length)]
     }
 
     const response = await axiosInstance.post('/api/crop-plantings', plantingData)
