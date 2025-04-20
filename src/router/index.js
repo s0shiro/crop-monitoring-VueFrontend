@@ -18,6 +18,8 @@ import CropPlantingManagement from '@/views/technician/CropPlanting/CropPlanting
 import CropPlantingDetails from '@/views/technician/CropPlanting/CropPlantingDetails.vue'
 import CropPlantingForm from '@/views/technician/CropPlanting/CropPlantingForm.vue'
 import CropPlantingEditForm from '@/views/technician/CropPlanting/CropPlantingEditForm.vue'
+import RiceStandingReport from '@/views/common/GenerateReports/RiceStandingReport.vue'
+import RiceHarvestReport from '@/views/common/GenerateReports/RiceHarvestReport.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -157,6 +159,24 @@ const router = createRouter({
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'Edit Crop Planting',
+          },
+        },
+        {
+          path: 'reports/rice-standing',
+          name: 'rice-standing-report',
+          component: RiceStandingReport,
+          meta: {
+            requiredRoles: ['technician', 'admin'],
+            title: 'Rice Standing Report',
+          },
+        },
+        {
+          path: 'reports/rice-harvest',
+          name: 'rice-harvest-report',
+          component: RiceHarvestReport,
+          meta: {
+            requiredRoles: ['technician', 'admin'],
+            title: 'Rice Harvest Report',
           },
         },
       ],

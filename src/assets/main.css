@@ -111,3 +111,26 @@
     @apply text-xl font-semibold text-foreground;
   }
 }
+
+@layer utilities {
+  /* Dark mode overrides for colored table cells */
+  .dark .bg-amber-50 {
+    @apply bg-amber-50/20 !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark .bg-blue-50 {
+    @apply bg-blue-50/20 !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark .bg-green-50 {
+    @apply bg-green-50/20 !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark .bg-gray-50 {
+    @apply bg-gray-50/20 !important;
+    color: hsl(var(--foreground)) !important;
+  }
+}

@@ -23,6 +23,7 @@ import {
   Settings2,
   SquareTerminal,
   Users,
+  FileText,
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -96,6 +97,21 @@ const data = {
         {
           title: 'Crop Planting',
           url: '/dashboard/crop-plantings',
+        },
+      ],
+    },
+    {
+      title: 'Reports',
+      url: '#',
+      icon: FileText,
+      items: [
+        {
+          title: 'Rice Standing Report',
+          url: '/dashboard/reports/rice-standing',
+        },
+        {
+          title: 'Rice Harvest Report',
+          url: '/dashboard/reports/rice-harvest',
         },
       ],
     },

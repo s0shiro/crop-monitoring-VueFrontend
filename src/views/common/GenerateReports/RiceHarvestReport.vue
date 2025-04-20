@@ -14,18 +14,22 @@ import {
 import { FileText, Printer, Loader2Icon, AlertCircle } from 'lucide-vue-next'
 import { useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/lib/axios'
-import { format } from 'date-fns'
 
 const authStore = useAuthStore()
 const user = authStore.user
 
-const municipalities = ['Boac', 'Buenavista', 'Gasan', 'Mogpog', 'Santa Cruz', 'Torrijos']
-const waterSupplyTypes = ['total', 'irrigated', 'rainfed', 'upland']
-
+// Filter states
 const selectedMunicipality = ref('Boac')
-const selectedWaterSupply = ref('total')
-const startDate = ref(format(new Date(), 'yyyy-MM-01'))
-const endDate = ref(format(new Date(), 'yyyy-MM-dd'))
+const selectedWaterSupply = ref('irrigated')
+const startDate = ref('')
+const endDate = ref('')
+
+// Constants
+const municipalities = ['Boac', 'Buenavista', 'Gasan', 'Mogpog', 'Santa Cruz', 'Torrijos']
+const waterSupplyTypes = ['irrigated', 'rainfed', 'upland', 'total']
+
+// Query state
+const enabled = ref(false)
 
 // Fetch report data using Tanstack Query
 const {
@@ -34,13 +38,7 @@ const {
   error,
   refetch,
 } = useQuery({
-  queryKey: [
-    'rice-harvest-report',
-    selectedMunicipality.value,
-    selectedWaterSupply.value,
-    startDate.value,
-    endDate.value,
-  ],
+  queryKey: ['rice-harvest-report', selectedMunicipality, selectedWaterSupply, startDate, endDate],
   queryFn: async () => {
     const response = await axiosInstance.get('/api/reports/rice-harvest', {
       params: {
@@ -52,29 +50,89 @@ const {
     })
     return response.data
   },
-  staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+  enabled: enabled,
 })
+
+async function applyFilters() {
+  if (!startDate.value || !endDate.value) {
+    alert('Please select a date range')
+    return
+  }
+  enabled.value = true
+  await refetch()
+}
 
 function formatValue(value) {
   if (!value || value === 0) return ''
-  return value.toFixed(3)
+  return Number(value).toFixed(4)
 }
 
-function getHeaderClass(supply) {
+function getHeaderClass(type) {
   return {
-    'bg-amber-50': supply === 'irrigated',
-    'bg-blue-50': supply === 'rainfed',
-    'bg-green-50': supply === 'upland',
-    'bg-gray-50': supply === 'total',
+    'bg-amber-50': type === 'irrigated',
+    'bg-blue-50': type === 'rainfed',
+    'bg-green-50': type === 'upland',
+    'bg-gray-50': type === 'total',
   }
 }
 
-function printReport() {
-  window.print()
+// Calculate row totals
+function calculateTotalArea(barangayData) {
+  const seedTypes = [
+    'hybridSeeds',
+    'registeredSeeds',
+    'certifiedSeeds',
+    'goodQualitySeeds',
+    'farmerSavedSeeds',
+  ]
+  return seedTypes.reduce((sum, type) => {
+    return sum + (barangayData[type]?.area || 0)
+  }, 0)
 }
 
-async function applyFilters() {
-  await refetch()
+function calculateAverageYield(barangayData) {
+  const seedTypes = [
+    'hybridSeeds',
+    'registeredSeeds',
+    'certifiedSeeds',
+    'goodQualitySeeds',
+    'farmerSavedSeeds',
+  ]
+  const sum = seedTypes.reduce((sum, type) => {
+    return sum + (barangayData[type]?.averageYield || 0)
+  }, 0)
+  const nonZeroTypes = seedTypes.filter((type) => barangayData[type]?.averageYield > 0).length
+  return nonZeroTypes > 0 ? sum / nonZeroTypes : 0
+}
+
+function calculateTotalProduction(barangayData) {
+  const seedTypes = [
+    'hybridSeeds',
+    'registeredSeeds',
+    'certifiedSeeds',
+    'goodQualitySeeds',
+    'farmerSavedSeeds',
+  ]
+  return seedTypes.reduce((sum, type) => {
+    return sum + (barangayData[type]?.production || 0)
+  }, 0)
+}
+
+function generateRandomFilename() {
+  const timestamp = new Date().toISOString().slice(0, 10)
+  const uuid = crypto.randomUUID()
+  return `rice-harvest-report_${timestamp}_${uuid}`
+}
+
+function printReport() {
+  // Set filename for print
+  const filename = generateRandomFilename()
+  document.title = filename
+  window.print()
+  // Reset document title after printing
+  setTimeout(() => {
+    document.title = 'Rice Harvest Report'
+  }, 1000)
 }
 </script>
 
@@ -275,34 +333,13 @@ async function applyFilters() {
                   </td>
                   <!-- Total -->
                   <td class="border text-center">
-                    {{
-                      formatValue(
-                        Object.values(barangayData).reduce(
-                          (sum, type) => sum + (type.area || 0),
-                          0,
-                        ),
-                      )
-                    }}
+                    {{ formatValue(calculateTotalArea(barangayData)) }}
                   </td>
                   <td class="border text-center">
-                    {{
-                      formatValue(
-                        Object.values(barangayData).reduce(
-                          (sum, type) => sum + (type.averageYield || 0),
-                          0,
-                        ) / 5,
-                      )
-                    }}
+                    {{ formatValue(calculateAverageYield(barangayData)) }}
                   </td>
                   <td class="border text-center">
-                    {{
-                      formatValue(
-                        Object.values(barangayData).reduce(
-                          (sum, type) => sum + (type.production || 0),
-                          0,
-                        ),
-                      )
-                    }}
+                    {{ formatValue(calculateTotalProduction(barangayData)) }}
                   </td>
                 </tr>
               </template>
@@ -336,7 +373,7 @@ async function applyFilters() {
     </div>
   </div>
 
-  <!-- Print version - absolutely positioned outside of Vue layout -->
+  <!-- Print version -->
   <div class="print-only" v-if="reportData">
     <div id="report-content">
       <!-- Header -->
@@ -449,31 +486,13 @@ async function applyFilters() {
                 </td>
                 <!-- Total -->
                 <td class="border text-center">
-                  {{
-                    formatValue(
-                      Object.values(barangayData).reduce((sum, type) => sum + (type.area || 0), 0),
-                    )
-                  }}
+                  {{ formatValue(calculateTotalArea(barangayData)) }}
                 </td>
                 <td class="border text-center">
-                  {{
-                    formatValue(
-                      Object.values(barangayData).reduce(
-                        (sum, type) => sum + (type.averageYield || 0),
-                        0,
-                      ) / 5,
-                    )
-                  }}
+                  {{ formatValue(calculateAverageYield(barangayData)) }}
                 </td>
                 <td class="border text-center">
-                  {{
-                    formatValue(
-                      Object.values(barangayData).reduce(
-                        (sum, type) => sum + (type.production || 0),
-                        0,
-                      ),
-                    )
-                  }}
+                  {{ formatValue(calculateTotalProduction(barangayData)) }}
                 </td>
               </tr>
             </template>
@@ -540,9 +559,9 @@ async function applyFilters() {
   display: none;
 }
 
-/* Print styles only */
+/* Print styles */
 @media print {
-  /* Hide screen version but maintain text visibility */
+  /* Hide screen version */
   body * {
     visibility: hidden;
   }
@@ -554,7 +573,7 @@ async function applyFilters() {
     top: 0 !important;
     left: 0 !important;
     width: 8.5in !important;
-    height: 11in !important;
+    height: 14in !important;
     margin: 0 !important;
     padding: 0 !important;
     z-index: 99999 !important;
@@ -565,104 +584,134 @@ async function applyFilters() {
     align-items: center !important;
   }
 
-  .print-only * {
-    visibility: visible !important;
-    color: black !important;
-  }
-
   #report-content {
     transform: rotate(90deg);
     transform-origin: center center;
-    width: 11in !important;
+    width: 14in !important;
     height: 8.5in !important;
-    padding: 0.25in !important;
+    padding: 0.15in !important;
     margin: 0 auto !important;
     background: white !important;
     visibility: visible !important;
     color: black !important;
   }
 
-  #report-content * {
-    visibility: visible !important;
+  /* Header text */
+  #report-content h1.text-xl {
+    font-size: 16pt !important;
+    margin-bottom: 2pt !important;
     color: black !important;
   }
 
-  /* Header text sizes */
-  #report-content h1 {
-    font-size: 14px !important;
+  #report-content h2.text-xl {
+    font-size: 16pt !important;
+    margin-bottom: 2pt !important;
+    color: black !important;
   }
 
-  #report-content h2 {
-    font-size: 14px !important;
+  #report-content p.text-lg {
+    font-size: 14pt !important;
+    margin-bottom: 2pt !important;
+    color: black !important;
   }
 
-  #report-content p {
-    font-size: 12px !important;
+  #report-content p.text-sm {
+    font-size: 10pt !important;
+    margin-bottom: 2pt !important;
+    color: black !important;
   }
 
-  /* Signature section */
-  #report-content .mt-12 p {
-    font-size: 11px !important;
-    margin-bottom: 0 !important;
+  #report-content .font-semibold {
+    font-size: 10pt !important;
+    color: black !important;
   }
 
-  #report-content .mt-12 .font-bold {
-    font-size: 12px !important;
-  }
-
-  #report-content .mt-12 .text-sm {
-    font-size: 10px !important;
-  }
-
-  /* Table styles */
+  /* Table styles - made more compact */
   .report-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    table-layout: fixed !important;
-    font-size: 10px !important;
-    margin: 0 !important;
+    margin: 12pt 0 !important;
     color: black !important;
   }
 
   .report-table th,
   .report-table td {
     border: 1px solid black !important;
-    padding: 2px !important;
-    font-size: 10px !important;
+    padding: 4px !important;
+    font-size: 9pt !important;
     color: black !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
   }
 
-  /* Colors and backgrounds */
+  /* Make header cells slightly taller but still compact */
+  .report-table th {
+    padding: 6px 4px !important;
+    font-size: 9pt !important;
+    font-weight: bold !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Reduce minimum width for barangay column */
+  .report-table th[rowspan="3"]:first-child {
+    min-width: 80px !important;
+  }
+
+  /* Colors with proper contrast */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  .bg-amber-50 {
-    background-color: #fff5e6 !important;
+  .bg-amber-50 { 
+    background-color: #fff5e6 !important; 
+    color: black !important;
   }
-  .bg-blue-50 {
-    background-color: #e6f3ff !important;
+  .bg-blue-50 { 
+    background-color: #e6f3ff !important; 
+    color: black !important;
   }
-  .bg-green-50 {
-    background-color: #e6ffe6 !important;
+  .bg-green-50 { 
+    background-color: #e6ffe6 !important; 
+    color: black !important;
   }
-  .bg-gray-50 {
-    background-color: #f8f9fa !important;
+  .bg-gray-50 { 
+    background-color: #f8f9fa !important; 
+    color: black !important;
   }
 
-  /* Hide screen elements */
-  .screen-only {
-    display: none !important;
+  /* Signature section - more compact */
+  .mt-12 {
+    margin-top: 24pt !important;
+  }
+
+  .mt-8 {
+    margin-top: 16pt !important;
+  }
+
+  .mt-4 {
+    margin-top: 8pt !important;
+  }
+
+  /* Signature text */
+  .mt-12 p,
+  .mt-12 .font-bold,
+  .mt-12 .text-sm {
+    color: black !important;
+    font-size: 10pt !important;
+  }
+
+  /* Adjust section spacing */
+  .mb-6 {
+    margin-bottom: 12pt !important;
   }
 
   /* Page settings */
   @page {
-    size: portrait;
+    size: legal portrait;
     margin: 0;
+  }
+
+  .screen-only {
+    display: none !important;
   }
 }
 </style>
