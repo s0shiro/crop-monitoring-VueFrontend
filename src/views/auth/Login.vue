@@ -1,25 +1,17 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Checkbox } from '@/components/ui/checkbox'
+import { User, LockKeyhole, Eye, EyeOff } from 'lucide-vue-next'
+import loginImage from '../../../images/login-left.webp'
 
 // Form data
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
+const showPassword = ref(false)
 
 // Form state
 const formErrors = ref({})
@@ -27,9 +19,11 @@ const generalError = ref('')
 
 // Get auth store and router
 const authStore = useAuthStore()
-const router = useRouter()
 
-// For Login.vue and Register.vue
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
+}
+
 const handleSubmit = async () => {
   formErrors.value = {}
   generalError.value = ''
@@ -40,12 +34,9 @@ const handleSubmit = async () => {
     remember: rememberMe.value,
   }
 
-  // No need to import or use router here
-  // The store will handle navigation
   const result = await authStore.login(credentials)
 
   if (!result.success) {
-    // Handle errors
     formErrors.value = result.errors || {}
 
     if (result.errors?.general) {
@@ -54,36 +45,52 @@ const handleSubmit = async () => {
       generalError.value = 'Invalid email or password'
     }
   }
-  // No need for router.push, it's handled in the store
 }
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
-    <Card class="w-full max-w-md">
-      <CardHeader class="space-y-1">
-        <CardTitle class="text-2xl font-bold">Sign in to your account</CardTitle>
-        <CardDescription> Enter your credentials to access your account </CardDescription>
-      </CardHeader>
+  <div
+    class="h-screen flex justify-center items-center bg-cover bg-center bg-gradient-to-t from-purple-600 to-accent"
+  >
+    <div
+      class="bg-card w-[90%] lg:w-[1000px] h-[80%] py-4 lg:py-10 rounded-xl shadow-xl font-poppins flex justify-center items-center"
+    >
+      <div class="hidden lg:block">
+        <img :src="loginImage" alt="Login" />
+      </div>
 
-      <CardContent>
-        <form @submit.prevent="handleSubmit" class="space-y-4">
-          <!-- Error Alert -->
-          <Alert variant="destructive" v-if="generalError">
-            <AlertDescription>{{ generalError }}</AlertDescription>
-          </Alert>
+      <div class="w-[95%] lg:w-[40%]">
+        <p class="text-2xl font-bold text-center mb-8 text-card-foreground">
+          Crop Monitoring System
+        </p>
 
+        <!-- Error Alert -->
+        <Alert variant="destructive" v-if="generalError" class="mb-4">
+          <AlertDescription>{{ generalError }}</AlertDescription>
+        </Alert>
+
+        <form
+          @submit.prevent="handleSubmit"
+          class="space-y-6 lg:space-y-8 w-[95%] lg:w-[80%] mx-auto"
+        >
           <!-- Email Field -->
           <div class="space-y-2">
-            <Label for="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              v-model="email"
-              placeholder="Enter your email"
-              :class="{ 'border-destructive': formErrors.email }"
-              autocomplete="email"
-            />
+            <div class="relative">
+              <Input
+                id="email"
+                type="email"
+                v-model="email"
+                placeholder="Email"
+                class="pl-10"
+                :class="{ 'border-destructive': formErrors.email }"
+                autocomplete="email"
+              />
+              <span
+                class="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+              >
+                <User size="20" />
+              </span>
+            </div>
             <p class="text-sm text-destructive" v-if="formErrors.email">
               {{ formErrors.email[0] }}
             </p>
@@ -91,53 +98,66 @@ const handleSubmit = async () => {
 
           <!-- Password Field -->
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <Label for="password">Password</Label>
-              <router-link
-                to="/forgot-password"
-                class="text-sm font-medium text-primary hover:underline"
+            <div class="relative">
+              <Input
+                id="password"
+                :type="showPassword ? 'text' : 'password'"
+                v-model="password"
+                placeholder="Password"
+                class="px-10"
+                :class="{ 'border-destructive': formErrors.password }"
+                autocomplete="current-password"
+              />
+              <span
+                class="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
               >
-                Forgot password?
-              </router-link>
+                <LockKeyhole size="20" />
+              </span>
+              <button
+                type="button"
+                @click="togglePasswordVisibility"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <EyeOff v-if="showPassword" size="20" />
+                <Eye v-else size="20" />
+              </button>
             </div>
-            <Input
-              id="password"
-              type="password"
-              v-model="password"
-              placeholder="Enter your password"
-              :class="{ 'border-destructive': formErrors.password }"
-              autocomplete="current-password"
-            />
             <p class="text-sm text-destructive" v-if="formErrors.password">
               {{ formErrors.password[0] }}
             </p>
           </div>
 
-          <!-- Remember Me -->
-          <div class="flex items-center space-x-2">
-            <Checkbox id="remember" v-model:checked="rememberMe" />
-            <Label
-              for="remember"
-              class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Remember me
-            </Label>
-          </div>
-
           <!-- Submit Button -->
-          <Button type="submit" class="w-full" :disabled="authStore.isLoading">
-            <span v-if="authStore.isLoading">Signing in...</span>
-            <span v-else>Sign In</span>
-          </Button>
+          <div class="flex justify-center items-center">
+            <Button
+              type="submit"
+              class="bg-primary text-primary-foreground hover:bg-primary/90 text-xl w-[85%] rounded-full font-bold tracking-wider py-6"
+              :disabled="authStore.isLoading"
+            >
+              <span v-if="authStore.isLoading">Signing in...</span>
+              <span v-else>Login</span>
+            </Button>
+          </div>
         </form>
-      </CardContent>
 
-      <CardFooter>
-        <p class="text-sm text-center w-full text-muted-foreground">
-          Don't have an account?
-          <router-link to="/register" class="text-primary hover:underline"> Sign up </router-link>
-        </p>
-      </CardFooter>
-    </Card>
+        <div class="text-center mt-4">
+          <router-link
+            to="/forgot-password"
+            class="text-sm text-primary hover:text-primary/90 hover:underline"
+          >
+            Forgot password?
+          </router-link>
+        </div>
+
+        <div class="text-center mt-4">
+          <p class="text-sm text-muted-foreground">
+            Don't have an account?
+            <router-link to="/register" class="text-primary hover:text-primary/90 hover:underline">
+              Sign up
+            </router-link>
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
