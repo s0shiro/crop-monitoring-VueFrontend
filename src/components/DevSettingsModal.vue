@@ -20,6 +20,7 @@ import {
 import { useToast } from '@/components/ui/toast/use-toast'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import axiosInstance from '@/lib/axios'
+import { Loader2, Users2, Building2, Sprout, Leaf, Flower2 } from 'lucide-vue-next'
 
 const props = defineProps({
   open: Boolean,
@@ -549,261 +550,454 @@ watch(selectedCropForVariety, (newCropId) => {
 
 <template>
   <Dialog :open="open" @update:open="emit('close')">
-    <DialogContent class="sm:max-w-[425px]">
-      <DialogHeader>
-        <DialogTitle>Developer Settings</DialogTitle>
-        <DialogDescription>Quick actions for development and testing purposes</DialogDescription>
+    <DialogContent class="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+      <DialogHeader class="space-y-3 pb-6 border-b">
+        <DialogTitle class="text-2xl font-semibold">Developer Settings</DialogTitle>
+        <DialogDescription class="text-sm text-muted-foreground">
+          Quick actions for development and testing purposes. Use these tools to generate test data
+          for the application.
+        </DialogDescription>
       </DialogHeader>
 
-      <Tabs v-model="activeTab" class="w-full">
-        <TabsList class="grid w-full grid-cols-5">
-          <TabsTrigger value="farmers">Farmers</TabsTrigger>
-          <TabsTrigger value="associations">Associations</TabsTrigger>
-          <TabsTrigger value="crops">Crops</TabsTrigger>
-          <TabsTrigger value="varieties">Varieties</TabsTrigger>
-          <TabsTrigger value="plantings">Plantings</TabsTrigger>
+      <Tabs v-model="activeTab" class="w-full mt-6">
+        <TabsList class="grid w-full grid-cols-5 gap-2 p-1 bg-muted/20 rounded-lg">
+          <TabsTrigger value="farmers" class="flex items-center gap-2 px-3 py-2">
+            <Users2 class="h-4 w-4" />
+            <span class="hidden sm:inline">Farmers</span>
+          </TabsTrigger>
+          <TabsTrigger value="associations" class="flex items-center gap-2 px-3 py-2">
+            <Building2 class="h-4 w-4" />
+            <span class="hidden sm:inline">Associations</span>
+          </TabsTrigger>
+          <TabsTrigger value="crops" class="flex items-center gap-2 px-3 py-2">
+            <Sprout class="h-4 w-4" />
+            <span class="hidden sm:inline">Crops</span>
+          </TabsTrigger>
+          <TabsTrigger value="varieties" class="flex items-center gap-2 px-3 py-2">
+            <Leaf class="h-4 w-4" />
+            <span class="hidden sm:inline">Varieties</span>
+          </TabsTrigger>
+          <TabsTrigger value="plantings" class="flex items-center gap-2 px-3 py-2">
+            <Flower2 class="h-4 w-4" />
+            <span class="hidden sm:inline">Plantings</span>
+          </TabsTrigger>
         </TabsList>
 
         <!-- Associations Tab -->
-        <TabsContent value="associations" class="space-y-4">
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Number of Associations</label>
-            <Input type="number" v-model="associationCount" min="1" max="50" />
+        <TabsContent value="associations" class="space-y-6 py-6">
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <h3 class="text-lg font-semibold">Create Test Associations</h3>
+              <p class="text-sm text-muted-foreground">
+                Generate test associations to group farmers together. Each association will be
+                created with random test data.
+              </p>
+            </div>
+            <div class="space-y-4 bg-muted/10 rounded-lg p-4">
+              <div class="space-y-2">
+                <label class="text-sm font-medium">Number of Associations</label>
+                <div class="flex items-center gap-4">
+                  <Input
+                    type="number"
+                    v-model="associationCount"
+                    min="1"
+                    max="50"
+                    class="max-w-[120px]"
+                  />
+                  <Button
+                    @click="handleCreateAssociations"
+                    :disabled="isCreatingAssociation"
+                    class="min-w-[140px]"
+                    variant="default"
+                  >
+                    <Loader2 v-if="isCreatingAssociation" class="mr-2 h-4 w-4 animate-spin" />
+                    {{ isCreatingAssociation ? 'Creating...' : 'Create Associations' }}
+                  </Button>
+                </div>
+                <p class="text-xs text-muted-foreground">
+                  Maximum of 50 associations can be created at once.
+                </p>
+              </div>
+            </div>
           </div>
-          <Button
-            @click="handleCreateAssociations"
-            class="w-full"
-            :disabled="isCreatingAssociation"
-          >
-            {{ isCreatingAssociation ? 'Creating...' : 'Create Test Associations' }}
-          </Button>
         </TabsContent>
 
         <!-- Farmers Tab -->
-        <TabsContent value="farmers" class="space-y-4">
-          <div class="space-y-4">
+        <TabsContent value="farmers" class="space-y-6 py-6">
+          <div class="space-y-6">
             <div class="space-y-2">
-              <label class="text-sm font-medium">Number of Farmers</label>
-              <Input type="number" v-model="farmerCount" min="1" max="50" />
+              <h3 class="text-lg font-semibold">Create Test Farmers</h3>
+              <p class="text-sm text-muted-foreground">
+                Generate test farmer records with random data. Each farmer can optionally be
+                assigned to an association.
+              </p>
             </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium">Association (Optional)</label>
-              <Select v-model="selectedAssociation">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select association" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    v-for="association in associations"
-                    :key="association.id"
-                    :value="association.id"
-                  >
-                    {{ association.name }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+            <div class="space-y-4 bg-muted/10 rounded-lg p-4">
+              <div class="grid gap-6 sm:grid-cols-2">
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Number of Farmers</label>
+                  <Input type="number" v-model="farmerCount" min="1" max="50" />
+                  <p class="text-xs text-muted-foreground">
+                    Maximum of 50 farmers can be created at once.
+                  </p>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Association (Optional)</label>
+                  <Select v-model="selectedAssociation">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select association" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="association in associations"
+                        :key="association.id"
+                        :value="association.id"
+                      >
+                        {{ association.name }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p class="text-xs text-muted-foreground">
+                    Farmers will be assigned to the selected association.
+                  </p>
+                </div>
+              </div>
+              <Button
+                @click="handleCreateFarmers"
+                :disabled="isCreatingFarmer"
+                class="min-w-[140px] mt-4"
+                variant="default"
+              >
+                <Loader2 v-if="isCreatingFarmer" class="mr-2 h-4 w-4 animate-spin" />
+                {{ isCreatingFarmer ? 'Creating...' : 'Create Farmers' }}
+              </Button>
             </div>
           </div>
-          <Button @click="handleCreateFarmers" class="w-full" :disabled="isCreatingFarmer">
-            {{ isCreatingFarmer ? 'Creating...' : 'Create Test Farmers' }}
-          </Button>
         </TabsContent>
 
         <!-- Crops Tab -->
-        <TabsContent value="crops" class="space-y-4">
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Category</label>
-            <Select v-model="selectedCategoryForCrop">
-              <SelectTrigger>
-                <SelectValue
-                  :placeholder="isLoadingCategories ? 'Loading categories...' : 'Select category'"
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <div
-                  v-if="isLoadingCategories"
-                  class="p-2 text-sm text-muted-foreground text-center"
-                >
-                  Loading categories...
+        <TabsContent value="crops" class="space-y-6 py-6">
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <h3 class="text-lg font-semibold">Create Test Crops</h3>
+              <p class="text-sm text-muted-foreground">
+                Generate test crops under a specific category. Each crop will be created with random
+                test data.
+              </p>
+            </div>
+            <div class="space-y-4 bg-muted/10 rounded-lg p-4">
+              <div class="grid gap-6 sm:grid-cols-2">
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Category</label>
+                  <Select v-model="selectedCategoryForCrop">
+                    <SelectTrigger>
+                      <SelectValue
+                        :placeholder="
+                          isLoadingCategories ? 'Loading categories...' : 'Select category'
+                        "
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        v-if="isLoadingCategories"
+                        class="p-2 text-sm text-muted-foreground text-center"
+                      >
+                        <Loader2 class="h-4 w-4 animate-spin mx-auto mb-2" />
+                        Loading categories...
+                      </div>
+                      <SelectItem
+                        v-else
+                        v-for="category in categories"
+                        :key="category.id"
+                        :value="category.id"
+                      >
+                        {{ category.name }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <SelectItem
-                  v-else
-                  v-for="category in categories"
-                  :key="category.id"
-                  :value="category.id"
-                >
-                  {{ category.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Number of Crops</label>
+                  <Input type="number" v-model="cropCount" min="1" max="50" />
+                  <p class="text-xs text-muted-foreground">
+                    Maximum of 50 crops can be created at once.
+                  </p>
+                </div>
+              </div>
+              <Button
+                @click="handleCreateCrops"
+                :disabled="isCreatingCrop || !selectedCategoryForCrop"
+                class="min-w-[140px] mt-4"
+                variant="default"
+              >
+                <Loader2 v-if="isCreatingCrop" class="mr-2 h-4 w-4 animate-spin" />
+                {{ isCreatingCrop ? 'Creating...' : 'Create Crops' }}
+              </Button>
+            </div>
           </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Number of Crops</label>
-            <Input type="number" v-model="cropCount" min="1" max="50" />
-          </div>
-          <Button @click="handleCreateCrops" class="w-full" :disabled="isCreatingCrop">
-            {{ isCreatingCrop ? 'Creating...' : 'Create Test Crops' }}
-          </Button>
         </TabsContent>
 
         <!-- Varieties Tab -->
-        <TabsContent value="varieties" class="space-y-4">
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Category</label>
-            <Select v-model="selectedCategoryForVariety">
-              <SelectTrigger>
-                <SelectValue
-                  :placeholder="isLoadingCategories ? 'Loading categories...' : 'Select category'"
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <div
-                  v-if="isLoadingCategories"
-                  class="p-2 text-sm text-muted-foreground text-center"
-                >
-                  Loading categories...
+        <TabsContent value="varieties" class="space-y-6 py-6">
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <h3 class="text-lg font-semibold">Create Test Varieties</h3>
+              <p class="text-sm text-muted-foreground">
+                Generate test varieties for a specific crop. Each variety will be created with
+                random maturity days.
+              </p>
+            </div>
+            <div class="space-y-4 bg-muted/10 rounded-lg p-4">
+              <div class="grid gap-6">
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Category</label>
+                  <Select v-model="selectedCategoryForVariety">
+                    <SelectTrigger>
+                      <SelectValue
+                        :placeholder="
+                          isLoadingCategories ? 'Loading categories...' : 'Select category'
+                        "
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        v-if="isLoadingCategories"
+                        class="p-2 text-sm text-muted-foreground text-center"
+                      >
+                        <Loader2 class="h-4 w-4 animate-spin mx-auto mb-2" />
+                        Loading categories...
+                      </div>
+                      <SelectItem
+                        v-else
+                        v-for="category in categories"
+                        :key="category.id"
+                        :value="category.id"
+                      >
+                        {{ category.name }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <SelectItem
-                  v-else
-                  v-for="category in categories"
-                  :key="category.id"
-                  :value="category.id"
-                >
-                  {{ category.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Crop</label>
-            <Select
-              v-model="selectedCropForVariety"
-              :disabled="!selectedCategoryForVariety || isLoadingCropsForVariety"
-            >
-              <SelectTrigger>
-                <SelectValue
-                  :placeholder="isLoadingCropsForVariety ? 'Loading crops...' : 'Select crop'"
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <div
-                  v-if="isLoadingCropsForVariety"
-                  class="p-2 text-sm text-muted-foreground text-center"
-                >
-                  Loading crops...
+
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Crop</label>
+                  <Select
+                    v-model="selectedCropForVariety"
+                    :disabled="!selectedCategoryForVariety || isLoadingCropsForVariety"
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        :placeholder="isLoadingCropsForVariety ? 'Loading crops...' : 'Select crop'"
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        v-if="isLoadingCropsForVariety"
+                        class="p-2 text-sm text-muted-foreground text-center"
+                      >
+                        <Loader2 class="h-4 w-4 animate-spin mx-auto mb-2" />
+                        Loading crops...
+                      </div>
+                      <SelectItem
+                        v-else
+                        v-for="crop in cropsForVariety"
+                        :key="crop.id"
+                        :value="crop.id"
+                      >
+                        {{ crop.name }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <SelectItem v-else v-for="crop in cropsForVariety" :key="crop.id" :value="crop.id">
-                  {{ crop.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Number of Varieties</label>
+                  <Input type="number" v-model="varietyCount" min="1" max="50" />
+                  <p class="text-xs text-muted-foreground">
+                    Maximum of 50 varieties can be created at once.
+                  </p>
+                </div>
+              </div>
+              <Button
+                @click="handleCreateVarieties"
+                :disabled="
+                  isCreatingVariety || !selectedCategoryForVariety || !selectedCropForVariety
+                "
+                class="min-w-[140px] mt-4"
+                variant="default"
+              >
+                <Loader2 v-if="isCreatingVariety" class="mr-2 h-4 w-4 animate-spin" />
+                {{ isCreatingVariety ? 'Creating...' : 'Create Varieties' }}
+              </Button>
+            </div>
           </div>
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Number of Varieties</label>
-            <Input type="number" v-model="varietyCount" min="1" max="50" />
-          </div>
-          <Button @click="handleCreateVarieties" class="w-full" :disabled="isCreatingVariety">
-            {{ isCreatingVariety ? 'Creating...' : 'Create Test Varieties' }}
-          </Button>
         </TabsContent>
 
         <!-- Plantings Tab -->
-        <TabsContent value="plantings" class="space-y-4">
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Category</label>
-            <Select v-model="selectedCategoryForPlanting">
-              <SelectTrigger>
-                <SelectValue
-                  :placeholder="isLoadingCategories ? 'Loading categories...' : 'Select category'"
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <div
-                  v-if="isLoadingCategories"
-                  class="p-2 text-sm text-muted-foreground text-center"
-                >
-                  Loading categories...
+        <TabsContent value="plantings" class="space-y-6 py-6">
+          <div class="space-y-6">
+            <div class="space-y-2">
+              <h3 class="text-lg font-semibold">Create Test Plantings</h3>
+              <p class="text-sm text-muted-foreground">
+                Generate test planting records with random data including area planted, expenses,
+                and location coordinates.
+              </p>
+            </div>
+            <div class="space-y-4 bg-muted/10 rounded-lg p-4">
+              <div class="grid gap-6">
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Category</label>
+                  <Select v-model="selectedCategoryForPlanting">
+                    <SelectTrigger>
+                      <SelectValue
+                        :placeholder="
+                          isLoadingCategories ? 'Loading categories...' : 'Select category'
+                        "
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        v-if="isLoadingCategories"
+                        class="p-2 text-sm text-muted-foreground text-center"
+                      >
+                        <Loader2 class="h-4 w-4 animate-spin mx-auto mb-2" />
+                        Loading categories...
+                      </div>
+                      <SelectItem
+                        v-else
+                        v-for="category in categories"
+                        :key="category.id"
+                        :value="category.id"
+                      >
+                        {{ category.name }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <SelectItem
-                  v-else
-                  v-for="category in categories"
-                  :key="category.id"
-                  :value="category.id"
-                >
-                  {{ category.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Crop</label>
-            <Select
-              v-model="selectedCropForPlanting"
-              :disabled="!selectedCategoryForPlanting || isLoadingCropsForPlanting"
-            >
-              <SelectTrigger>
-                <SelectValue
-                  :placeholder="isLoadingCropsForPlanting ? 'Loading crops...' : 'Select crop'"
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <div
-                  v-if="isLoadingCropsForPlanting"
-                  class="p-2 text-sm text-muted-foreground text-center"
-                >
-                  Loading crops...
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Crop</label>
+                  <Select
+                    v-model="selectedCropForPlanting"
+                    :disabled="!selectedCategoryForPlanting || isLoadingCropsForPlanting"
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        :placeholder="
+                          isLoadingCropsForPlanting ? 'Loading crops...' : 'Select crop'
+                        "
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        v-if="isLoadingCropsForPlanting"
+                        class="p-2 text-sm text-muted-foreground text-center"
+                      >
+                        <Loader2 class="h-4 w-4 animate-spin mx-auto mb-2" />
+                        Loading crops...
+                      </div>
+                      <SelectItem
+                        v-else
+                        v-for="crop in cropsForPlanting"
+                        :key="crop.id"
+                        :value="crop.id"
+                      >
+                        {{ crop.name }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <SelectItem v-else v-for="crop in cropsForPlanting" :key="crop.id" :value="crop.id">
-                  {{ crop.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Variety</label>
-            <Select
-              v-model="selectedVarietyForPlanting"
-              :disabled="!selectedCropForPlanting || isLoadingVarietiesForPlanting"
-            >
-              <SelectTrigger>
-                <SelectValue
-                  :placeholder="
-                    isLoadingVarietiesForPlanting ? 'Loading varieties...' : 'Select variety'
-                  "
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <div
-                  v-if="isLoadingVarietiesForPlanting"
-                  class="p-2 text-sm text-muted-foreground text-center"
-                >
-                  Loading varieties...
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Variety</label>
+                  <Select
+                    v-model="selectedVarietyForPlanting"
+                    :disabled="!selectedCropForPlanting || isLoadingVarietiesForPlanting"
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        :placeholder="
+                          isLoadingVarietiesForPlanting ? 'Loading varieties...' : 'Select variety'
+                        "
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div
+                        v-if="isLoadingVarietiesForPlanting"
+                        class="p-2 text-sm text-muted-foreground text-center"
+                      >
+                        <Loader2 class="h-4 w-4 animate-spin mx-auto mb-2" />
+                        Loading varieties...
+                      </div>
+                      <SelectItem
+                        v-else
+                        v-for="variety in varietiesForPlanting"
+                        :key="variety.id"
+                        :value="variety.id"
+                      >
+                        {{ variety.name }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <SelectItem
-                  v-else
-                  v-for="variety in varietiesForPlanting"
-                  :key="variety.id"
-                  :value="variety.id"
-                >
-                  {{ variety.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Number of Plantings</label>
-            <Input type="number" v-model="plantingCount" min="1" max="50" />
-          </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium">Number of Plantings</label>
+                  <Input type="number" v-model="plantingCount" min="1" max="50" />
+                  <p class="text-xs text-muted-foreground">
+                    Maximum of 50 plantings can be created at once.
+                  </p>
+                </div>
+              </div>
 
-          <Button @click="handleCreatePlantings" class="w-full" :disabled="isCreatingPlanting">
-            {{ isCreatingPlanting ? 'Creating...' : 'Create Test Plantings' }}
-          </Button>
+              <Button
+                @click="handleCreatePlantings"
+                :disabled="
+                  isCreatingPlanting ||
+                  !selectedCategoryForPlanting ||
+                  !selectedCropForPlanting ||
+                  !selectedVarietyForPlanting
+                "
+                class="min-w-[140px] mt-4"
+                variant="default"
+              >
+                <Loader2 v-if="isCreatingPlanting" class="mr-2 h-4 w-4 animate-spin" />
+                {{ isCreatingPlanting ? 'Creating...' : 'Create Plantings' }}
+              </Button>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </DialogContent>
   </Dialog>
 </template>
+
+<style scoped>
+.Dialog-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+:deep(.dialog-content) {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Improved scrollbar styling */
+:deep(.dialog-content::-webkit-scrollbar) {
+  width: 8px;
+}
+
+:deep(.dialog-content::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+:deep(.dialog-content::-webkit-scrollbar-thumb) {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+:deep(.dialog-content::-webkit-scrollbar-thumb:hover) {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+</style>

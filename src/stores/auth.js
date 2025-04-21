@@ -5,9 +5,8 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
     loading: false,
+    loggingIn: false,
     error: null,
-    accessToken: null,
-    refreshToken: null,
     userRoles: [],
     userPermissions: [],
   }),
@@ -16,6 +15,7 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: (state) => !!state.user,
     currentUser: (state) => state.user,
     isLoading: (state) => state.loading,
+    isLoggingIn: (state) => state.loggingIn,
     authError: (state) => state.error,
     roles: (state) => state.userRoles,
     permissions: (state) => state.userPermissions,
@@ -57,15 +57,13 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.userRoles = []
       this.userPermissions = []
-      this.accessToken = null
-      this.refreshToken = null
     },
 
     /**
      * Login user with email and password
      */
     async login(credentials) {
-      this.loading = true
+      this.loggingIn = true
       this.error = null
       this.clearUserData()
 
@@ -74,8 +72,6 @@ export const useAuthStore = defineStore('auth', {
 
         if (response.data.status === 'success') {
           this.user = response.data.user
-          this.accessToken = response.data.authorization.access_token
-          this.refreshToken = response.data.authorization.refresh_token
           this.updateUserRolesAndPermissions(response.data.user)
           this.router.push({ name: 'dashboard' })
           return { success: true, data: response.data }
@@ -89,23 +85,7 @@ export const useAuthStore = defineStore('auth', {
         }
         return { success: false, errors }
       } finally {
-        this.loading = false
-      }
-    },
-
-    async refreshToken() {
-      try {
-        const response = await authApi.refresh()
-
-        if (response.data.status === 'success') {
-          this.accessToken = response.data.authorization.access_token
-          return { success: true, data: response.data }
-        }
-        throw new Error('Token refresh failed')
-      } catch (err) {
-        // If refresh fails, logout the user
-        await this.logout()
-        throw err
+        this.loggingIn = false
       }
     },
 
