@@ -41,8 +41,6 @@ const handleSubmit = async () => {
 
     if (result.errors?.general) {
       generalError.value = result.errors.general[0]
-    } else if (result.errors?.email || result.errors?.password) {
-      generalError.value = 'Invalid email or password'
     }
   }
 }
@@ -65,7 +63,7 @@ const handleSubmit = async () => {
         </p>
 
         <!-- Error Alert -->
-        <Alert variant="destructive" v-if="generalError" class="mb-4">
+        <Alert variant="destructive" v-if="generalError" class="mb-4 text-center">
           <AlertDescription>{{ generalError }}</AlertDescription>
         </Alert>
 

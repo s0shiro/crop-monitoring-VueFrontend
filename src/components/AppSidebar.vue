@@ -66,7 +66,7 @@ const data = {
       items: [
         {
           title: 'User Management',
-          url: '/dashboard/users',
+          url: '/users',
         },
       ],
     },
@@ -76,27 +76,23 @@ const data = {
       icon: Bot,
       items: [
         {
-          title: 'Dashboard',
-          url: '/dashboard',
-        },
-        {
           title: 'Crop Management',
-          url: '/dashboard/crops',
+          url: '/crops',
           icon: BookOpen,
         },
         {
           title: 'Associations Management',
-          url: '/dashboard/associations',
+          url: '/associations',
           icon: BookOpen,
         },
         {
           title: 'Farmer Management',
-          url: '/dashboard/farmers',
+          url: '/farmers',
           icon: Users,
         },
         {
           title: 'Crop Planting',
-          url: '/dashboard/crop-plantings',
+          url: '/crop-plantings',
         },
       ],
     },
@@ -107,15 +103,15 @@ const data = {
       items: [
         {
           title: 'Rice Standing Report',
-          url: '/dashboard/reports/rice-standing',
+          url: '/reports/rice-standing',
         },
         {
           title: 'Rice Harvest Report',
-          url: '/dashboard/reports/rice-harvest',
+          url: '/reports/rice-harvest',
         },
         {
           title: 'Monthly Rice Planting Report',
-          url: '/dashboard/reports/rice-planting',
+          url: '/reports/rice-planting',
         },
       ],
     },

@@ -28,7 +28,7 @@ const router = createRouter({
       path: '/',
       redirect: (to) => {
         const authStore = useAuthStore()
-        return authStore.isAuthenticated ? '/dashboard' : '/login'
+        return authStore.isAuthenticated ? '/' : '/login'
       },
     },
     {
@@ -44,7 +44,7 @@ const router = createRouter({
       meta: { requiresGuest: true },
     },
     {
-      path: '/dashboard',
+      path: '/',
       component: DashboardLayout,
       meta: { requiresAuth: true },
       children: [

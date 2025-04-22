@@ -12,7 +12,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast/use-toast'
-import { PencilIcon, SaveIcon, XIcon, Trash2Icon, ArrowLeftIcon, UserIcon, MapPinIcon, Loader2 } from 'lucide-vue-next'
+import {
+  PencilIcon,
+  SaveIcon,
+  XIcon,
+  Trash2Icon,
+  ArrowLeftIcon,
+  UserIcon,
+  MapPinIcon,
+  Loader2,
+} from 'lucide-vue-next'
 import axiosInstance from '@/lib/axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
@@ -78,11 +87,22 @@ const cancelEditing = () => {
 const { data: farmer, isLoading: isLoadingFarmer } = useQuery({
   queryKey: ['farmer', farmerId],
   queryFn: async () => {
-    const response = await axiosInstance.get(`/api/farmers/${farmerId}`)
-    const data = response.data.data
-    initializeFormData(data)
-    return data
-  }
+    try {
+      const response = await axiosInstance.get(`/api/farmers/${farmerId}`)
+      const data = response.data.data
+      initializeFormData(data)
+      return data
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          error.response?.status === 404 ? 'Farmer not found' : 'Failed to load farmer details',
+      })
+      router.push({ name: 'farmer-management' })
+      throw error
+    }
+  },
 })
 
 // Fetch associations for dropdown
@@ -91,7 +111,7 @@ const { data: associations } = useQuery({
   queryFn: async () => {
     const response = await axiosInstance.get('/api/associations')
     return response.data
-  }
+  },
 })
 
 // Fetch technicians if user is admin
@@ -101,7 +121,7 @@ const { data: technicians } = useQuery({
     const response = await axiosInstance.get('/api/users/technicians')
     return response.data
   },
-  enabled: authStore.hasRole('admin')
+  enabled: authStore.hasRole('admin'),
 })
 
 // Update farmer mutation
@@ -124,7 +144,7 @@ const { mutate: updateFarmer, isPending: isUpdating } = useMutation({
       title: 'Error',
       description: error.response?.data?.message || 'Failed to update farmer.',
     })
-  }
+  },
 })
 
 // Delete farmer mutation
@@ -145,7 +165,7 @@ const { mutate: deleteFarmer } = useMutation({
       title: 'Error',
       description: error.response?.data?.message || 'Failed to update farmer.',
     })
-  }
+  },
 })
 
 const handleUpdate = () => {
@@ -177,21 +197,11 @@ const handleDelete = () => {
         <h1 class="text-3xl font-extrabold tracking-tight">Farmer Details</h1>
       </div>
       <div class="flex items-center gap-2">
-        <Button 
-          @click="startEditing" 
-          variant="outline"
-          class="gap-2"
-          v-if="!isEditing"
-        >
+        <Button @click="startEditing" variant="outline" class="gap-2" v-if="!isEditing">
           <PencilIcon class="w-4 h-4" />
           Edit Details
         </Button>
-        <Button 
-          @click="confirmDelete" 
-          variant="destructive"
-          :disabled="isDeleting"
-          class="gap-2"
-        >
+        <Button @click="confirmDelete" variant="destructive" :disabled="isDeleting" class="gap-2">
           <Trash2Icon class="w-4 h-4" />
           {{ isDeleting ? 'Deleting...' : 'Delete' }}
         </Button>
@@ -201,7 +211,9 @@ const handleDelete = () => {
     <!-- Loading State -->
     <div v-if="isLoadingFarmer" class="flex items-center justify-center min-h-[400px]">
       <div class="flex flex-col items-center gap-2">
-        <div class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div
+          class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"
+        ></div>
         <p class="text-muted-foreground">Loading farmer details...</p>
       </div>
     </div>
@@ -220,7 +232,9 @@ const handleDelete = () => {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-4">
               <div>
-                <label for="edit-name" class="text-sm font-medium text-muted-foreground">Name</label>
+                <label for="edit-name" class="text-sm font-medium text-muted-foreground"
+                  >Name</label
+                >
                 <Input
                   id="edit-name"
                   v-model="formData.name"
@@ -229,7 +243,9 @@ const handleDelete = () => {
                 />
               </div>
               <div>
-                <label for="edit-gender" class="text-sm font-medium text-muted-foreground">Gender</label>
+                <label for="edit-gender" class="text-sm font-medium text-muted-foreground"
+                  >Gender</label
+                >
                 <Select v-model="formData.gender" class="mt-1.5">
                   <SelectTrigger class="w-full">
                     <SelectValue placeholder="Select gender" />
@@ -241,7 +257,9 @@ const handleDelete = () => {
                 </Select>
               </div>
               <div>
-                <label for="edit-rsbsa" class="text-sm font-medium text-muted-foreground">RSBSA Number</label>
+                <label for="edit-rsbsa" class="text-sm font-medium text-muted-foreground"
+                  >RSBSA Number</label
+                >
                 <Input
                   id="edit-rsbsa"
                   v-model="formData.rsbsa"
@@ -250,7 +268,9 @@ const handleDelete = () => {
                 />
               </div>
               <div>
-                <label for="edit-landsize" class="text-sm font-medium text-muted-foreground">Land Size (hectares)</label>
+                <label for="edit-landsize" class="text-sm font-medium text-muted-foreground"
+                  >Land Size (hectares)</label
+                >
                 <Input
                   id="edit-landsize"
                   v-model="formData.landsize"
@@ -264,7 +284,9 @@ const handleDelete = () => {
             </div>
             <div class="space-y-4">
               <div>
-                <label for="edit-barangay" class="text-sm font-medium text-muted-foreground">Barangay</label>
+                <label for="edit-barangay" class="text-sm font-medium text-muted-foreground"
+                  >Barangay</label
+                >
                 <Input
                   id="edit-barangay"
                   v-model="formData.barangay"
@@ -273,7 +295,9 @@ const handleDelete = () => {
                 />
               </div>
               <div>
-                <label for="edit-municipality" class="text-sm font-medium text-muted-foreground">Municipality</label>
+                <label for="edit-municipality" class="text-sm font-medium text-muted-foreground"
+                  >Municipality</label
+                >
                 <Input
                   id="edit-municipality"
                   v-model="formData.municipality"
@@ -282,7 +306,9 @@ const handleDelete = () => {
                 />
               </div>
               <div>
-                <label for="edit-association" class="text-sm font-medium text-muted-foreground">Association</label>
+                <label for="edit-association" class="text-sm font-medium text-muted-foreground"
+                  >Association</label
+                >
                 <Select v-model="formData.association_id" class="mt-1.5">
                   <SelectTrigger>
                     <SelectValue placeholder="Select association" />
@@ -295,7 +321,9 @@ const handleDelete = () => {
                 </Select>
               </div>
               <div v-if="authStore.hasRole('admin')">
-                <label for="edit-technician" class="text-sm font-medium text-muted-foreground">Assign Technician</label>
+                <label for="edit-technician" class="text-sm font-medium text-muted-foreground"
+                  >Assign Technician</label
+                >
                 <Select v-model="formData.technician_id" class="mt-1.5">
                   <SelectTrigger>
                     <SelectValue placeholder="Select technician" />
@@ -314,12 +342,7 @@ const handleDelete = () => {
               <XIcon class="w-4 h-4" />
               Cancel
             </Button>
-            <Button
-              @click="handleUpdate"
-              :disabled="isUpdating"
-              variant="default"
-              class="gap-2"
-            >
+            <Button @click="handleUpdate" :disabled="isUpdating" variant="default" class="gap-2">
               <SaveIcon class="w-4 h-4" />
               {{ isUpdating ? 'Updating...' : 'Save Changes' }}
             </Button>
@@ -398,11 +421,15 @@ const handleDelete = () => {
             </div>
             <div>
               <p class="text-sm font-medium text-muted-foreground">Member Since</p>
-              <p class="text-lg mt-1">{{ new Date(farmer.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              }) }}</p>
+              <p class="text-lg mt-1">
+                {{
+                  new Date(farmer.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                }}
+              </p>
             </div>
           </CardContent>
         </Card>
