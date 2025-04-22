@@ -60,7 +60,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     /**
-     * Login user with email and password
+     * Login user with username/email and password
      */
     async login(credentials) {
       this.loggingIn = true
@@ -68,7 +68,10 @@ export const useAuthStore = defineStore('auth', {
       this.clearUserData()
 
       try {
-        const response = await authApi.login(credentials)
+        const response = await authApi.login({
+          login: credentials.login,
+          password: credentials.password,
+        })
 
         if (response.data.status === 'success') {
           this.user = response.data.user

@@ -42,12 +42,7 @@ const { toast } = useToast()
 const router = useRouter()
 
 // State from composable
-const {
-  users,
-  isLoadingUsers,
-  createUser,
-  isCreating,
-} = useUserManagement()
+const { users, isLoadingUsers, createUser, isCreating } = useUserManagement()
 
 // Dialog state
 const showCreateDialog = ref(false)
@@ -55,10 +50,11 @@ const selectedUser = ref(null)
 
 // Form state
 const formData = ref({
+  username: '',
   name: '',
   email: '',
   password: '',
-  role: ''
+  role: '',
 })
 
 // Watch for dialog changes to reset form
@@ -84,7 +80,9 @@ async function handleCreateUser(e) {
     toast({
       variant: 'destructive',
       title: 'Failed to create user!',
-      description: errorData?.errors ? Object.values(errorData.errors).flat().join(', ') : errorData?.message || 'Failed to create user',
+      description: errorData?.errors
+        ? Object.values(errorData.errors).flat().join(', ')
+        : errorData?.message || 'Failed to create user',
     })
   }
 }
@@ -95,10 +93,11 @@ function viewUserDetails(user) {
 
 function resetForm() {
   formData.value = {
+    username: '',
     name: '',
     email: '',
     password: '',
-    role: ''
+    role: '',
   }
   selectedUser.value = null
 }
@@ -117,11 +116,13 @@ function resetForm() {
       <DialogContent class="sm:max-w-[425px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
         <DialogHeader class="p-6 pb-0">
           <DialogTitle>Create User</DialogTitle>
-          <DialogDescription>
-            Add a new user to the system.
-          </DialogDescription>
+          <DialogDescription> Add a new user to the system. </DialogDescription>
         </DialogHeader>
         <form @submit.prevent="handleCreateUser" class="grid gap-4 py-4 overflow-y-auto px-6">
+          <div class="space-y-2">
+            <Label for="username">Username</Label>
+            <Input id="username" v-model="formData.username" required />
+          </div>
           <div class="space-y-2">
             <Label for="name">Name</Label>
             <Input id="name" v-model="formData.name" required />
@@ -162,6 +163,7 @@ function resetForm() {
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead>Username</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Role</TableHead>
@@ -171,12 +173,13 @@ function resetForm() {
       </TableHeader>
       <TableBody>
         <TableRow v-if="isLoadingUsers">
-          <TableCell colspan="5" class="text-center py-4">Loading...</TableCell>
+          <TableCell colspan="6" class="text-center py-4">Loading...</TableCell>
         </TableRow>
         <TableRow v-else-if="!users?.length">
-          <TableCell colspan="5" class="text-center py-4">No users found</TableCell>
+          <TableCell colspan="6" class="text-center py-4">No users found</TableCell>
         </TableRow>
         <TableRow v-for="user in users" :key="user.id">
+          <TableCell>{{ user.username }}</TableCell>
           <TableCell>{{ user.name }}</TableCell>
           <TableCell>{{ user.email }}</TableCell>
           <TableCell>{{ (user.roles ?? []).join(', ') }}</TableCell>

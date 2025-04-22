@@ -16,6 +16,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 // Form data
+const username = ref('') // Add username field
 const name = ref('')
 const email = ref('')
 const password = ref('')
@@ -37,6 +38,7 @@ const handleSubmit = async () => {
 
   try {
     const userData = {
+      username: username.value, // Add username to userData
       name: name.value,
       email: email.value,
       password: password.value,
@@ -79,6 +81,20 @@ const handleSubmit = async () => {
           <Alert variant="destructive" v-if="generalError">
             <AlertDescription>{{ generalError }}</AlertDescription>
           </Alert>
+
+          <!-- Username Field -->
+          <div class="space-y-2">
+            <Label for="username">Username</Label>
+            <Input
+              id="username"
+              v-model="username"
+              placeholder="Choose a username"
+              :class="{ 'border-destructive': formErrors.username }"
+            />
+            <p class="text-sm text-destructive" v-if="formErrors.username">
+              {{ formErrors.username[0] }}
+            </p>
+          </div>
 
           <!-- Name Field -->
           <div class="space-y-2">

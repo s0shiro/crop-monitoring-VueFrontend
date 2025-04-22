@@ -46,6 +46,7 @@ const isDeleting = ref(false)
 // State for editing basic details (separated from permission editing)
 const isEditMode = ref(false)
 const detailsForm = ref({
+  username: '',
   name: '',
   email: '',
   password: '',
@@ -102,6 +103,7 @@ watch(
   (newDetails) => {
     if (newDetails) {
       detailsForm.value = {
+        username: newDetails.user.username,
         name: newDetails.user.name,
         email: newDetails.user.email,
         password: '',
@@ -200,6 +202,7 @@ async function handleDeleteUser() {
 
 function handleDetailsSubmit() {
   updateUserMutation({
+    username: detailsForm.value.username,
     name: detailsForm.value.name,
     email: detailsForm.value.email,
     password: detailsForm.value.password,
@@ -297,6 +300,18 @@ const allPermissions = computed(() => {
         </CardHeader>
         <CardContent>
           <div v-if="userDetails" class="grid gap-6 sm:grid-cols-2">
+            <div class="space-y-2">
+              <Label class="text-sm font-medium">Username</Label>
+              <div v-if="!isEditMode" class="text-sm text-foreground">
+                {{ userDetails.user.username }}
+              </div>
+              <Input
+                v-else
+                v-model="detailsForm.username"
+                required
+                class="border-muted focus:ring-primary"
+              />
+            </div>
             <div class="space-y-2">
               <Label class="text-sm font-medium">Name</Label>
               <div v-if="!isEditMode" class="text-sm text-foreground">

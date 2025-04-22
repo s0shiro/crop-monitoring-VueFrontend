@@ -8,7 +8,7 @@ import { User, LockKeyhole, Eye, EyeOff } from 'lucide-vue-next'
 import loginImage from '../../../images/pao-bg.webp'
 
 // Form data
-const email = ref('')
+const login = ref('') // Changed from email to login
 const password = ref('')
 const rememberMe = ref(false)
 const showPassword = ref(false)
@@ -29,7 +29,7 @@ const handleSubmit = async () => {
   generalError.value = ''
 
   const credentials = {
-    email: email.value,
+    login: login.value, // Changed from email to login
     password: password.value,
     remember: rememberMe.value,
   }
@@ -71,17 +71,16 @@ const handleSubmit = async () => {
           @submit.prevent="handleSubmit"
           class="space-y-4 sm:space-y-6 w-full max-w-[400px] mx-auto"
         >
-          <!-- Email Field -->
+          <!-- Login Field (Email or Username) -->
           <div class="space-y-2">
             <div class="relative">
               <Input
-                id="email"
-                type="email"
-                v-model="email"
-                placeholder="Email"
+                id="login"
+                v-model="login"
+                placeholder="Email or Username"
                 class="pl-10 h-11 sm:h-12"
-                :class="{ 'border-destructive': formErrors.email }"
-                autocomplete="email"
+                :class="{ 'border-destructive': formErrors.login }"
+                autocomplete="username"
               />
               <span
                 class="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
@@ -89,8 +88,8 @@ const handleSubmit = async () => {
                 <User size="18" />
               </span>
             </div>
-            <p class="text-xs sm:text-sm text-destructive" v-if="formErrors.email">
-              {{ formErrors.email[0] }}
+            <p class="text-xs sm:text-sm text-destructive" v-if="formErrors.login">
+              {{ formErrors.login[0] }}
             </p>
           </div>
 

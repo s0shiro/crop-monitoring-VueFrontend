@@ -9,7 +9,7 @@ export const authApi = {
     return axiosInstance.post('/api/register', userData)
   },
 
-  login: (credentials) => {
+  login(credentials) {
     return axiosInstance.post('/api/login', credentials)
   },
 
