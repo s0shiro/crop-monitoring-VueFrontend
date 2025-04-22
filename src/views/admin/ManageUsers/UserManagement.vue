@@ -35,7 +35,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Eye, MoreHorizontal, Plus, Loader2 } from 'lucide-vue-next'
+import {
+  Eye,
+  EyeOff,
+  MoreHorizontal,
+  Plus,
+  Loader2,
+  X,
+  User,
+  Mail,
+  Shield,
+  Users,
+} from 'lucide-vue-next'
 import { useToast } from '@/components/ui/toast/use-toast'
 
 const { toast } = useToast()
@@ -56,6 +67,10 @@ const formData = ref({
   password: '',
   role: '',
 })
+
+// Add new refs for password visibility and form validation
+const showPassword = ref(false)
+const formRef = ref(null)
 
 // Watch for dialog changes to reset form
 watch(showCreateDialog, (newValue) => {
@@ -113,44 +128,124 @@ function resetForm() {
           Add User
         </Button>
       </DialogTrigger>
-      <DialogContent class="sm:max-w-[425px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
-        <DialogHeader class="p-6 pb-0">
-          <DialogTitle>Create User</DialogTitle>
-          <DialogDescription> Add a new user to the system. </DialogDescription>
-        </DialogHeader>
-        <form @submit.prevent="handleCreateUser" class="grid gap-4 py-4 overflow-y-auto px-6">
-          <div class="space-y-2">
-            <Label for="username">Username</Label>
-            <Input id="username" v-model="formData.username" required />
+      <DialogContent
+        class="sm:max-w-[600px] p-0 overflow-hidden duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[2%]"
+      >
+        <div class="p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle class="text-xl font-semibold">Create New User</DialogTitle>
+            <DialogDescription class="text-muted-foreground mt-1.5">
+              Add a new user to the system with their role and permissions.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <form ref="formRef" @submit.prevent="handleCreateUser" class="p-6 pt-4">
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Username field -->
+            <div class="space-y-2">
+              <Label for="username" class="text-sm font-medium">Username</Label>
+              <div class="relative">
+                <User class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="username"
+                  v-model="formData.username"
+                  class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Name field -->
+            <div class="space-y-2">
+              <Label for="name" class="text-sm font-medium">Full Name</Label>
+              <Input
+                id="name"
+                v-model="formData.name"
+                class="ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="Enter full name"
+                required
+              />
+            </div>
+
+            <!-- Email field -->
+            <div class="space-y-2">
+              <Label for="email" class="text-sm font-medium">Email</Label>
+              <div class="relative">
+                <Mail class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  v-model="formData.email"
+                  class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Enter email"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Password field -->
+            <div class="space-y-2">
+              <Label for="password" class="text-sm font-medium">Password</Label>
+              <div class="relative">
+                <Input
+                  id="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  v-model="formData.password"
+                  class="pr-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Enter password"
+                  required
+                />
+                <button
+                  type="button"
+                  class="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                  @click="showPassword = !showPassword"
+                >
+                  <Eye v-if="!showPassword" class="h-4 w-4" />
+                  <EyeOff v-else class="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Role field -->
+            <div class="space-y-2 md:col-span-2">
+              <Label for="role" class="text-sm font-medium">Role</Label>
+              <Select v-model="formData.role" required>
+                <SelectTrigger
+                  class="ring-offset-background transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="technician">
+                    <div class="flex items-center">
+                      <Users class="h-4 w-4 mr-2 text-muted-foreground" />
+                      Technician
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="coordinator">
+                    <div class="flex items-center">
+                      <Shield class="h-4 w-4 mr-2 text-muted-foreground" />
+                      Coordinator
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div class="space-y-2">
-            <Label for="name">Name</Label>
-            <Input id="name" v-model="formData.name" required />
-          </div>
-          <div class="space-y-2">
-            <Label for="email">Email</Label>
-            <Input id="email" type="email" v-model="formData.email" required />
-          </div>
-          <div class="space-y-2">
-            <Label for="password">Password</Label>
-            <Input id="password" type="password" v-model="formData.password" required />
-          </div>
-          <div class="space-y-2">
-            <Label for="role">Role</Label>
-            <Select v-model="formData.role" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="technician">Technician</SelectItem>
-                <SelectItem value="coordinator">Coordinator</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter class="p-6 pt-0">
-            <Button type="submit" :disabled="isCreating">
+
+          <DialogFooter class="mt-6 gap-2">
+            <DialogTrigger as-child>
+              <Button type="button" variant="outline" class="transition-colors"> Cancel </Button>
+            </DialogTrigger>
+            <Button
+              type="submit"
+              :disabled="isCreating"
+              class="transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+            >
               <Loader2 v-if="isCreating" class="mr-2 h-4 w-4 animate-spin" />
-              {{ isCreating ? 'Creating...' : 'Create' }}
+              {{ isCreating ? 'Creating...' : 'Create User' }}
             </Button>
           </DialogFooter>
         </form>

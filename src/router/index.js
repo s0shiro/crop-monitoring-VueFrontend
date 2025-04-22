@@ -20,6 +20,7 @@ import CropPlantingForm from '@/views/technician/CropPlanting/CropPlantingForm.v
 import CropPlantingEditForm from '@/views/technician/CropPlanting/CropPlantingEditForm.vue'
 import RiceStandingReport from '@/views/common/GenerateReports/RiceStandingReport.vue'
 import RiceHarvestReport from '@/views/common/GenerateReports/RiceHarvestReport.vue'
+import CornStandingReport from '@/views/common/GenerateReports/CornStandingReport.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -195,6 +196,15 @@ const router = createRouter({
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'Monthly Corn Harvest Report',
+          },
+        },
+        {
+          path: 'reports/corn-standing',
+          name: 'corn-standing-report',
+          component: CornStandingReport,
+          meta: {
+            requiredRoles: ['technician', 'admin'],
+            title: 'Corn Standing Report',
           },
         },
       ],
