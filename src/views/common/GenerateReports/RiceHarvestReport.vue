@@ -550,6 +550,37 @@ function printReport() {
   color: hsl(var(--foreground));
 }
 
+/* Screen-only styles - fix horizontal scrollbar */
+.screen-only .report-table {
+  table-layout: fixed;
+}
+
+.screen-only .report-table th,
+.screen-only .report-table td {
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+/* Header cell sizes on screen */
+.screen-only .report-table th[rowspan='3']:first-child {
+  width: 120px;
+}
+
+.screen-only .report-table th[rowspan='3']:nth-child(2) {
+  width: 80px;
+}
+
+/* Seed type columns */
+.screen-only .report-table th[colspan='3'] {
+  font-size: 0.7rem;
+}
+
+/* Individual data columns */
+.screen-only .report-table th:not([rowspan]):not([colspan]) {
+  width: 50px;
+  font-size: 0.65rem;
+}
+
 /* Screen styles */
 .screen-only {
   display: block;
@@ -651,7 +682,7 @@ function printReport() {
   }
 
   /* Reduce minimum width for barangay column */
-  .report-table th[rowspan="3"]:first-child {
+  .report-table th[rowspan='3']:first-child {
     min-width: 80px !important;
   }
 
@@ -661,20 +692,20 @@ function printReport() {
     print-color-adjust: exact !important;
   }
 
-  .bg-amber-50 { 
-    background-color: #fff5e6 !important; 
+  .bg-amber-50 {
+    background-color: #fff5e6 !important;
     color: black !important;
   }
-  .bg-blue-50 { 
-    background-color: #e6f3ff !important; 
+  .bg-blue-50 {
+    background-color: #e6f3ff !important;
     color: black !important;
   }
-  .bg-green-50 { 
-    background-color: #e6ffe6 !important; 
+  .bg-green-50 {
+    background-color: #e6ffe6 !important;
     color: black !important;
   }
-  .bg-gray-50 { 
-    background-color: #f8f9fa !important; 
+  .bg-gray-50 {
+    background-color: #f8f9fa !important;
     color: black !important;
   }
 
