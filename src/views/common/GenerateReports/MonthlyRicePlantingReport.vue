@@ -689,6 +689,51 @@ function printReport() {
   background-color: #f0e68c;
 }
 
+/* Screen-only styles - fix horizontal scrollbar */
+.screen-only .report-table {
+  table-layout: fixed;
+}
+
+.screen-only .report-table th,
+.screen-only .report-table td {
+  vertical-align: middle;
+  word-break: break-word;
+}
+
+/* First two columns (Municipality & Farmers) */
+.screen-only .report-table th[rowspan="3"]:first-child {
+  width: 110px;
+}
+
+.screen-only .report-table th[rowspan="3"]:nth-child(2) {
+  width: 70px;
+}
+
+/* Category columns */
+.screen-only .report-table th[colspan="6"] {
+  font-size: 0.75rem;
+}
+
+.screen-only .report-table th[colspan="11"] {
+  font-size: 0.75rem;
+}
+
+.screen-only .report-table th[colspan="5"],
+.screen-only .report-table th[colspan="6"] {
+  font-size: 0.7rem;
+}
+
+/* Individual columns */
+.screen-only .report-table th[rowspan="2"] {
+  width: 40px;
+  font-size: 0.65rem;
+}
+
+.screen-only .report-table th:not([rowspan]):not([colspan]) {
+  width: 40px;
+  font-size: 0.65rem;
+}
+
 /* Screen styles */
 .screen-only {
   display: block;
