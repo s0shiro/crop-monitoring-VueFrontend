@@ -258,11 +258,11 @@ function printReport() {
 </template>
 
 <style scoped>
-/* Regular styles */
+/* Regular styles that apply to both screen and print */
 .printable-report {
   background-color: hsl(var(--card));
   color: hsl(var(--card-foreground));
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 0.5rem;
   box-shadow:
     0 1px 3px 0 rgb(0 0 0 / 0.1),
@@ -279,8 +279,48 @@ function printReport() {
 .report-table td {
   border: 1px solid hsl(var(--border));
   padding: 0.25rem;
-  font-size: 0.75rem;
   color: hsl(var(--foreground));
+  text-align: center;
+}
+
+/* Screen-only styles */
+.screen-only .report-table {
+  table-layout: fixed; /* Fixed layout for better width control on screen */
+  font-size: 0.75rem; /* Smaller font for screen */
+}
+
+.screen-only .report-table th,
+.screen-only .report-table td {
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* First column (MUNICIPALITY) on screen */
+.screen-only .report-table th:first-child,
+.screen-only .report-table td:first-child {
+  width: 8rem;
+  text-align: left;
+}
+
+/* Category headers (IRRIGATED, RAINFED, UPLAND) on screen */
+.screen-only .report-table th[colspan='5'] {
+  font-weight: bold;
+  height: 2rem;
+}
+
+/* Each stage column on screen */
+.screen-only .report-table th:not(:first-child):not([colspan]) {
+  width: 4rem;
+  white-space: normal;
+  word-break: break-word;
+  font-weight: normal;
+}
+
+/* Data cells on screen */
+.screen-only .report-table td:not(:first-child) {
+  width: 4rem;
 }
 
 /* Screen styles */
@@ -294,6 +334,26 @@ function printReport() {
 
 /* Print styles */
 @media print {
+  /* Reset table styles for printing */
+  .report-table {
+    table-layout: auto !important;
+    font-size: unset !important;
+    width: 100% !important;
+  }
+
+  .report-table th,
+  .report-table td {
+    max-width: none !important;
+    width: auto !important;
+    word-wrap: normal !important;
+    padding: 0.25rem !important;
+  }
+
+  .report-table th:first-child,
+  .report-table td:first-child {
+    width: auto !important;
+  }
+
   /* Hide screen version */
   body * {
     visibility: hidden;
