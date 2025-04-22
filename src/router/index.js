@@ -188,6 +188,15 @@ const router = createRouter({
             title: 'Monthly Rice Planting Report',
           },
         },
+        {
+          path: 'reports/corn-harvest',
+          name: 'monthly-corn-harvest-report',
+          component: () => import('@/views/common/GenerateReports/MonthlyCornHarvestReport.vue'),
+          meta: {
+            requiredRoles: ['technician', 'admin'],
+            title: 'Monthly Corn Harvest Report',
+          },
+        },
       ],
     },
     {

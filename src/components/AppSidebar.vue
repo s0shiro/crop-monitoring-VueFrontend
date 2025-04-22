@@ -113,6 +113,10 @@ const data = {
           title: 'Monthly Rice Planting Report',
           url: '/reports/rice-planting',
         },
+        {
+          title: 'Monthly Corn Harvest Report',
+          url: '/reports/corn-harvest',
+        },
       ],
     },
   ],
