@@ -48,6 +48,127 @@ const plantingCount = ref(1)
 
 const remarksOptions = ['newly planted/seedling', 'vegetative', 'reproductive', 'maturing']
 
+const firstNames = [
+  'Juan',
+  'Maria',
+  'Pedro',
+  'Rosa',
+  'Miguel',
+  'Ana',
+  'Jose',
+  'Carmen',
+  'Francisco',
+  'Elena',
+  'Antonio',
+  'Lucia',
+  'Manuel',
+  'Sofia',
+  'Ricardo',
+  'Isabel',
+  'Eduardo',
+  'Teresa',
+  'Carlos',
+  'Beatriz',
+]
+
+const lastNames = [
+  'Santos',
+  'Reyes',
+  'Cruz',
+  'Garcia',
+  'Torres',
+  'Ramos',
+  'Flores',
+  'Mendoza',
+  'Dela Cruz',
+  'Gonzales',
+  'Bautista',
+  'Rodriguez',
+  'Fernandez',
+  'Lopez',
+  'Perez',
+  'Martinez',
+  'Rivera',
+  'Aquino',
+  'Castro',
+  'Morales',
+]
+
+const barangaysPerMunicipality = {
+  Boac: [
+    'Agot',
+    'Agumaymayan',
+    'Amoingon',
+    'Apitong',
+    'Balagasan',
+    'Balaring',
+    'Balimbing',
+    'Bamban',
+    'Bangbangalon',
+    'Bantay',
+  ],
+  Buenavista: [
+    'Bagacay',
+    'Bagtingon',
+    'Bicas-bicas',
+    'Caigangan',
+    'Daykitin',
+    'Libas',
+    'Malbog',
+    'Sihi',
+    'Timbo',
+    'Yook',
+  ],
+  Gasan: [
+    'Antipolo',
+    'Bachao Ilaya',
+    'Bachao Ibaba',
+    'Bahi',
+    'Bangbang',
+    'Banot',
+    'Banuyo',
+    'Bognuyan',
+    'Cabugao',
+    'Dawis',
+  ],
+  Mogpog: [
+    'Anapog-Sibucao',
+    'Argao',
+    'Balanacan',
+    'Banto',
+    'Bintakay',
+    'Butansapa',
+    'Candahon',
+    'Danao',
+    'Guisian',
+    'Hinadharan',
+  ],
+  'Santa Cruz': [
+    'Alobo',
+    'Angas',
+    'Aturan',
+    'Baguidbirin',
+    'Baliis',
+    'Balogo',
+    'Bangcuangan',
+    'Banogbog',
+    'Biga',
+    'Botilao',
+  ],
+  Torrijos: [
+    'Bayakbakin',
+    'Bolo',
+    'Bonliw',
+    'Buangan',
+    'Cabuyo',
+    'Cagpo',
+    'Dampulan',
+    'Malibago',
+    'Mataas na Bayan',
+    'Nangka',
+  ],
+}
+
 const municipalities = ['Boac', 'Buenavista', 'Gasan', 'Mogpog', 'Santa Cruz', 'Torrijos']
 
 const hvcClassificationOptions = [
@@ -193,15 +314,21 @@ const { mutate: createDevFarmer, isPending: isCreatingFarmer } = useMutation({
   mutationFn: async () => {
     const randomNum = Math.floor(Math.random() * 10000)
     const randomMunicipality = municipalities[Math.floor(Math.random() * municipalities.length)]
+    const randomFirstName = firstNames[Math.floor(Math.random() * firstNames.length)]
+    const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)]
+    const municipalityBarangays = barangaysPerMunicipality[randomMunicipality]
+    const randomBarangay =
+      municipalityBarangays[Math.floor(Math.random() * municipalityBarangays.length)]
+
     const response = await axiosInstance.post('/api/farmers', {
-      name: `Test Farmer ${randomNum}`,
+      name: `${randomFirstName} ${randomLastName}`,
       gender: Math.random() > 0.5 ? 'male' : 'female',
       rsbsa: `RSBSA-${randomNum}`,
       landsize: (Math.random() * 10).toFixed(2),
       association_id: selectedAssociation.value || null,
       municipality: randomMunicipality,
-      barangay: 'Test Barangay',
-      technician_id: 2, // Make sure this matches an existing technician ID
+      barangay: randomBarangay,
+      technician_id: 2,
     })
     return response.data
   },
