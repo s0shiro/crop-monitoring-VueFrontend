@@ -179,6 +179,15 @@ const router = createRouter({
             title: 'Rice Harvest Report',
           },
         },
+        {
+          path: 'reports/rice-planting',
+          name: 'rice-planting-report',
+          component: () => import('@/views/common/GenerateReports/MonthlyRicePlantingReport.vue'),
+          meta: {
+            requiredRoles: ['technician', 'admin'],
+            title: 'Monthly Rice Planting Report',
+          },
+        },
       ],
     },
     {
