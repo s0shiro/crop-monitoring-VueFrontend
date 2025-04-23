@@ -118,6 +118,10 @@ const data = {
           url: '/reports/corn-harvest',
         },
         {
+          title: 'Monthly Corn Planting Report',
+          url: '/reports/corn-planting',
+        },
+        {
           title: 'Corn Standing Report',
           url: '/reports/corn-standing',
         },
