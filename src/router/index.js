@@ -216,6 +216,15 @@ const router = createRouter({
             title: 'Corn Standing Report',
           },
         },
+        {
+          path: 'reports/high-value',
+          name: 'high-value-report',
+          component: () => import('@/views/common/GenerateReports/HighValueReport.vue'),
+          meta: {
+            requiredRoles: ['technician', 'admin'],
+            title: 'High Value Crop Report',
+          },
+        },
       ],
     },
     {

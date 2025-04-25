@@ -3,6 +3,7 @@ import NavMain from '@/components/NavMain.vue'
 import NavProjects from '@/components/NavProjects.vue'
 import NavUser from '@/components/NavUser.vue'
 import TeamSwitcher from '@/components/TeamSwitcher.vue'
+import { useUserAuth } from '@/composables/useUserAuth'
 import {
   Sidebar,
   SidebarContent,
@@ -25,12 +26,63 @@ import {
   Users,
   FileText,
 } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 const props = defineProps({
   side: { type: String, required: false },
   variant: { type: String, required: false },
   collapsible: { type: String, required: false, default: 'icon' },
   class: { type: null, required: false },
+})
+
+const { hasPermission } = useUserAuth()
+
+// Filter navigation items based on permissions
+const filteredNavMain = computed(() => {
+  return data.navMain
+    .map((section) => {
+      // First check if any items in the section should be visible
+      const filteredItems =
+        section.items?.filter((item) => {
+          switch (item.title) {
+            case 'User Management':
+              return hasPermission('manage_users')
+            case 'Crop Management':
+              return (
+                hasPermission('create_crops') ||
+                hasPermission('update_crops') ||
+                hasPermission('view_reports')
+              )
+            case 'Associations Management':
+              return (
+                hasPermission('create_associations') ||
+                hasPermission('update_associations') ||
+                hasPermission('view_associations')
+              )
+            case 'Farmer Management':
+              return (
+                hasPermission('create_farmers') ||
+                hasPermission('update_farmers') ||
+                hasPermission('view_farmers')
+              )
+            case 'Crop Planting':
+              return hasPermission('view_crop_planting') || hasPermission('manage_crop_planting')
+            // For reports, check if user has view_reports permission
+            default:
+              return section.title === 'Reports' ? hasPermission('view_reports') : true
+          }
+        }) || []
+
+      // Only return the section if it has visible items
+      if (filteredItems.length > 0) {
+        return {
+          ...section,
+          items: filteredItems,
+        }
+      }
+      return null
+    })
+    .filter((section) => section !== null)
 })
 
 // This is sample data.
@@ -125,6 +177,10 @@ const data = {
           title: 'Corn Standing Report',
           url: '/reports/corn-standing',
         },
+        {
+          title: 'High Value Crop Report',
+          url: '/reports/high-value',
+        },
       ],
     },
   ],
@@ -154,7 +210,7 @@ const data = {
       <TeamSwitcher :teams="data.teams" />
     </SidebarHeader>
     <SidebarContent>
-      <NavMain :items="data.navMain" />
+      <NavMain :items="filteredNavMain" />
       <NavProjects :projects="data.projects" />
     </SidebarContent>
     <SidebarFooter>
