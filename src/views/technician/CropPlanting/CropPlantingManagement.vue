@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
+import { useUserAuth } from '@/composables/useUserAuth'
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ import { format } from 'date-fns'
 
 const router = useRouter()
 const { toast } = useToast()
+const { hasPermission } = useUserAuth()
 
 // Filter states
 const searchQuery = ref('')
@@ -121,7 +123,13 @@ const addNewPlanting = () => {
     <!-- Header Section -->
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-extrabold text-primary">Crop Plantings</h1>
-      <Button @click="addNewPlanting" variant="default">Add New Planting</Button>
+      <Button 
+        v-if="hasPermission('manage_crop_planting')" 
+        @click="addNewPlanting" 
+        variant="default"
+      >
+        Add New Planting
+      </Button>
     </div>
 
     <!-- Status Overview Cards -->

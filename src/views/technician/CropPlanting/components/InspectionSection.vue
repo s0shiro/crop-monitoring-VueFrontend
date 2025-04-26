@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/components/ui/toast/use-toast'
+import { useUserAuth } from '@/composables/useUserAuth'
 import {
   ClipboardListIcon,
   AlertCircleIcon,
@@ -49,6 +50,7 @@ const props = defineProps({
 
 const { toast } = useToast()
 const queryClient = useQueryClient()
+const { hasPermission } = useUserAuth()
 
 // Inspection dialog state
 const showInspectionDialog = ref(false)
@@ -139,7 +141,7 @@ const handleInspectionSubmit = () => {
             <CardTitle class="text-lg">Inspections</CardTitle>
           </div>
           <Button
-            v-if="planting?.status === 'standing'"
+            v-if="planting?.status === 'standing' && hasPermission('create_inspections')"
             @click="showInspectionDialog = true"
             variant="default"
             class="gap-2"
