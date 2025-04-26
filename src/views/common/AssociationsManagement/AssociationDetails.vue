@@ -1,12 +1,23 @@
-`
 <script setup>
 import { useRoute } from 'vue-router'
-import { useQuery, useInfiniteQuery } from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 import { useToast } from '@/components/ui/toast/use-toast'
+import { Loading } from '@/components/ui/loading'
 import axiosInstance from '@/lib/axios'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Building2,
+  Users2,
+  ChevronLeft,
+  User,
+  MapPin,
+  FileText,
+  UserCircle2,
+  UserCircle,
+  Ruler,
+} from 'lucide-vue-next'
 
 const route = useRoute()
 const { toast } = useToast()
@@ -34,78 +45,147 @@ const {
 </script>
 
 <template>
-  <div class="space-y-8">
-    <div v-if="isLoadingAssociation" class="text-center py-8">
-      <div
-        class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"
-      ></div>
-      <p class="mt-2 text-muted-foreground">Loading association details...</p>
-    </div>
+  <div>
+    <Loading v-if="isLoadingAssociation">Loading association details...</Loading>
 
     <div v-else-if="associationError" class="text-center py-8 text-destructive">
-      Failed to load association details. Please try again later.
+      <p class="text-lg">Failed to load association details. Please try again later.</p>
     </div>
 
     <template v-else-if="associationData">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-extrabold text-primary">
-            {{ associationData.association.name }}
-          </h1>
-          <p class="text-muted-foreground mt-2">{{ associationData.association.description }}</p>
+      <!-- Header Section -->
+      <div class="mb-8">
+        <Button
+          variant="ghost"
+          @click="$router.back()"
+          class="mb-4 text-muted-foreground hover:text-primary"
+        >
+          <ChevronLeft class="h-4 w-4 mr-2" />
+          Back to Associations
+        </Button>
+
+        <div class="flex items-start justify-between">
+          <div class="space-y-2">
+            <div class="flex items-center gap-3">
+              <Building2 class="h-8 w-8 text-primary" />
+              <h1 class="text-3xl font-extrabold text-primary">
+                {{ associationData.association.name }}
+              </h1>
+            </div>
+            <p class="text-muted-foreground max-w-2xl pl-11">
+              {{ associationData.association.description }}
+            </p>
+          </div>
         </div>
-        <Button variant="outline" @click="$router.back()">Back</Button>
       </div>
 
-      <!-- Gender Statistics -->
-      <Card class="p-6">
-        <h2 class="text-xl font-semibold mb-4">Gender Statistics</h2>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-primary/10 rounded-lg p-4">
-            <div class="text-2xl font-bold text-primary">
-              {{ associationData.genderStats.male }}
-            </div>
-            <div class="text-sm text-muted-foreground">Male Farmers</div>
+      <!-- Stats Cards -->
+      <div class="grid gap-6 mb-8 grid-cols-1 md:grid-cols-2">
+        <!-- Gender Statistics Card -->
+        <Card class="p-6 hover:shadow-lg transition-shadow duration-200">
+          <div class="flex items-center gap-3 mb-6">
+            <Users2 class="h-5 w-5 text-primary" />
+            <h2 class="text-xl font-semibold">Gender Distribution</h2>
           </div>
-          <div class="bg-primary/10 rounded-lg p-4">
-            <div class="text-2xl font-bold text-primary">
-              {{ associationData.genderStats.female }}
-            </div>
-            <div class="text-sm text-muted-foreground">Female Farmers</div>
-          </div>
-        </div>
-      </Card>
-
-      <!-- Farmers List -->
-      <div>
-        <h2 class="text-xl font-semibold mb-4">Farmers</h2>
-        <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <Card v-for="farmer in associationData.farmers" :key="farmer.id" class="p-4">
-            <div class="flex justify-between items-start">
+          <div class="grid grid-cols-2 gap-4">
+            <div
+              class="bg-primary/5 rounded-lg p-6 flex items-center gap-4 transition-all hover:bg-primary/10"
+            >
+              <UserCircle2 class="h-8 w-8 text-blue-500" />
               <div>
-                <h3 class="font-semibold">{{ farmer.name }}</h3>
-                <p class="text-sm text-muted-foreground">
-                  {{ farmer.barangay }}, {{ farmer.municipality }}
-                </p>
-                <p class="text-sm text-muted-foreground mt-1">
-                  RSBSA: {{ farmer.rsbsa || 'Not available' }}
-                </p>
+                <div class="text-2xl font-bold text-primary">
+                  {{ associationData.genderStats.male }}
+                </div>
+                <div class="text-sm text-muted-foreground">Male Farmers</div>
               </div>
-              <Badge :variant="farmer.gender === 'male' ? 'default' : 'secondary'">
-                {{ farmer.gender }}
-              </Badge>
             </div>
-          </Card>
+            <div
+              class="bg-primary/5 rounded-lg p-6 flex items-center gap-4 transition-all hover:bg-primary/10"
+            >
+              <UserCircle class="h-8 w-8 text-pink-500" />
+              <div>
+                <div class="text-2xl font-bold text-primary">
+                  {{ associationData.genderStats.female }}
+                </div>
+                <div class="text-sm text-muted-foreground">Female Farmers</div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <!-- Total Members Card -->
+        <Card class="p-6 hover:shadow-lg transition-shadow duration-200">
+          <div class="flex items-center gap-3 mb-6">
+            <Users2 class="h-5 w-5 text-primary" />
+            <h2 class="text-xl font-semibold">Total Members</h2>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="bg-primary/5 rounded-lg p-6 flex-1">
+              <div class="text-3xl font-bold text-primary">
+                {{ associationData.totalFarmers }}
+              </div>
+              <div class="text-sm text-muted-foreground mt-1">Active Farmers</div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <!-- Farmers List Section -->
+      <div class="space-y-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <User class="h-5 w-5 text-primary" />
+            <h2 class="text-xl font-semibold">Association Members</h2>
+          </div>
         </div>
 
         <div
           v-if="associationData.farmers.length === 0"
-          class="text-center py-8 text-muted-foreground"
+          class="text-center py-12 bg-primary/5 rounded-lg"
         >
-          No farmers in this association yet.
+          <Users2 class="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+          <p class="text-muted-foreground">No farmers in this association yet.</p>
+        </div>
+
+        <div v-else class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <Card
+            v-for="farmer in associationData.farmers"
+            :key="farmer.id"
+            class="p-6 hover:shadow-lg transition-all duration-200 hover:border-primary/20 group"
+          >
+            <div class="flex justify-between items-start">
+              <div class="space-y-4 w-full">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <User class="h-5 w-5 text-primary" />
+                    <h3 class="font-semibold text-lg group-hover:text-primary transition-colors">
+                      {{ farmer.name }}
+                    </h3>
+                  </div>
+                  <Badge :variant="farmer.gender === 'male' ? 'default' : 'secondary'" class="mt-2">
+                    {{ farmer.gender }}
+                  </Badge>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin class="h-4 w-4" />
+                    <span>{{ farmer.barangay }}, {{ farmer.municipality }}</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                    <FileText class="h-4 w-4" />
+                    <span>RSBSA: {{ farmer.rsbsa || 'Not available' }}</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Ruler class="h-4 w-4" />
+                    <span>Land Size: {{ farmer.landsize }} hectares</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     </template>
   </div>
 </template>
-`
