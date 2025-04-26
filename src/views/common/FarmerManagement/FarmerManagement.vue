@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Loading } from '@/components/ui/loading'
 import {
   Select,
   SelectContent,
@@ -21,7 +22,16 @@ import {
 } from '@/components/ui/dialog'
 import { Card } from '@/components/ui/card'
 import { useAuthStore } from '@/stores/auth'
-import { MoreHorizontal } from 'lucide-vue-next'
+import {
+  MoreHorizontal,
+  Users2,
+  User,
+  MapPin,
+  Home,
+  Building2,
+  Ruler,
+  FileText,
+} from 'lucide-vue-next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,13 +52,10 @@ const formErrors = ref({})
 
 const { toast } = useToast()
 const authStore = useAuthStore()
-const queryClient = useQueryClient()  
+const queryClient = useQueryClient()
 
 // Fetch associations for the dropdown
-const {
-  data: associationsData,
-  isLoading: isLoadingAssociations,
-} = useQuery({
+const { data: associationsData, isLoading: isLoadingAssociations } = useQuery({
   queryKey: ['associations-dropdown'],
   queryFn: async () => {
     const response = await axiosInstance.get('/api/associations')
@@ -57,10 +64,7 @@ const {
 })
 
 // Fetch technicians if user is admin
-const {
-  data: technicians,
-  isLoading: isLoadingTechnicians,
-} = useQuery({
+const { data: technicians, isLoading: isLoadingTechnicians } = useQuery({
   queryKey: ['technicians'],
   queryFn: async () => {
     const response = await axiosInstance.get('/api/users/technicians')
@@ -159,16 +163,22 @@ const resetForm = () => {
 <template>
   <div class="space-y-8">
     <div class="flex items-center justify-between">
-      <h1 class="text-3xl font-extrabold text-primary">Farmer Management</h1>
-      <Button @click="showAddFarmerDialog = true" variant="default">Add Farmer</Button>
+      <div class="flex items-center gap-3">
+        <Users2 class="h-8 w-8 text-primary" />
+        <h1 class="text-3xl font-extrabold text-primary">Farmer Management</h1>
+      </div>
+      <Button @click="showAddFarmerDialog = true" variant="default" class="gap-2">
+        <User class="h-4 w-4" />
+        Add Farmer
+      </Button>
     </div>
 
-    <div v-if="isLoadingFarmers" class="text-center text-muted-foreground py-4 italic">
-      Loading farmers...
+    <Loading v-if="isLoadingFarmers">Loading farmers...</Loading>
+
+    <div v-else-if="farmersError" class="text-center py-8 text-destructive">
+      Failed to load farmers. Please try again later.
     </div>
-    <div v-else-if="farmersError" class="text-center text-destructive py-4 italic">
-      Failed to load farmers.
-    </div>
+
     <div v-else>
       <div
         v-if="
@@ -176,7 +186,7 @@ const resetForm = () => {
           farmersData.pages.length === 0 ||
           farmersData.pages.every((page) => page.data.length === 0)
         "
-        class="text-center text-muted-foreground py-4 italic"
+        class="text-center text-muted-foreground py-8"
       >
         No farmers available.
       </div>
@@ -185,13 +195,30 @@ const resetForm = () => {
           <Card
             v-for="farmer in page.data"
             :key="farmer.id"
-            class="flex flex-col items-start p-4 shadow-md hover:shadow-lg transition-shadow rounded-lg"
+            class="group flex flex-col p-6 shadow-md hover:shadow-lg transition-all duration-200 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-primary/5"
           >
             <div class="flex justify-between w-full">
-              <h3 class="text-lg font-semibold text-primary">{{ farmer.name }}</h3>
+              <div class="flex items-start gap-3">
+                <User class="h-5 w-5 text-primary mt-1" />
+                <div>
+                  <h3 class="text-xl font-bold text-primary">{{ farmer.name }}</h3>
+                  <div class="flex items-center gap-2 mt-1">
+                    <FileText class="h-4 w-4 text-blue-500" />
+                    <p class="text-sm text-muted-foreground">
+                      RSBSA:
+                      <span class="font-medium text-foreground">{{
+                        farmer.rsbsa || 'Not available'
+                      }}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger as-child>
-                  <Button variant="ghost" class="p-2">
+                  <Button
+                    variant="ghost"
+                    class="p-2 -mt-1 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
                     <MoreHorizontal class="h-5 w-5 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -202,19 +229,58 @@ const resetForm = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <p class="text-sm text-muted-foreground">RSBSA: {{ farmer.rsbsa || 'Not available' }}</p>
-            <p class="text-sm text-muted-foreground">{{ farmer.barangay }}, {{ farmer.municipality }}</p>
-            <p class="text-sm text-muted-foreground">
-              Association: {{ farmer.association?.name || 'Not assigned' }}
-            </p>
+
+            <div class="grid grid-cols-2 gap-4 mt-4">
+              <div class="flex items-center gap-2">
+                <MapPin class="h-4 w-4 text-green-500" />
+                <div class="text-sm">
+                  <p class="text-muted-foreground">Barangay</p>
+                  <p class="font-medium">{{ farmer.barangay }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <Home class="h-4 w-4 text-orange-500" />
+                <div class="text-sm">
+                  <p class="text-muted-foreground">Municipality</p>
+                  <p class="font-medium">{{ farmer.municipality }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 mt-4">
+              <Building2 class="h-4 w-4 text-purple-500" />
+              <p class="text-sm">
+                <span class="text-muted-foreground">Association:</span>
+                <span class="font-medium ml-1">{{
+                  farmer.association?.name || 'Not assigned'
+                }}</span>
+              </p>
+            </div>
+
+            <div v-if="farmer.landsize" class="flex items-center gap-2 mt-2">
+              <Ruler class="h-4 w-4 text-yellow-500" />
+              <p class="text-sm">
+                <span class="text-muted-foreground">Land Size:</span>
+                <span class="font-medium ml-1">{{ farmer.landsize }} hectares</span>
+              </p>
+            </div>
           </Card>
         </template>
       </div>
+
       <div class="text-center mt-6">
-        <Button v-if="hasNextPage && !isFetchingNextPage" @click="fetchNextPage" variant="default">
-          Load More
+        <Button
+          v-if="hasNextPage && !isFetchingNextPage"
+          @click="fetchNextPage"
+          variant="default"
+          class="gap-2"
+        >
+          <span>Load More</span>
+          <Users2 class="h-4 w-4" />
         </Button>
-        <div v-else-if="isFetchingNextPage" class="text-muted-foreground italic">Loading...</div>
+        <div v-else-if="isFetchingNextPage" class="text-muted-foreground italic">
+          Loading more...
+        </div>
       </div>
     </div>
 
@@ -222,7 +288,10 @@ const resetForm = () => {
     <Dialog :open="showAddFarmerDialog" @update:open="showAddFarmerDialog = $event">
       <DialogContent class="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle class="text-lg font-semibold text-primary">Add Farmer</DialogTitle>
+          <DialogTitle class="flex items-center gap-2 text-lg font-semibold text-primary">
+            <User class="h-5 w-5" />
+            Add Farmer
+          </DialogTitle>
         </DialogHeader>
         <div class="grid gap-4 py-4 md:grid-cols-2">
           <div class="space-y-2">
@@ -233,18 +302,20 @@ const resetForm = () => {
               placeholder="Enter farmer name"
               :class="[
                 'border-muted focus:ring-primary rounded-lg',
-                formErrors.name ? 'border-destructive' : ''
+                formErrors.name ? 'border-destructive' : '',
               ]"
             />
             <p v-if="formErrors.name" class="text-xs text-destructive">{{ formErrors.name[0] }}</p>
           </div>
           <div class="space-y-2">
-            <label for="gender" class="block text-sm font-medium text-muted-foreground">Gender</label>
+            <label for="gender" class="block text-sm font-medium text-muted-foreground"
+              >Gender</label
+            >
             <Select v-model="gender">
-              <SelectTrigger 
+              <SelectTrigger
                 :class="[
                   'w-full border-muted focus:ring-primary rounded-lg',
-                  formErrors.gender ? 'border-destructive' : ''
+                  formErrors.gender ? 'border-destructive' : '',
                 ]"
               >
                 <SelectValue placeholder="Select gender" />
@@ -254,7 +325,9 @@ const resetForm = () => {
                 <SelectItem value="female">Female</SelectItem>
               </SelectContent>
             </Select>
-            <p v-if="formErrors.gender" class="text-xs text-destructive">{{ formErrors.gender[0] }}</p>
+            <p v-if="formErrors.gender" class="text-xs text-destructive">
+              {{ formErrors.gender[0] }}
+            </p>
           </div>
           <div class="space-y-2">
             <label for="rsbsa" class="block text-sm font-medium text-muted-foreground">RSBSA</label>
@@ -264,13 +337,17 @@ const resetForm = () => {
               placeholder="Enter RSBSA number"
               :class="[
                 'border-muted focus:ring-primary rounded-lg',
-                formErrors.rsbsa ? 'border-destructive' : ''
+                formErrors.rsbsa ? 'border-destructive' : '',
               ]"
             />
-            <p v-if="formErrors.rsbsa" class="text-xs text-destructive">{{ formErrors.rsbsa[0] }}</p>
+            <p v-if="formErrors.rsbsa" class="text-xs text-destructive">
+              {{ formErrors.rsbsa[0] }}
+            </p>
           </div>
           <div class="space-y-2">
-            <label for="landsize" class="block text-sm font-medium text-muted-foreground">Land Size (hectares)</label>
+            <label for="landsize" class="block text-sm font-medium text-muted-foreground"
+              >Land Size (hectares)</label
+            >
             <Input
               id="landsize"
               v-model="landsize"
@@ -280,44 +357,56 @@ const resetForm = () => {
               placeholder="Enter land size"
               :class="[
                 'border-muted focus:ring-primary rounded-lg',
-                formErrors.landsize ? 'border-destructive' : ''
+                formErrors.landsize ? 'border-destructive' : '',
               ]"
             />
-            <p v-if="formErrors.landsize" class="text-xs text-destructive">{{ formErrors.landsize[0] }}</p>
+            <p v-if="formErrors.landsize" class="text-xs text-destructive">
+              {{ formErrors.landsize[0] }}
+            </p>
           </div>
           <div class="space-y-2">
-            <label for="barangay" class="block text-sm font-medium text-muted-foreground">Barangay</label>
+            <label for="barangay" class="block text-sm font-medium text-muted-foreground"
+              >Barangay</label
+            >
             <Input
               id="barangay"
               v-model="barangay"
               placeholder="Enter barangay"
               :class="[
                 'border-muted focus:ring-primary rounded-lg',
-                formErrors.barangay ? 'border-destructive' : ''
+                formErrors.barangay ? 'border-destructive' : '',
               ]"
             />
-            <p v-if="formErrors.barangay" class="text-xs text-destructive">{{ formErrors.barangay[0] }}</p>
+            <p v-if="formErrors.barangay" class="text-xs text-destructive">
+              {{ formErrors.barangay[0] }}
+            </p>
           </div>
           <div class="space-y-2">
-            <label for="municipality" class="block text-sm font-medium text-muted-foreground">Municipality</label>
+            <label for="municipality" class="block text-sm font-medium text-muted-foreground"
+              >Municipality</label
+            >
             <Input
               id="municipality"
               v-model="municipality"
               placeholder="Enter municipality"
               :class="[
                 'border-muted focus:ring-primary rounded-lg',
-                formErrors.municipality ? 'border-destructive' : ''
+                formErrors.municipality ? 'border-destructive' : '',
               ]"
             />
-            <p v-if="formErrors.municipality" class="text-xs text-destructive">{{ formErrors.municipality[0] }}</p>
+            <p v-if="formErrors.municipality" class="text-xs text-destructive">
+              {{ formErrors.municipality[0] }}
+            </p>
           </div>
           <div class="space-y-2">
-            <label for="association" class="block text-sm font-medium text-muted-foreground">Association</label>
+            <label for="association" class="block text-sm font-medium text-muted-foreground"
+              >Association</label
+            >
             <Select v-model="associationId">
-              <SelectTrigger 
+              <SelectTrigger
                 :class="[
                   'w-full border-muted focus:ring-primary rounded-lg',
-                  formErrors.association_id ? 'border-destructive' : ''
+                  formErrors.association_id ? 'border-destructive' : '',
                 ]"
               >
                 <SelectValue placeholder="Select association" />
@@ -328,15 +417,19 @@ const resetForm = () => {
                 </SelectItem>
               </SelectContent>
             </Select>
-            <p v-if="formErrors.association_id" class="text-xs text-destructive">{{ formErrors.association_id[0] }}</p>
+            <p v-if="formErrors.association_id" class="text-xs text-destructive">
+              {{ formErrors.association_id[0] }}
+            </p>
           </div>
           <div v-if="authStore.hasRole('admin')" class="space-y-2">
-            <label for="technician" class="block text-sm font-medium text-muted-foreground">Assign Technician</label>
+            <label for="technician" class="block text-sm font-medium text-muted-foreground"
+              >Assign Technician</label
+            >
             <Select v-model="technicianId">
-              <SelectTrigger 
+              <SelectTrigger
                 :class="[
                   'w-full border-muted focus:ring-primary rounded-lg',
-                  formErrors.technician_id ? 'border-destructive' : ''
+                  formErrors.technician_id ? 'border-destructive' : '',
                 ]"
               >
                 <SelectValue placeholder="Select technician" />
@@ -347,7 +440,9 @@ const resetForm = () => {
                 </SelectItem>
               </SelectContent>
             </Select>
-            <p v-if="formErrors.technician_id" class="text-xs text-destructive">{{ formErrors.technician_id[0] }}</p>
+            <p v-if="formErrors.technician_id" class="text-xs text-destructive">
+              {{ formErrors.technician_id[0] }}
+            </p>
           </div>
         </div>
         <DialogFooter class="mt-6">

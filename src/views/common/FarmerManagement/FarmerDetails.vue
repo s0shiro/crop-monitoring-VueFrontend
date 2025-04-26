@@ -21,6 +21,13 @@ import {
   UserIcon,
   MapPinIcon,
   Loader2,
+  UsersIcon,
+  HomeIcon,
+  ClipboardIcon,
+  RulerIcon,
+  CalendarIcon,
+  BuildingIcon,
+  ShieldIcon,
 } from 'lucide-vue-next'
 import axiosInstance from '@/lib/axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
@@ -189,19 +196,47 @@ const handleDelete = () => {
 <template>
   <div class="space-y-8">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 pb-4"
+    >
       <div class="flex items-center gap-4">
-        <Button @click="router.back()" variant="ghost" class="rounded-full">
+        <Button
+          @click="router.back()"
+          variant="ghost"
+          class="rounded-full hover:bg-primary/10 transition-colors"
+        >
           <ArrowLeftIcon class="w-4 h-4" />
         </Button>
-        <h1 class="text-3xl font-extrabold tracking-tight">Farmer Details</h1>
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight text-primary">Farmer Details</h1>
+          <p class="text-sm text-muted-foreground mt-1" v-if="farmer">
+            Member since
+            {{
+              new Date(farmer.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })
+            }}
+          </p>
+        </div>
       </div>
       <div class="flex items-center gap-2">
-        <Button @click="startEditing" variant="outline" class="gap-2" v-if="!isEditing">
+        <Button
+          @click="startEditing"
+          variant="outline"
+          class="gap-2 hover:border-primary/50 transition-colors"
+          v-if="!isEditing"
+        >
           <PencilIcon class="w-4 h-4" />
           Edit Details
         </Button>
-        <Button @click="confirmDelete" variant="destructive" :disabled="isDeleting" class="gap-2">
+        <Button
+          @click="confirmDelete"
+          variant="destructive"
+          :disabled="isDeleting"
+          class="gap-2 hover:bg-destructive/90 transition-colors"
+        >
           <Trash2Icon class="w-4 h-4" />
           {{ isDeleting ? 'Deleting...' : 'Delete' }}
         </Button>
@@ -219,9 +254,9 @@ const handleDelete = () => {
     </div>
 
     <!-- Content -->
-    <div v-else-if="farmer" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div v-else-if="farmer" class="space-y-6">
       <!-- Edit Mode -->
-      <Card v-if="isEditing" class="lg:col-span-3">
+      <Card v-if="isEditing" class="transition-all duration-300 ease-in-out">
         <CardHeader>
           <CardTitle class="flex items-center gap-2">
             <PencilIcon class="w-5 h-5 text-primary" />
@@ -231,22 +266,30 @@ const handleDelete = () => {
         <CardContent>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-4">
-              <div>
-                <label for="edit-name" class="text-sm font-medium text-muted-foreground"
+              <div class="relative group">
+                <label
+                  for="edit-name"
+                  class="text-sm font-medium text-muted-foreground group-focus-within:text-primary transition-colors"
                   >Name</label
                 >
-                <Input
-                  id="edit-name"
-                  v-model="formData.name"
-                  placeholder="Enter farmer name"
-                  class="mt-1.5"
-                />
+                <div class="relative">
+                  <UserIcon
+                    class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
+                  />
+                  <Input
+                    id="edit-name"
+                    v-model="formData.name"
+                    placeholder="Enter farmer name"
+                    class="mt-1.5 pl-10"
+                  />
+                </div>
               </div>
-              <div>
+
+              <div class="space-y-1.5">
                 <label for="edit-gender" class="text-sm font-medium text-muted-foreground"
                   >Gender</label
                 >
-                <Select v-model="formData.gender" class="mt-1.5">
+                <Select v-model="formData.gender">
                   <SelectTrigger class="w-full">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
@@ -256,60 +299,93 @@ const handleDelete = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <label for="edit-rsbsa" class="text-sm font-medium text-muted-foreground"
+
+              <div class="relative group">
+                <label
+                  for="edit-rsbsa"
+                  class="text-sm font-medium text-muted-foreground group-focus-within:text-primary transition-colors"
                   >RSBSA Number</label
                 >
-                <Input
-                  id="edit-rsbsa"
-                  v-model="formData.rsbsa"
-                  placeholder="Enter RSBSA number"
-                  class="mt-1.5"
-                />
+                <div class="relative">
+                  <ClipboardIcon
+                    class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
+                  />
+                  <Input
+                    id="edit-rsbsa"
+                    v-model="formData.rsbsa"
+                    placeholder="Enter RSBSA number"
+                    class="mt-1.5 pl-10"
+                  />
+                </div>
               </div>
-              <div>
-                <label for="edit-landsize" class="text-sm font-medium text-muted-foreground"
+
+              <div class="relative group">
+                <label
+                  for="edit-landsize"
+                  class="text-sm font-medium text-muted-foreground group-focus-within:text-primary transition-colors"
                   >Land Size (hectares)</label
                 >
-                <Input
-                  id="edit-landsize"
-                  v-model="formData.landsize"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Enter land size"
-                  class="mt-1.5"
-                />
+                <div class="relative">
+                  <RulerIcon
+                    class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
+                  />
+                  <Input
+                    id="edit-landsize"
+                    v-model="formData.landsize"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="Enter land size"
+                    class="mt-1.5 pl-10"
+                  />
+                </div>
               </div>
             </div>
+
             <div class="space-y-4">
-              <div>
-                <label for="edit-barangay" class="text-sm font-medium text-muted-foreground"
+              <div class="relative group">
+                <label
+                  for="edit-barangay"
+                  class="text-sm font-medium text-muted-foreground group-focus-within:text-primary transition-colors"
                   >Barangay</label
                 >
-                <Input
-                  id="edit-barangay"
-                  v-model="formData.barangay"
-                  placeholder="Enter barangay"
-                  class="mt-1.5"
-                />
+                <div class="relative">
+                  <MapPinIcon
+                    class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
+                  />
+                  <Input
+                    id="edit-barangay"
+                    v-model="formData.barangay"
+                    placeholder="Enter barangay"
+                    class="mt-1.5 pl-10"
+                  />
+                </div>
               </div>
-              <div>
-                <label for="edit-municipality" class="text-sm font-medium text-muted-foreground"
+
+              <div class="relative group">
+                <label
+                  for="edit-municipality"
+                  class="text-sm font-medium text-muted-foreground group-focus-within:text-primary transition-colors"
                   >Municipality</label
                 >
-                <Input
-                  id="edit-municipality"
-                  v-model="formData.municipality"
-                  placeholder="Enter municipality"
-                  class="mt-1.5"
-                />
+                <div class="relative">
+                  <HomeIcon
+                    class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
+                  />
+                  <Input
+                    id="edit-municipality"
+                    v-model="formData.municipality"
+                    placeholder="Enter municipality"
+                    class="mt-1.5 pl-10"
+                  />
+                </div>
               </div>
-              <div>
+
+              <div class="space-y-1.5">
                 <label for="edit-association" class="text-sm font-medium text-muted-foreground"
                   >Association</label
                 >
-                <Select v-model="formData.association_id" class="mt-1.5">
+                <Select v-model="formData.association_id">
                   <SelectTrigger>
                     <SelectValue placeholder="Select association" />
                   </SelectTrigger>
@@ -320,11 +396,12 @@ const handleDelete = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div v-if="authStore.hasRole('admin')">
+
+              <div v-if="authStore.hasRole('admin')" class="space-y-1.5">
                 <label for="edit-technician" class="text-sm font-medium text-muted-foreground"
                   >Assign Technician</label
                 >
-                <Select v-model="formData.technician_id" class="mt-1.5">
+                <Select v-model="formData.technician_id">
                   <SelectTrigger>
                     <SelectValue placeholder="Select technician" />
                   </SelectTrigger>
@@ -337,12 +414,22 @@ const handleDelete = () => {
               </div>
             </div>
           </div>
+
           <div class="flex justify-end gap-2 mt-8">
-            <Button variant="ghost" @click="cancelEditing" class="gap-2">
+            <Button
+              variant="ghost"
+              @click="cancelEditing"
+              class="gap-2 hover:bg-destructive/10 hover:text-destructive transition-colors"
+            >
               <XIcon class="w-4 h-4" />
               Cancel
             </Button>
-            <Button @click="handleUpdate" :disabled="isUpdating" variant="default" class="gap-2">
+            <Button
+              @click="handleUpdate"
+              :disabled="isUpdating"
+              variant="default"
+              class="gap-2 bg-primary hover:bg-primary/90 transition-colors"
+            >
               <SaveIcon class="w-4 h-4" />
               {{ isUpdating ? 'Updating...' : 'Save Changes' }}
             </Button>
@@ -350,112 +437,186 @@ const handleDelete = () => {
         </CardContent>
       </Card>
 
-      <!-- View Mode -->
-      <template v-else>
-        <!-- Personal Information Card -->
-        <Card>
-          <CardHeader>
-            <CardTitle class="flex items-center gap-2 text-lg">
-              <UserIcon class="w-5 h-5 text-primary" />
-              Personal Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent class="space-y-4">
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Full Name</p>
-              <p class="text-lg font-medium mt-1">{{ farmer.name }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Gender</p>
-              <p class="text-lg capitalize mt-1">{{ farmer.gender }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">RSBSA Number</p>
-              <p class="text-lg mt-1">{{ farmer.rsbsa || 'Not available' }}</p>
+      <!-- View Mode - Bento Grid Layout -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Name Card - Span 2 columns -->
+        <Card
+          class="md:col-span-2 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-primary/5 to-transparent"
+        >
+          <CardContent class="p-6">
+            <div class="flex items-start gap-3">
+              <div class="p-2 rounded-full bg-primary/10">
+                <UserIcon class="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p class="text-sm font-medium text-muted-foreground">Full Name</p>
+                <h3 class="text-2xl font-bold text-primary mt-1">{{ farmer.name }}</h3>
+                <p class="text-sm text-muted-foreground mt-2">
+                  Member since
+                  {{
+                    new Date(farmer.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })
+                  }}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <!-- Location Card -->
-        <Card>
-          <CardHeader>
-            <CardTitle class="flex items-center gap-2 text-lg">
-              <MapPinIcon class="w-5 h-5 text-primary" />
-              Location Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent class="space-y-4">
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Land Size</p>
-              <p class="text-lg mt-1">
+        <!-- RSBSA Card -->
+        <Card
+          class="group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-500/5 to-transparent"
+        >
+          <CardContent class="p-6">
+            <div class="flex flex-col h-full">
+              <div class="p-2 rounded-full bg-blue-500/10 w-fit">
+                <ClipboardIcon class="w-5 h-5 text-blue-500" />
+              </div>
+              <p class="text-sm font-medium text-muted-foreground mt-4">RSBSA Number</p>
+              <p class="text-lg font-semibold mt-1">{{ farmer.rsbsa || 'Not available' }}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- Gender Card -->
+        <Card
+          class="group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-500/5 to-transparent"
+        >
+          <CardContent class="p-6">
+            <div class="flex flex-col h-full">
+              <div class="p-2 rounded-full bg-green-500/10 w-fit">
+                <ShieldIcon class="w-5 h-5 text-green-500" />
+              </div>
+              <p class="text-sm font-medium text-muted-foreground mt-4">Gender</p>
+              <p class="text-lg font-semibold capitalize mt-1">{{ farmer.gender }}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- Location Card - Span 2 columns -->
+        <Card
+          class="md:col-span-2 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-orange-500/5 to-transparent"
+        >
+          <CardContent class="p-6">
+            <div class="flex flex-col">
+              <div class="p-2 rounded-full bg-orange-500/10 w-fit">
+                <MapPinIcon class="w-5 h-5 text-orange-500" />
+              </div>
+              <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                  <p class="text-sm font-medium text-muted-foreground">Barangay</p>
+                  <p class="text-lg font-semibold mt-1">{{ farmer.barangay }}</p>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-muted-foreground">Municipality</p>
+                  <p class="text-lg font-semibold mt-1">{{ farmer.municipality }}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- Land Size Card -->
+        <Card
+          class="group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-yellow-500/5 to-transparent"
+        >
+          <CardContent class="p-6">
+            <div class="flex flex-col h-full">
+              <div class="p-2 rounded-full bg-yellow-500/10 w-fit">
+                <RulerIcon class="w-5 h-5 text-yellow-500" />
+              </div>
+              <p class="text-sm font-medium text-muted-foreground mt-4">Land Size</p>
+              <p class="text-lg font-semibold mt-1">
                 {{ farmer.landsize ? `${farmer.landsize} hectares` : 'Not specified' }}
               </p>
             </div>
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Barangay</p>
-              <p class="text-lg mt-1">{{ farmer.barangay }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Municipality</p>
-              <p class="text-lg mt-1">{{ farmer.municipality }}</p>
-            </div>
           </CardContent>
         </Card>
 
-        <!-- Association & Technical Support -->
-        <Card>
-          <CardHeader>
-            <CardTitle class="flex items-center gap-2 text-lg">
-              <UsersIcon class="w-5 h-5 text-primary" />
-              Association & Support
-            </CardTitle>
-          </CardHeader>
-          <CardContent class="space-y-4">
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Farmers Association</p>
-              <p class="text-lg mt-1">{{ farmer.association?.name || 'Not assigned' }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Technical Support</p>
-              <p class="text-lg mt-1">{{ farmer.technician?.name || 'Not assigned' }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Member Since</p>
-              <p class="text-lg mt-1">
-                {{
-                  new Date(farmer.created_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })
-                }}
+        <!-- Association Card -->
+        <Card
+          class="group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-purple-500/5 to-transparent"
+        >
+          <CardContent class="p-6">
+            <div class="flex flex-col h-full">
+              <div class="p-2 rounded-full bg-purple-500/10 w-fit">
+                <BuildingIcon class="w-5 h-5 text-purple-500" />
+              </div>
+              <p class="text-sm font-medium text-muted-foreground mt-4">Farmers Association</p>
+              <p class="text-lg font-semibold mt-1">
+                {{ farmer.association?.name || 'Not assigned' }}
               </p>
             </div>
           </CardContent>
         </Card>
-      </template>
+
+        <!-- Technical Support Card - Span full width -->
+        <Card
+          class="md:col-span-2 lg:col-span-4 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-indigo-500/5 to-transparent"
+        >
+          <CardContent class="p-6">
+            <div class="flex items-start gap-4">
+              <div class="p-2 rounded-full bg-indigo-500/10">
+                <UsersIcon class="w-5 h-5 text-indigo-500" />
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-medium text-muted-foreground">Technical Support</p>
+                    <p class="text-lg font-semibold mt-1">
+                      {{ farmer.technician?.name || 'Not assigned' }}
+                    </p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm font-medium text-muted-foreground">Last Updated</p>
+                    <p class="text-sm mt-1">
+                      {{
+                        new Date(farmer.updated_at).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
 
     <!-- Delete Confirmation Dialog -->
     <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle class="text-lg font-semibold">Delete Farmer</DialogTitle>
-          <DialogDescription class="text-sm text-muted-foreground">
+          <DialogTitle class="flex items-center gap-2 text-lg font-semibold text-destructive">
+            <Trash2Icon class="w-5 h-5" />
+            Delete Farmer
+          </DialogTitle>
+          <DialogDescription class="text-sm text-muted-foreground mt-2">
             Are you sure you want to delete this farmer? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="ghost" class="hover:bg-muted/10" @click="showDeleteDialog = false">
+        <DialogFooter class="mt-4">
+          <Button
+            variant="ghost"
+            class="hover:bg-muted/10 transition-colors"
+            @click="showDeleteDialog = false"
+          >
             Cancel
           </Button>
           <Button
             variant="destructive"
-            class="hover:bg-destructive/90"
+            class="hover:bg-destructive/90 transition-colors gap-2"
             :disabled="isDeleting"
             @click="handleDelete"
           >
-            <Loader2 v-if="isDeleting" class="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 v-if="isDeleting" class="h-4 w-4 animate-spin" />
             {{ isDeleting ? 'Deleting...' : 'Delete' }}
           </Button>
         </DialogFooter>
