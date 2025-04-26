@@ -162,12 +162,12 @@ const resetForm = () => {
 
 <template>
   <div class="space-y-8">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-3">
       <div class="flex items-center gap-3">
-        <Users2 class="h-8 w-8 text-primary" />
-        <h1 class="text-3xl font-extrabold text-primary">Farmer Management</h1>
+        <Users2 class="h-8 w-8 text-primary shrink-0" />
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-primary break-words">Farmer Management</h1>
       </div>
-      <Button @click="showAddFarmerDialog = true" variant="default" class="gap-2">
+      <Button @click="showAddFarmerDialog = true" variant="default" class="gap-2 whitespace-nowrap">
         <User class="h-4 w-4" />
         Add Farmer
       </Button>

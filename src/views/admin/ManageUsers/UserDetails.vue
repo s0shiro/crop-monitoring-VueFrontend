@@ -14,14 +14,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
 import { ChevronLeft, Loader2, Trash2, Pencil } from 'lucide-vue-next'
 import { useToast } from '@/components/ui/toast/use-toast'
 import { Input } from '@/components/ui/input'
@@ -228,59 +220,51 @@ const allPermissions = computed(() => {
 
 <template>
   <div class="space-y-8">
-    <!-- Breadcrumb and Actions -->
-    <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <RouterLink :to="{ name: 'dashboard' }">
-              <BreadcrumbLink>Dashboard</BreadcrumbLink>
-            </RouterLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <RouterLink :to="{ name: 'user-management' }">
-              <BreadcrumbLink>Users</BreadcrumbLink>
-            </RouterLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>User Details</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
+    <!-- Actions -->
+    <div
+      class="flex items-center justify-between bg-white/50 backdrop-blur-sm p-4 rounded-lg border border-border/50"
+    >
       <div class="flex items-center gap-3">
         <Button
           variant="ghost"
           size="sm"
-          class="hover:bg-muted/10"
+          class="hover:bg-muted/10 transition-colors"
           @click="router.push({ name: 'user-management' })"
         >
           <ChevronLeft class="h-4 w-4 mr-1" /> Back
         </Button>
-        <Button v-if="!isEditMode" size="sm" class="hover:bg-primary/10" @click="isEditMode = true">
+        <Button
+          v-if="!isEditMode"
+          size="sm"
+          class="hover:bg-primary/90 transition-colors"
+          @click="isEditMode = true"
+        >
           <Pencil class="w-4 h-4 mr-1" /> Edit
         </Button>
         <template v-else>
           <Button
             size="sm"
             variant="default"
-            class="hover:bg-primary/90"
+            class="hover:bg-primary/90 transition-colors"
             @click="handleDetailsSubmit"
             :disabled="isUpdatingDetails"
           >
             <Loader2 v-if="isUpdatingDetails" class="mr-2 h-4 w-4 animate-spin" />
             {{ isUpdatingDetails ? 'Saving...' : 'Save' }}
           </Button>
-          <Button size="sm" variant="outline" class="hover:bg-muted/10" @click="isEditMode = false"
-            >Cancel</Button
+          <Button
+            size="sm"
+            variant="outline"
+            class="hover:bg-muted/10 transition-colors"
+            @click="isEditMode = false"
           >
+            Cancel
+          </Button>
         </template>
         <Button
           size="sm"
           variant="destructive"
-          class="hover:bg-destructive/90"
+          class="hover:bg-destructive/90 transition-colors"
           @click="showDeleteDialog = true"
         >
           <Trash2 class="w-4 h-4 mr-1" /> Delete
@@ -291,42 +275,51 @@ const allPermissions = computed(() => {
     <!-- User Details Section -->
     <div class="grid gap-8">
       <!-- Basic Information Card -->
-      <Card class="shadow-lg">
-        <CardHeader class="space-y-2">
-          <CardTitle class="text-lg font-semibold">Basic Information</CardTitle>
-          <CardDescription class="text-sm text-muted-foreground"
-            >Manage user's profile information</CardDescription
-          >
+      <Card class="shadow-lg border border-border/50 backdrop-blur-sm">
+        <CardHeader class="space-y-2 border-b border-border/50 bg-muted/5">
+          <CardTitle class="text-xl font-semibold text-foreground/90">Basic Information</CardTitle>
+          <CardDescription class="text-sm text-muted-foreground">
+            Manage user's profile information
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div v-if="userDetails" class="grid gap-6 sm:grid-cols-2">
-            <div class="space-y-2">
-              <Label class="text-sm font-medium">Username</Label>
-              <div v-if="!isEditMode" class="text-sm text-foreground">
+        <CardContent class="pt-6">
+          <div v-if="userDetails" class="grid gap-8 sm:grid-cols-2">
+            <div class="space-y-3">
+              <Label class="text-sm font-medium text-foreground/80">Username</Label>
+              <div
+                v-if="!isEditMode"
+                class="text-sm text-foreground p-2 rounded-md bg-muted/5 border border-border/50"
+              >
                 {{ userDetails.user.username }}
               </div>
               <Input
                 v-else
                 v-model="detailsForm.username"
                 required
-                class="border-muted focus:ring-primary"
+                class="border-muted focus:ring-primary transition-shadow"
               />
             </div>
-            <div class="space-y-2">
-              <Label class="text-sm font-medium">Name</Label>
-              <div v-if="!isEditMode" class="text-sm text-foreground">
+            <div class="space-y-3">
+              <Label class="text-sm font-medium text-foreground/80">Name</Label>
+              <div
+                v-if="!isEditMode"
+                class="text-sm text-foreground p-2 rounded-md bg-muted/5 border border-border/50"
+              >
                 {{ userDetails.user.name }}
               </div>
               <Input
                 v-else
                 v-model="detailsForm.name"
                 required
-                class="border-muted focus:ring-primary"
+                class="border-muted focus:ring-primary transition-shadow"
               />
             </div>
-            <div class="space-y-2">
-              <Label class="text-sm font-medium">Email</Label>
-              <div v-if="!isEditMode" class="text-sm text-foreground">
+            <div class="space-y-3">
+              <Label class="text-sm font-medium text-foreground/80">Email</Label>
+              <div
+                v-if="!isEditMode"
+                class="text-sm text-foreground p-2 rounded-md bg-muted/5 border border-border/50"
+              >
                 {{ userDetails.user.email }}
               </div>
               <Input
@@ -334,23 +327,23 @@ const allPermissions = computed(() => {
                 type="email"
                 v-model="detailsForm.email"
                 required
-                class="border-muted focus:ring-primary"
+                class="border-muted focus:ring-primary transition-shadow"
               />
             </div>
-            <div v-if="isEditMode" class="space-y-2">
-              <Label class="text-sm font-medium">Password</Label>
+            <div v-if="isEditMode" class="space-y-3">
+              <Label class="text-sm font-medium text-foreground/80">Password</Label>
               <Input
                 type="password"
                 v-model="detailsForm.password"
                 placeholder="Leave blank to keep current password"
-                class="border-muted focus:ring-primary"
+                class="border-muted focus:ring-primary transition-shadow"
               />
             </div>
-            <div class="space-y-2">
-              <Label class="text-sm font-medium">Role</Label>
+            <div class="space-y-3">
+              <Label class="text-sm font-medium text-foreground/80">Role</Label>
               <div
                 v-if="!isEditMode"
-                class="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary"
+                class="inline-flex items-center rounded-md bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary border border-primary/20"
               >
                 {{ userDetails.roles[0] }}
               </div>
@@ -365,18 +358,21 @@ const allPermissions = computed(() => {
               </Select>
             </div>
           </div>
-          <div v-else class="text-sm text-muted-foreground">Loading user details...</div>
+          <div v-else class="text-sm text-muted-foreground flex items-center justify-center py-8">
+            <Loader2 class="w-5 h-5 animate-spin mr-2" />
+            Loading user details...
+          </div>
         </CardContent>
       </Card>
 
       <!-- Permissions Card -->
-      <Card class="shadow-lg">
-        <CardHeader class="flex flex-col gap-2">
+      <Card class="shadow-lg border border-border/50 backdrop-blur-sm">
+        <CardHeader class="flex flex-col gap-2 border-b border-border/50 bg-muted/5">
           <div>
-            <CardTitle class="text-lg font-semibold">Permissions</CardTitle>
-            <CardDescription class="text-sm text-muted-foreground"
-              >Manage user's access and permissions</CardDescription
-            >
+            <CardTitle class="text-xl font-semibold text-foreground/90">Permissions</CardTitle>
+            <CardDescription class="text-sm text-muted-foreground">
+              Manage user's access and permissions
+            </CardDescription>
           </div>
           <div class="self-end">
             <Button
@@ -384,7 +380,9 @@ const allPermissions = computed(() => {
               variant="outline"
               v-if="!isEditingPermissions"
               @click="handleEditPermissions"
+              class="transition-colors"
             >
+              <Pencil class="w-4 h-4 mr-1" />
               Edit Permissions
             </Button>
             <template v-else>
@@ -393,6 +391,7 @@ const allPermissions = computed(() => {
                 variant="default"
                 @click="handlePermissionsSubmit"
                 :disabled="isUpdatingPermissions"
+                class="transition-colors"
               >
                 <Loader2 v-if="isUpdatingPermissions" class="mr-2 h-4 w-4 animate-spin" />
                 Save
@@ -400,7 +399,7 @@ const allPermissions = computed(() => {
               <Button
                 size="sm"
                 variant="outline"
-                class="ml-2"
+                class="ml-2 transition-colors"
                 @click="isEditingPermissions = false"
               >
                 Cancel
@@ -408,32 +407,35 @@ const allPermissions = computed(() => {
             </template>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent class="pt-6">
           <div v-if="isEditingPermissions" class="grid gap-4 sm:grid-cols-2">
             <label
               v-for="perm in availablePermissions"
               :key="perm"
-              class="flex items-center space-x-2"
+              class="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/5 transition-colors cursor-pointer"
             >
               <input
                 type="checkbox"
                 :value="perm"
                 v-model="permissionsForm.direct_permissions"
-                class="h-4 w-4 rounded border-muted text-primary focus:ring-primary"
+                class="h-4 w-4 rounded border-muted text-primary focus:ring-primary transition-colors"
               />
               <span class="text-sm text-foreground">{{ perm }}</span>
             </label>
           </div>
-          <div v-else>
+          <div v-else class="min-h-[100px]">
             <div class="flex flex-wrap gap-2">
               <div
                 v-for="permission in allPermissions"
                 :key="permission"
-                class="inline-flex items-center rounded-full bg-secondary/10 px-3 py-1 text-xs font-medium text-secondary-foreground border border-secondary/20"
+                class="inline-flex items-center rounded-full bg-secondary/10 px-3 py-1.5 text-sm font-medium text-secondary-foreground border border-secondary/20 transition-colors hover:bg-secondary/15"
               >
                 {{ permission }}
               </div>
-              <div v-if="allPermissions.length === 0" class="text-sm text-muted-foreground">
+              <div
+                v-if="allPermissions.length === 0"
+                class="text-sm text-muted-foreground flex items-center justify-center w-full py-8"
+              >
                 No permissions assigned
               </div>
             </div>
@@ -444,20 +446,24 @@ const allPermissions = computed(() => {
 
     <!-- Delete Confirmation Dialog -->
     <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
-      <DialogContent>
+      <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-lg font-semibold">Delete User</DialogTitle>
+          <DialogTitle class="text-lg font-semibold text-foreground/90">Delete User</DialogTitle>
           <DialogDescription class="text-sm text-muted-foreground">
             Are you sure you want to delete this user? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="ghost" class="hover:bg-muted/10" @click="showDeleteDialog = false"
-            >Cancel</Button
+        <DialogFooter class="gap-2 sm:gap-0">
+          <Button
+            variant="ghost"
+            class="hover:bg-muted/10 transition-colors"
+            @click="showDeleteDialog = false"
           >
+            Cancel
+          </Button>
           <Button
             variant="destructive"
-            class="hover:bg-destructive/90"
+            class="hover:bg-destructive/90 transition-colors"
             :disabled="isDeleting"
             @click="handleDeleteUser"
           >

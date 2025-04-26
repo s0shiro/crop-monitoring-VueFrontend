@@ -15,11 +15,19 @@ import {
 import {
   AudioWaveform,
   BookOpen,
-  Bot,
-  Command,
-  GalleryVerticalEnd,
+  Building2,
   Users,
-  FileText,
+  Sprout,
+  GalleryVerticalEnd,
+  Command,
+  Wheat,
+  LeafyGreen,
+  Apple,
+  CalendarCheck,
+  LineChart,
+  ClipboardList,
+  Settings,
+  UserCog,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 
@@ -112,11 +120,12 @@ const data = {
     {
       title: 'Management',
       url: '#',
-      icon: Bot,
+      icon: Settings,
       items: [
         {
           title: 'Users',
           url: '/users',
+          icon: UserCog,
         },
         {
           title: 'Farmers',
@@ -126,7 +135,7 @@ const data = {
         {
           title: 'Associations',
           url: '/associations',
-          icon: BookOpen,
+          icon: Building2,
         },
       ],
     },
@@ -134,16 +143,17 @@ const data = {
     {
       title: 'Production',
       url: '#',
-      icon: Bot,
+      icon: Sprout,
       items: [
         {
           title: 'Crops',
           url: '/crops',
-          icon: BookOpen,
+          icon: Sprout,
         },
         {
           title: 'Crop Plantings',
           url: '/crop-plantings',
+          icon: CalendarCheck,
         },
       ],
     },
@@ -151,19 +161,22 @@ const data = {
     {
       title: 'Rice Production',
       url: '#',
-      icon: Bot,
+      icon: Wheat,
       items: [
         {
           title: 'Monthly Planting',
           url: '/reports/rice-planting',
+          icon: CalendarCheck,
         },
         {
           title: 'Rice Standing',
           url: '/reports/rice-standing',
+          icon: LineChart,
         },
         {
           title: 'Rice Harvest',
           url: '/reports/rice-harvest',
+          icon: ClipboardList,
         },
       ],
     },
@@ -171,19 +184,22 @@ const data = {
     {
       title: 'Corn Production',
       url: '#',
-      icon: Bot,
+      icon: LeafyGreen,
       items: [
         {
           title: 'Monthly Planting',
           url: '/reports/corn-planting',
+          icon: CalendarCheck,
         },
         {
           title: 'Corn Standing Report',
           url: '/reports/corn-standing',
+          icon: LineChart,
         },
         {
           title: 'Monthly Harvest',
           url: '/reports/corn-harvest',
+          icon: ClipboardList,
         },
       ],
     },
@@ -191,11 +207,12 @@ const data = {
     {
       title: 'HVC Production',
       url: '#',
-      icon: FileText,
+      icon: Apple,
       items: [
         {
           title: 'HVC Report',
           url: '/reports/high-value',
+          icon: ClipboardList,
         },
       ],
     },

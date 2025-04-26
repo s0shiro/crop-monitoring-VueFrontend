@@ -89,12 +89,20 @@ const createAssociation = () => {
 
 <template>
   <div class="space-y-8">
-    <div class="flex items-center justify-between">
+    <div
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-3"
+    >
       <div class="flex items-center gap-3">
-        <Building2 class="h-8 w-8 text-primary" />
-        <h1 class="text-3xl font-extrabold text-primary">Associations Management</h1>
+        <Building2 class="h-8 w-8 text-primary shrink-0" />
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-primary break-words">
+          Associations Management
+        </h1>
       </div>
-      <Button @click="showAddAssociationDialog = true" variant="default" class="gap-2">
+      <Button
+        @click="showAddAssociationDialog = true"
+        variant="default"
+        class="gap-2 whitespace-nowrap"
+      >
         <Users class="h-4 w-4" />
         Add Association
       </Button>
@@ -126,15 +134,16 @@ const createAssociation = () => {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger as-child>
-                  <Button variant="ghost" class="p-2 -mt-1 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    class="p-2 -mt-1 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
                     <MoreHorizontal class="h-5 w-5 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent class="w-56">
                   <RouterLink :to="{ name: 'association-details', params: { id: association.id } }">
-                    <DropdownMenuItem>
-                      View Details
-                    </DropdownMenuItem>
+                    <DropdownMenuItem> View Details </DropdownMenuItem>
                   </RouterLink>
                 </DropdownMenuContent>
               </DropdownMenu>
