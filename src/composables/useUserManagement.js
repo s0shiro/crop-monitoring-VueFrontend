@@ -1,20 +1,26 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/lib/axios'
 
 export function useUserManagement() {
   const queryClient = useQueryClient()
 
-  // Fetch users query
+  // Fetch users with infinite query
   const {
-    data: users,
+    data: usersData,
     isLoading: isLoadingUsers,
     error: fetchError,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['users'],
-    queryFn: async () => {
-      const { data } = await axiosInstance.get('/api/users')
+    queryFn: async ({ pageParam = 0 }) => {
+      const { data } = await axiosInstance.get('/api/users', {
+        params: { cursor: pageParam },
+      })
       return data
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   })
 
   // Get user details query
@@ -89,9 +95,12 @@ export function useUserManagement() {
 
   return {
     // Queries
-    users,
+    usersData,
     isLoadingUsers,
     fetchError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     getUserDetails,
 
     // Create mutation

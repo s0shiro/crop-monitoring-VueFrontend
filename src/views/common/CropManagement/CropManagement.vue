@@ -27,6 +27,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Tractor, Sprout } from 'lucide-vue-next'
+import Loading from '@/components/ui/loading/Loading.vue'
 
 const cropName = ref('')
 const categoryId = ref('')
@@ -186,9 +188,9 @@ const openAddVarietyDialog = (cropId) => {
     <div v-if="!selectedCategoryId" class="text-center text-muted-foreground py-4 italic">
       Please select a category.
     </div>
-    <div v-else-if="isLoadingCrops" class="text-center text-muted-foreground py-4 italic">
-      Loading crops...
-    </div>
+
+    <Loading v-else-if="isLoadingCrops">Loading crops...</Loading>
+
     <div v-else-if="cropsError" class="text-center text-destructive py-4 italic">
       Failed to load crops.
     </div>
@@ -198,7 +200,7 @@ const openAddVarietyDialog = (cropId) => {
           <Card
             v-for="crop in page.data"
             :key="crop.id"
-            class="flex flex-col items-start p-4 shadow-md hover:shadow-lg transition-shadow"
+            class="flex flex-col items-start p-6 shadow-md hover:shadow-lg transition-shadow space-y-4"
           >
             <div class="flex justify-between w-full">
               <h2 class="text-xl font-bold text-primary">{{ crop.name }}</h2>
@@ -218,17 +220,34 @@ const openAddVarietyDialog = (cropId) => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <p class="text-sm text-muted-foreground">{{ crop.varieties_count }} varieties</p>
-            <p class="text-xs text-muted-foreground mt-2">
-              Added on
-              {{
-                new Date(crop.created_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })
-              }}
-            </p>
+            <div class="flex gap-4">
+              <div class="flex items-center gap-2">
+                <Sprout class="h-4 w-4 text-green-500" />
+                <p class="text-sm text-muted-foreground">
+                  <span class="font-semibold text-foreground">{{ crop.varieties_count }}</span>
+                  {{ crop.varieties_count === 1 ? 'variety' : 'varieties' }}
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <Tractor class="h-4 w-4 text-blue-500" />
+                <p class="text-sm text-muted-foreground">
+                  <span class="font-semibold text-foreground">{{ crop.crop_plantings_count }}</span>
+                  {{ crop.crop_plantings_count === 1 ? 'planting' : 'plantings' }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mt-2">
+              <p class="text-xs text-muted-foreground">
+                Added on
+                {{
+                  new Date(crop.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                }}
+              </p>
+            </div>
           </Card>
         </template>
       </div>
