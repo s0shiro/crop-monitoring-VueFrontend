@@ -21,6 +21,7 @@ import CropPlantingEditForm from '@/views/technician/CropPlanting/CropPlantingEd
 import RiceStandingReport from '@/views/common/GenerateReports/RiceStandingReport.vue'
 import RiceHarvestReport from '@/views/common/GenerateReports/RiceHarvestReport.vue'
 import CornStandingReport from '@/views/common/GenerateReports/CornStandingReport.vue'
+import ExampleUsage from '@/views/common/ExampleUsage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -77,7 +78,7 @@ const router = createRouter({
           name: 'crop-management',
           component: CropManagement,
           meta: {
-            requiredRoles: ['admin', 'technician'],
+            requiredRoles: ['admin', 'technician', 'coordinator'],
             title: 'Crop Management',
           },
         },
@@ -113,7 +114,7 @@ const router = createRouter({
           name: 'farmer-management',
           component: FarmerManagement,
           meta: {
-            requiredRoles: ['admin', 'technician'],
+            requiredRoles: ['admin', 'technician', 'coordinator'],
             title: 'Farmer Management',
           },
         },
@@ -223,6 +224,15 @@ const router = createRouter({
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'High Value Crop Report',
+          },
+        },
+        {
+          path: 'example',
+          name: 'example-usage',
+          component: ExampleUsage,
+          meta: {
+            requiredRoles: ['admin', 'technician'],
+            title: 'Example Loading States',
           },
         },
       ],
