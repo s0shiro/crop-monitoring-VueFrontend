@@ -1,15 +1,463 @@
+<template>
+  <div class="space-y-8">
+    <!-- Header Section -->
+    <div
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 pb-4"
+    >
+      <div class="flex items-center gap-3">
+        <div class="p-2 rounded-full bg-primary/10">
+          <Users class="w-6 h-6 text-primary" />
+        </div>
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight text-primary">User Management</h1>
+          <p class="text-sm text-muted-foreground mt-1">Manage system users and their roles</p>
+        </div>
+      </div>
+      <Dialog>
+        <DialogTrigger as-child>
+          <Button
+            class="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus class="w-4 h-4" />
+            Add User
+          </Button>
+        </DialogTrigger>
+        <DialogContent
+          class="sm:max-w-[600px] p-0 overflow-hidden duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[2%]"
+        >
+          <div class="p-6 pb-0">
+            <DialogHeader>
+              <DialogTitle class="flex items-center gap-2 text-xl font-semibold text-primary">
+                <User class="w-5 h-5" />
+                Create New User
+              </DialogTitle>
+              <DialogDescription class="text-muted-foreground mt-1.5">
+                Add a new user to the system with their role and permissions.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <form ref="formRef" @submit.prevent="handleCreateUser" class="p-6 pt-4">
+            <div class="grid md:grid-cols-2 gap-4">
+              <!-- Username field -->
+              <div class="space-y-2 group">
+                <Label
+                  for="username"
+                  class="text-sm font-medium group-focus-within:text-primary transition-colors"
+                  >Username</Label
+                >
+                <div class="relative">
+                  <User
+                    class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors"
+                  />
+                  <Input
+                    id="username"
+                    v-model="formData.username"
+                    class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    placeholder="Enter username"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Name field -->
+              <div class="space-y-2">
+                <Label for="name" class="text-sm font-medium">Full Name</Label>
+                <Input
+                  id="name"
+                  v-model="formData.name"
+                  class="ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Enter full name"
+                  required
+                />
+              </div>
+
+              <!-- Email field -->
+              <div class="space-y-2 group">
+                <Label
+                  for="email"
+                  class="text-sm font-medium group-focus-within:text-primary transition-colors"
+                  >Email</Label
+                >
+                <div class="relative">
+                  <Mail
+                    class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors"
+                  />
+                  <Input
+                    id="email"
+                    type="email"
+                    v-model="formData.email"
+                    class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    placeholder="Enter email"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Password field -->
+              <div class="space-y-2 group">
+                <Label
+                  for="password"
+                  class="text-sm font-medium group-focus-within:text-primary transition-colors"
+                  >Password</Label
+                >
+                <div class="relative">
+                  <Input
+                    id="password"
+                    :type="showPassword ? 'text' : 'password'"
+                    v-model="formData.password"
+                    class="pr-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    placeholder="Enter password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                    @click="showPassword = !showPassword"
+                  >
+                    <Eye v-if="!showPassword" class="h-4 w-4" />
+                    <EyeOff v-else class="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Role field -->
+              <div class="space-y-2 md:col-span-2">
+                <Label for="role" class="text-sm font-medium">Role</Label>
+                <Select v-model="formData.role" required>
+                  <SelectTrigger
+                    class="ring-offset-background transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="technician">
+                      <div class="flex items-center">
+                        <Users class="h-4 w-4 mr-2 text-blue-500" />
+                        Technician
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="coordinator">
+                      <div class="flex items-center">
+                        <Shield class="h-4 w-4 mr-2 text-green-500" />
+                        Coordinator
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter class="mt-6 gap-2">
+              <DialogTrigger as-child>
+                <Button
+                  type="button"
+                  variant="outline"
+                  class="transition-colors hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                >
+                  Cancel
+                </Button>
+              </DialogTrigger>
+              <Button
+                type="submit"
+                :disabled="isCreating"
+                class="transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Loading v-if="isCreating" description="Creating user...">Please wait</Loading>
+                <template v-else>
+                  <Plus class="w-4 h-4 mr-2" />
+                  Create User
+                </template>
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+
+    <!-- Loading State -->
+    <Loading v-if="isLoadingUsers">Loading users...</Loading>
+
+    <!-- Error State -->
+    <div v-else-if="fetchError" class="text-center py-8 text-destructive">
+      Failed to load users. Please try again later.
+    </div>
+
+    <!-- Empty State -->
+    <div
+      v-else-if="
+        !usersData?.pages ||
+        usersData.pages.length === 0 ||
+        usersData.pages.every((page) => page.data.length === 0)
+      "
+      class="min-h-[400px] flex flex-col items-center justify-center text-center"
+    >
+      <div class="p-4 rounded-full bg-muted">
+        <Users class="h-8 w-8 text-muted-foreground" />
+      </div>
+      <p class="mt-4 text-lg font-medium text-muted-foreground">No users found</p>
+    </div>
+
+    <!-- Users Grid -->
+    <div v-else>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <template v-for="page in usersData.pages" :key="page.nextCursor">
+          <Card
+            v-for="user in page.data"
+            :key="user.id"
+            class="group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-background to-muted/20"
+          >
+            <CardContent class="p-6">
+              <div class="flex justify-between items-start">
+                <div class="flex items-start gap-3">
+                  <div class="p-2 rounded-full bg-primary/10">
+                    <User class="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold text-foreground">{{ user.name }}</h3>
+                    <p class="text-sm text-muted-foreground">@{{ user.username }}</p>
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      class="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem @click="viewUserDetails(user)" class="cursor-pointer">
+                      <Eye class="mr-2 h-4 w-4" />
+                      View Details
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <div class="mt-4 space-y-3">
+                <div class="flex items-center gap-2">
+                  <Mail class="w-4 h-4 text-blue-500" />
+                  <p class="text-sm">{{ user.email }}</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <Shield class="w-4 h-4 text-green-500" />
+                  <div class="flex gap-2">
+                    <span
+                      v-for="role in user.roles"
+                      :key="role"
+                      :class="{
+                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold': true,
+                        'bg-blue-500/10 text-blue-500': role === 'technician',
+                        'bg-green-500/10 text-green-500': role === 'coordinator',
+                        'bg-purple-500/10 text-purple-500': role === 'admin',
+                      }"
+                    >
+                      {{ role }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <CalendarDays class="w-4 h-4 text-orange-500" />
+                  <p class="text-sm text-muted-foreground">
+                    Joined
+                    {{
+                      new Date(user.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })
+                    }}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </template>
+      </div>
+
+      <!-- Load More Button -->
+      <div class="text-center mt-6">
+        <Button
+          v-if="hasNextPage && !isFetchingNextPage"
+          @click="fetchNextPage"
+          variant="default"
+          class="rounded-lg gap-2"
+        >
+          <span>Load More</span>
+          <Users class="h-4 w-4" />
+        </Button>
+        <div v-else-if="isFetchingNextPage" class="text-muted-foreground italic">
+          Loading more...
+        </div>
+      </div>
+    </div>
+
+    <!-- Create User Dialog -->
+    <Dialog :open="showCreateDialog" @update:open="showCreateDialog = $event">
+      <DialogContent
+        class="sm:max-w-[600px] p-0 overflow-hidden duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[2%]"
+      >
+        <div class="p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle class="flex items-center gap-2 text-xl font-semibold text-primary">
+              <User class="w-5 h-5" />
+              Create New User
+            </DialogTitle>
+            <DialogDescription class="text-muted-foreground mt-1.5">
+              Add a new user to the system with their role and permissions.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <form ref="formRef" @submit.prevent="handleCreateUser" class="p-6 pt-4">
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Username field -->
+            <div class="space-y-2 group">
+              <Label
+                for="username"
+                class="text-sm font-medium group-focus-within:text-primary transition-colors"
+                >Username</Label
+              >
+              <div class="relative">
+                <User
+                  class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors"
+                />
+                <Input
+                  id="username"
+                  v-model="formData.username"
+                  class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Name field -->
+            <div class="space-y-2">
+              <Label for="name" class="text-sm font-medium">Full Name</Label>
+              <Input
+                id="name"
+                v-model="formData.name"
+                class="ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                placeholder="Enter full name"
+                required
+              />
+            </div>
+
+            <!-- Email field -->
+            <div class="space-y-2 group">
+              <Label
+                for="email"
+                class="text-sm font-medium group-focus-within:text-primary transition-colors"
+                >Email</Label
+              >
+              <div class="relative">
+                <Mail
+                  class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors"
+                />
+                <Input
+                  id="email"
+                  type="email"
+                  v-model="formData.email"
+                  class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Enter email"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Password field -->
+            <div class="space-y-2 group">
+              <Label
+                for="password"
+                class="text-sm font-medium group-focus-within:text-primary transition-colors"
+                >Password</Label
+              >
+              <div class="relative">
+                <Input
+                  id="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  v-model="formData.password"
+                  class="pr-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  placeholder="Enter password"
+                  required
+                />
+                <button
+                  type="button"
+                  class="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                  @click="showPassword = !showPassword"
+                >
+                  <Eye v-if="!showPassword" class="h-4 w-4" />
+                  <EyeOff v-else class="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Role field -->
+            <div class="space-y-2 md:col-span-2">
+              <Label for="role" class="text-sm font-medium">Role</Label>
+              <Select v-model="formData.role" required>
+                <SelectTrigger
+                  class="ring-offset-background transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                >
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="technician">
+                    <div class="flex items-center">
+                      <Users class="h-4 w-4 mr-2 text-blue-500" />
+                      Technician
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="coordinator">
+                    <div class="flex items-center">
+                      <Shield class="h-4 w-4 mr-2 text-green-500" />
+                      Coordinator
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter class="mt-6 gap-2">
+            <DialogTrigger as-child>
+              <Button
+                type="button"
+                variant="outline"
+                class="transition-colors hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+              >
+                Cancel
+              </Button>
+            </DialogTrigger>
+            <Button
+              type="submit"
+              :disabled="isCreating"
+              class="transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Loading v-if="isCreating" description="Creating user...">Please wait</Loading>
+              <template v-else>
+                <Plus class="w-4 h-4 mr-2" />
+                Create User
+              </template>
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  </div>
+</template>
+
 <script setup>
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserManagement } from '@/composables/useUserManagement'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Card, CardContent } from '@/components/ui/card'
+import { Loading } from '@/components/ui/loading'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +494,7 @@ import {
   Mail,
   Shield,
   Users,
+  CalendarDays,
 } from 'lucide-vue-next'
 import { useToast } from '@/components/ui/toast/use-toast'
 
@@ -53,7 +502,16 @@ const { toast } = useToast()
 const router = useRouter()
 
 // State from composable
-const { users, isLoadingUsers, createUser, isCreating } = useUserManagement()
+const {
+  usersData,
+  isLoadingUsers,
+  fetchError,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  createUser,
+  isCreating,
+} = useUserManagement()
 
 // Dialog state
 const showCreateDialog = ref(false)
@@ -117,185 +575,3 @@ function resetForm() {
   selectedUser.value = null
 }
 </script>
-
-<template>
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">User Management</h1>
-    <Dialog>
-      <DialogTrigger as-child>
-        <Button>
-          <Plus class="w-4 h-4 mr-2" />
-          Add User
-        </Button>
-      </DialogTrigger>
-      <DialogContent
-        class="sm:max-w-[600px] p-0 overflow-hidden duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[2%]"
-      >
-        <div class="p-6 pb-0">
-          <DialogHeader>
-            <DialogTitle class="text-xl font-semibold">Create New User</DialogTitle>
-            <DialogDescription class="text-muted-foreground mt-1.5">
-              Add a new user to the system with their role and permissions.
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-
-        <form ref="formRef" @submit.prevent="handleCreateUser" class="p-6 pt-4">
-          <div class="grid md:grid-cols-2 gap-4">
-            <!-- Username field -->
-            <div class="space-y-2">
-              <Label for="username" class="text-sm font-medium">Username</Label>
-              <div class="relative">
-                <User class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="username"
-                  v-model="formData.username"
-                  class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  placeholder="Enter username"
-                  required
-                />
-              </div>
-            </div>
-
-            <!-- Name field -->
-            <div class="space-y-2">
-              <Label for="name" class="text-sm font-medium">Full Name</Label>
-              <Input
-                id="name"
-                v-model="formData.name"
-                class="ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                placeholder="Enter full name"
-                required
-              />
-            </div>
-
-            <!-- Email field -->
-            <div class="space-y-2">
-              <Label for="email" class="text-sm font-medium">Email</Label>
-              <div class="relative">
-                <Mail class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  v-model="formData.email"
-                  class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  placeholder="Enter email"
-                  required
-                />
-              </div>
-            </div>
-
-            <!-- Password field -->
-            <div class="space-y-2">
-              <Label for="password" class="text-sm font-medium">Password</Label>
-              <div class="relative">
-                <Input
-                  id="password"
-                  :type="showPassword ? 'text' : 'password'"
-                  v-model="formData.password"
-                  class="pr-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  placeholder="Enter password"
-                  required
-                />
-                <button
-                  type="button"
-                  class="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
-                  @click="showPassword = !showPassword"
-                >
-                  <Eye v-if="!showPassword" class="h-4 w-4" />
-                  <EyeOff v-else class="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <!-- Role field -->
-            <div class="space-y-2 md:col-span-2">
-              <Label for="role" class="text-sm font-medium">Role</Label>
-              <Select v-model="formData.role" required>
-                <SelectTrigger
-                  class="ring-offset-background transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="technician">
-                    <div class="flex items-center">
-                      <Users class="h-4 w-4 mr-2 text-muted-foreground" />
-                      Technician
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="coordinator">
-                    <div class="flex items-center">
-                      <Shield class="h-4 w-4 mr-2 text-muted-foreground" />
-                      Coordinator
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter class="mt-6 gap-2">
-            <DialogTrigger as-child>
-              <Button type="button" variant="outline" class="transition-colors"> Cancel </Button>
-            </DialogTrigger>
-            <Button
-              type="submit"
-              :disabled="isCreating"
-              class="transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Loader2 v-if="isCreating" class="mr-2 h-4 w-4 animate-spin" />
-              {{ isCreating ? 'Creating...' : 'Create User' }}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  </div>
-
-  <!-- Users Table -->
-  <div class="rounded-md border">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Username</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Created At</TableHead>
-          <TableHead class="w-[50px]">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        <TableRow v-if="isLoadingUsers">
-          <TableCell colspan="6" class="text-center py-4">Loading...</TableCell>
-        </TableRow>
-        <TableRow v-else-if="!users?.length">
-          <TableCell colspan="6" class="text-center py-4">No users found</TableCell>
-        </TableRow>
-        <TableRow v-for="user in users" :key="user.id">
-          <TableCell>{{ user.username }}</TableCell>
-          <TableCell>{{ user.name }}</TableCell>
-          <TableCell>{{ user.email }}</TableCell>
-          <TableCell>{{ (user.roles ?? []).join(', ') }}</TableCell>
-          <TableCell>{{ new Date(user.created_at).toLocaleDateString() }}</TableCell>
-          <TableCell>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" class="h-8 w-8 p-0">
-                  <MoreHorizontal class="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem @click="viewUserDetails(user)">
-                  <Eye class="mr-2 h-4 w-4" />
-                  View Details
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
-  </div>
-</template>
