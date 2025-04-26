@@ -8,7 +8,7 @@
       <!-- Background Image Container -->
       <div class="w-32 h-32 relative animate-pulse">
         <img
-          src="../../../../../images/pao-noBG.png"
+          src="/images/pao-noBG.png"
           alt="PAO Logo"
           class="w-full h-full object-contain opacity-50 max-w-[120px]"
         />
