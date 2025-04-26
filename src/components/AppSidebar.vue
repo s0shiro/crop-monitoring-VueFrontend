@@ -17,12 +17,7 @@ import {
   BookOpen,
   Bot,
   Command,
-  Frame,
   GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
   Users,
   FileText,
 } from 'lucide-vue-next'
@@ -45,31 +40,35 @@ const filteredNavMain = computed(() => {
       const filteredItems =
         section.items?.filter((item) => {
           switch (item.title) {
-            case 'User Management':
+            case 'Users':
               return hasPermission('manage_users')
-            case 'Crop Management':
+            case 'Crops':
               return (
                 hasPermission('create_crops') ||
                 hasPermission('update_crops') ||
                 hasPermission('view_reports')
               )
-            case 'Associations Management':
+            case 'Associations':
               return (
                 hasPermission('create_associations') ||
                 hasPermission('update_associations') ||
                 hasPermission('view_associations')
               )
-            case 'Farmer Management':
+            case 'Farmers':
               return (
                 hasPermission('create_farmers') ||
                 hasPermission('update_farmers') ||
                 hasPermission('view_farmers')
               )
-            case 'Crop Planting':
+            case 'Crop Plantings':
               return hasPermission('view_crop_planting') || hasPermission('manage_crop_planting')
             // For reports, check if user has view_reports permission
             default:
-              return section.title === 'Reports' ? hasPermission('view_reports') : true
+              return ['Rice Production', 'Corn Production', 'HVC Production'].includes(
+                section.title,
+              )
+                ? hasPermission('view_reports')
+                : true
           }
         }) || []
 
@@ -113,64 +112,69 @@ const data = {
     {
       title: 'Management',
       url: '#',
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: 'User Management',
-          url: '/users',
-        },
-      ],
-    },
-    {
-      title: 'Common',
-      url: '#',
       icon: Bot,
       items: [
         {
-          title: 'Crop Management',
-          url: '/crops',
-          icon: BookOpen,
+          title: 'Users',
+          url: '/users',
         },
         {
-          title: 'Associations Management',
-          url: '/associations',
-          icon: BookOpen,
-        },
-        {
-          title: 'Farmer Management',
+          title: 'Farmers',
           url: '/farmers',
           icon: Users,
         },
         {
-          title: 'Crop Planting',
+          title: 'Associations',
+          url: '/associations',
+          icon: BookOpen,
+        },
+      ],
+    },
+
+    {
+      title: 'Production',
+      url: '#',
+      icon: Bot,
+      items: [
+        {
+          title: 'Crops',
+          url: '/crops',
+          icon: BookOpen,
+        },
+        {
+          title: 'Crop Plantings',
           url: '/crop-plantings',
         },
       ],
     },
+
     {
-      title: 'Reports',
+      title: 'Rice Production',
       url: '#',
-      icon: FileText,
+      icon: Bot,
       items: [
         {
-          title: 'Rice Standing Report',
-          url: '/reports/rice-standing',
-        },
-        {
-          title: 'Rice Harvest Report',
-          url: '/reports/rice-harvest',
-        },
-        {
-          title: 'Monthly Rice Planting Report',
+          title: 'Monthly Planting',
           url: '/reports/rice-planting',
         },
         {
-          title: 'Monthly Corn Harvest Report',
-          url: '/reports/corn-harvest',
+          title: 'Rice Standing',
+          url: '/reports/rice-standing',
         },
         {
-          title: 'Monthly Corn Planting Report',
+          title: 'Rice Harvest',
+          url: '/reports/rice-harvest',
+        },
+      ],
+    },
+
+    {
+      title: 'Corn Production',
+      url: '#',
+      icon: Bot,
+      items: [
+        {
+          title: 'Monthly Planting',
           url: '/reports/corn-planting',
         },
         {
@@ -178,29 +182,41 @@ const data = {
           url: '/reports/corn-standing',
         },
         {
-          title: 'High Value Crop Report',
+          title: 'Monthly Harvest',
+          url: '/reports/corn-harvest',
+        },
+      ],
+    },
+
+    {
+      title: 'HVC Production',
+      url: '#',
+      icon: FileText,
+      items: [
+        {
+          title: 'HVC Report',
           url: '/reports/high-value',
         },
       ],
     },
   ],
-  projects: [
-    {
-      name: 'Design Engineering',
-      url: '#',
-      icon: Frame,
-    },
-    {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: PieChart,
-    },
-    {
-      name: 'Travel',
-      url: '#',
-      icon: Map,
-    },
-  ],
+  // projects: [
+  //   {
+  //     name: 'Design Engineering',
+  //     url: '#',
+  //     icon: Frame,
+  //   },
+  //   {
+  //     name: 'Sales & Marketing',
+  //     url: '#',
+  //     icon: PieChart,
+  //   },
+  //   {
+  //     name: 'Travel',
+  //     url: '#',
+  //     icon: Map,
+  //   },
+  // ],
 }
 </script>
 
