@@ -1,13 +1,10 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { FileText, Printer, Loader2Icon, AlertCircle } from 'lucide-vue-next'
 import { useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/lib/axios'
-import { format } from 'date-fns'
 
 const authStore = useAuthStore()
 const user = authStore.user
@@ -143,141 +140,136 @@ function printReport() {
 </script>
 
 <template>
-  <div class="screen-only p-4">
+  <!-- Screen version -->
+  <div class="screen-only">
     <!-- Controls -->
-    <div class="bg-card text-card-foreground rounded-lg shadow p-4 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold flex items-center gap-2 text-foreground">
-          <FileText class="h-5 w-5" />
-          High Value Crop Report
+    <div class="flex flex-col gap-6">
+      <div class="flex justify-between items-center">
+        <h2
+          class="text-xl sm:text-2xl lg:text-3xl flex items-center gap-2 font-extrabold text-primary break-words"
+        >
+          <FileText class="h-6 w-6 text-primary flex-shrink-0" />
+          <span class="min-w-0">High Value Crop Report</span>
         </h2>
-        <Button @click="printReport" variant="default" class="flex items-center gap-2">
+        <Button @click="printReport" variant="outline" class="hidden md:flex items-center gap-2">
           <Printer class="h-4 w-4" />
           Print Report
         </Button>
       </div>
+    </div>
 
-      <div class="grid md:grid-cols-3 gap-4">
-        <div>
-          <Label class="text-foreground">Prepared by</Label>
-          <Input type="text" :value="user?.name" disabled class="text-foreground" />
-        </div>
-        <div>
-          <Label class="text-foreground">Date</Label>
-          <Input type="text" :value="currentDate" disabled class="text-foreground" />
-        </div>
+    <!-- Mobile message -->
+    <div class="block md:hidden text-center py-12 bg-muted/10 rounded-lg mt-6">
+      <FileText class="h-16 w-16 mx-auto mb-4 text-primary opacity-80" />
+      <h3 class="text-xl font-semibold mb-3">Desktop View Recommended</h3>
+      <p class="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+        This report is optimized for desktop viewing. Please use a larger screen to view the full
+        report preview.
+      </p>
+      <Button @click="printReport" variant="default" class="flex items-center gap-2 mx-auto">
+        <Printer class="h-4 w-4" />
+        Print Report
+      </Button>
+    </div>
+
+    <!-- Desktop preview -->
+    <div class="hidden md:block mt-6">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex items-center justify-center py-12">
+        <Loader2Icon class="w-10 h-10 animate-spin text-primary" />
       </div>
-    </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
-    </div>
+      <!-- Error State -->
+      <div v-else-if="error" class="text-center text-destructive py-12">
+        <AlertCircle class="w-8 h-8 mx-auto mb-3" />
+        <p class="font-medium">
+          {{ error?.response?.data?.message || 'Failed to load report data' }}
+        </p>
+      </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center text-destructive py-8">
-      <AlertCircle class="w-6 h-6 mx-auto mb-2" />
-      <p>{{ error?.response?.data?.message || 'Failed to load report data' }}</p>
-    </div>
-
-    <!-- Report Content -->
-    <div v-else class="printable-report bg-card text-card-foreground rounded-lg shadow">
-      <div ref="printableRef" class="p-4">
-        <table class="report-table">
-          <thead>
-            <tr>
-              <th rowspan="2" class="border p-2 font-medium text-left">COMMODITY</th>
-              <th colspan="3" class="border p-2 font-medium text-center">AREA PLANTED (ha)</th>
-              <th colspan="2" class="border p-2 font-medium text-center">PRODUCTION (MT)</th>
-              <th rowspan="2" class="border p-2 font-medium text-left">REMARKS</th>
-            </tr>
-            <tr>
-              <th class="border p-2 font-medium">EXISTING</th>
-              <th class="border p-2 font-medium">THIS MONTH</th>
-              <th class="border p-2 font-medium">TO DATE</th>
-              <th class="border p-2 font-medium">THIS MONTH</th>
-              <th class="border p-2 font-medium">TO DATE</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="(crops, category) in tableData" :key="category">
+      <!-- Report Content -->
+      <div v-else-if="reportData" class="printable-report">
+        <div ref="printableRef" class="p-4">
+          <table class="report-table">
+            <thead>
               <tr>
-                <td class="border p-2 font-medium commodity">{{ category }}</td>
-                <td class="border p-2"></td>
-                <td class="border p-2"></td>
-                <td class="border p-2"></td>
-                <td class="border p-2"></td>
-                <td class="border p-2"></td>
-                <td class="border p-2"></td>
-              </tr>
-              <tr v-for="(data, crop) in crops" :key="crop">
-                <td class="border p-2 pl-4 crop">{{ crop }}</td>
-                <td class="border p-2 text-right">
-                  {{ data.existing > 0 ? data.existing.toFixed(4) : '' }}
-                </td>
-                <td class="border p-2 text-right">
-                  {{ data.thisMonth > 0 ? data.thisMonth.toFixed(4) : '' }}
-                </td>
-                <td class="border p-2 text-right">
-                  {{ data.toDate > 0 ? data.toDate.toFixed(4) : '' }}
-                </td>
-                <td class="border p-2 text-right">
-                  {{ data.production > 0 ? data.production.toFixed(2) : '' }}
-                </td>
-                <td class="border p-2 text-right">
-                  {{ data.production > 0 ? data.production.toFixed(2) : '' }}
-                </td>
-                <td class="border p-2"></td>
+                <th rowspan="2" class="border p-2 font-medium text-left">COMMODITY</th>
+                <th colspan="3" class="border p-2 font-medium text-center">AREA PLANTED (ha)</th>
+                <th colspan="2" class="border p-2 font-medium text-center">PRODUCTION (MT)</th>
+                <th rowspan="2" class="border p-2 font-medium text-left">REMARKS</th>
               </tr>
               <tr>
-                <td class="border p-2 pl-4 font-medium total">TOTAL</td>
-                <td class="border p-2 text-right font-medium total">
-                  {{ totals[category]?.existing > 0 ? totals[category].existing.toFixed(4) : '' }}
-                </td>
-                <td class="border p-2 text-right font-medium total">
-                  {{ totals[category]?.thisMonth > 0 ? totals[category].thisMonth.toFixed(4) : '' }}
-                </td>
-                <td class="border p-2 text-right font-medium total">
-                  {{ totals[category]?.toDate > 0 ? totals[category].toDate.toFixed(4) : '' }}
-                </td>
-                <td class="border p-2 text-right font-medium total">
-                  {{
-                    totals[category]?.production > 0 ? totals[category].production.toFixed(2) : ''
-                  }}
-                </td>
-                <td class="border p-2 text-right font-medium total">
-                  {{
-                    totals[category]?.production > 0 ? totals[category].production.toFixed(2) : ''
-                  }}
-                </td>
-                <td class="border p-2"></td>
+                <th class="border p-2 font-medium">EXISTING</th>
+                <th class="border p-2 font-medium">THIS MONTH</th>
+                <th class="border p-2 font-medium">TO DATE</th>
+                <th class="border p-2 font-medium">THIS MONTH</th>
+                <th class="border p-2 font-medium">TO DATE</th>
               </tr>
-            </template>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Signature Section -->
-    <div class="flex flex-col gap-4 mt-6 print:hidden">
-      <div class="flex justify-end">
-        <div class="space-y-2">
-          <Label class="text-foreground">Submitted by</Label>
-          <Input v-model="submittedByName" placeholder="Enter name" class="w-64" />
-          <Input v-model="submittedByTitle" placeholder="Enter title" class="w-64" />
-        </div>
-      </div>
-      <div class="flex justify-end">
-        <div class="space-y-2">
-          <Label class="text-foreground">Noted by</Label>
-          <Input v-model="notedByName" placeholder="Enter name" class="w-64" />
-          <Input v-model="notedByTitle" placeholder="Enter title" class="w-64" />
+            </thead>
+            <tbody>
+              <template v-for="(crops, category) in tableData" :key="category">
+                <tr>
+                  <td class="border p-2 font-medium commodity">{{ category }}</td>
+                  <td class="border p-2"></td>
+                  <td class="border p-2"></td>
+                  <td class="border p-2"></td>
+                  <td class="border p-2"></td>
+                  <td class="border p-2"></td>
+                  <td class="border p-2"></td>
+                </tr>
+                <tr v-for="(data, crop) in crops" :key="crop">
+                  <td class="border p-2 pl-4 crop">{{ crop }}</td>
+                  <td class="border p-2 text-right">
+                    {{ data.existing > 0 ? data.existing.toFixed(4) : '' }}
+                  </td>
+                  <td class="border p-2 text-right">
+                    {{ data.thisMonth > 0 ? data.thisMonth.toFixed(4) : '' }}
+                  </td>
+                  <td class="border p-2 text-right">
+                    {{ data.toDate > 0 ? data.toDate.toFixed(4) : '' }}
+                  </td>
+                  <td class="border p-2 text-right">
+                    {{ data.production > 0 ? data.production.toFixed(2) : '' }}
+                  </td>
+                  <td class="border p-2 text-right">
+                    {{ data.production > 0 ? data.production.toFixed(2) : '' }}
+                  </td>
+                  <td class="border p-2"></td>
+                </tr>
+                <tr>
+                  <td class="border p-2 pl-4 font-medium total">TOTAL</td>
+                  <td class="border p-2 text-right font-medium total">
+                    {{ totals[category]?.existing > 0 ? totals[category].existing.toFixed(4) : '' }}
+                  </td>
+                  <td class="border p-2 text-right font-medium total">
+                    {{
+                      totals[category]?.thisMonth > 0 ? totals[category].thisMonth.toFixed(4) : ''
+                    }}
+                  </td>
+                  <td class="border p-2 text-right font-medium total">
+                    {{ totals[category]?.toDate > 0 ? totals[category].toDate.toFixed(4) : '' }}
+                  </td>
+                  <td class="border p-2 text-right font-medium total">
+                    {{
+                      totals[category]?.production > 0 ? totals[category].production.toFixed(2) : ''
+                    }}
+                  </td>
+                  <td class="border p-2 text-right font-medium total">
+                    {{
+                      totals[category]?.production > 0 ? totals[category].production.toFixed(2) : ''
+                    }}
+                  </td>
+                  <td class="border p-2"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Print version - absolutely positioned outside of Vue layout -->
+  <!-- Print version -->
   <div class="print-only" v-if="reportData">
     <div id="report-content">
       <!-- Header -->

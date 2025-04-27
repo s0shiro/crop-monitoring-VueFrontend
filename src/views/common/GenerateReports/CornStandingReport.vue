@@ -104,28 +104,33 @@ const getTotal = (barangay, type) => {
 const getColumnTotal = (type, stage) => {
   if (!reportData.value?.data || !selectedMunicipality.value || !barangays.value) return 0
   return barangays.value.reduce((sum, barangay) => {
-    return sum + (getCropData(barangay, type, stage) || 0)
+    const value = Number(getCropData(barangay, type, stage)) || 0
+    return sum + value
   }, 0)
 }
 
 const getTypeTotal = (type) => {
   if (!reportData.value?.data || !selectedMunicipality.value || !barangays.value) return 0
   return barangays.value.reduce((sum, barangay) => {
-    return sum + getTotal(barangay, type)
+    const total = Number(getTotal(barangay, type)) || 0
+    return sum + total
   }, 0)
 }
 </script>
 
 <template>
-  <div class="screen-only p-4">
+  <!-- Screen version -->
+  <div class="screen-only">
     <!-- Controls -->
-    <div class="bg-card text-card-foreground rounded-lg shadow p-4 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold flex items-center gap-2 text-foreground">
-          <FileText class="h-5 w-5" />
-          Corn Standing Report
+    <div class="flex flex-col gap-6">
+      <div class="flex justify-between items-center">
+        <h2
+          class="text-xl sm:text-2xl lg:text-3xl flex items-center gap-2 font-extrabold text-primary break-words"
+        >
+          <FileText class="h-6 w-6 text-primary flex-shrink-0" />
+          <span class="min-w-0">Corn Standing Report</span>
         </h2>
-        <Button @click="handlePrint" variant="default" class="flex items-center gap-2">
+        <Button @click="handlePrint" variant="outline" class="hidden md:flex items-center gap-2">
           <Printer class="h-4 w-4" />
           Print Report
         </Button>
@@ -149,193 +154,213 @@ const getTypeTotal = (type) => {
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <Label class="text-foreground">Prepared by</Label>
-          <Input type="text" :value="user?.name" disabled class="text-foreground" />
-        </div>
-        <div>
-          <Label class="text-foreground">Date</Label>
-          <Input type="text" :value="currentDate" disabled class="text-foreground" />
-        </div>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
+    <!-- Mobile message -->
+    <div class="block md:hidden text-center py-12 bg-muted/10 rounded-lg mt-6">
+      <FileText class="h-16 w-16 mx-auto mb-4 text-primary opacity-80" />
+      <h3 class="text-xl font-semibold mb-3">Desktop View Recommended</h3>
+      <p class="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+        This report is optimized for desktop viewing. Please use a larger screen to view the full
+        report preview.
+      </p>
+      <Button @click="handlePrint" variant="default" class="flex items-center gap-2 mx-auto">
+        <Printer class="h-4 w-4" />
+        Print Report
+      </Button>
     </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center text-destructive py-8">
-      <AlertCircle class="w-6 h-6 mx-auto mb-2" />
-      <p>{{ error?.response?.data?.message || 'Failed to load report data' }}</p>
-    </div>
+    <!-- Desktop preview -->
+    <div class="hidden md:block mt-6">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex items-center justify-center py-12">
+        <Loader2Icon class="w-10 h-10 animate-spin text-primary" />
+      </div>
 
-    <!-- Report Content -->
-    <div
-      v-else-if="reportData"
-      class="printable-report bg-card text-card-foreground rounded-lg shadow"
-    >
-      <div ref="printableRef" class="p-4">
-        <!-- Header -->
-        <div class="text-center mb-6">
-          <h1 class="text-xl font-bold text-foreground">CORN STANDING REPORT</h1>
-          <p class="text-sm text-foreground">As of: {{ currentDate }}</p>
-          <div class="mt-4 text-left">
-            <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
-            <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+      <!-- Error State -->
+      <div v-else-if="error" class="text-center text-destructive py-12">
+        <AlertCircle class="w-8 h-8 mx-auto mb-3" />
+        <p class="font-medium">
+          {{ error?.response?.data?.message || 'Failed to load report data' }}
+        </p>
+      </div>
+
+      <!-- Report Content -->
+      <div v-else-if="reportData" class="printable-report">
+        <div ref="printableRef" class="p-4">
+          <!-- Header -->
+          <div class="text-center mb-6">
+            <h1 class="text-xl font-bold text-foreground">CORN STANDING REPORT</h1>
+            <p class="text-sm text-foreground">As of: {{ currentDate }}</p>
+            <div class="mt-4 text-left">
+              <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
+              <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+            </div>
           </div>
-        </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full border-collapse border-2 text-xs">
-            <thead class="bg-card">
-              <tr>
-                <th rowspan="2" class="border-2 p-2 text-left font-semibold">
-                  Province/ Ecosystem
-                </th>
-                <th colspan="5" class="border-2 p-2 text-center font-semibold bg-yellow-50">
-                  YELLOW
-                </th>
-                <th colspan="5" class="border-2 p-2 text-center font-semibold bg-gray-50">WHITE</th>
-                <th colspan="5" class="border-2 p-2 text-center font-semibold bg-blue-50">
-                  GRAND TOTAL
-                </th>
-              </tr>
-              <tr>
-                <template v-for="type in ['YELLOW', 'WHITE', 'GRAND TOTAL']" :key="type">
-                  <th class="border p-1 text-center" :class="getHeaderClass(type)">
-                    Newly Planted/ Seedling Stage (ha)
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse border-2 text-xs">
+              <thead class="bg-card">
+                <tr>
+                  <th rowspan="2" class="border-2 p-2 text-left font-semibold">
+                    Province/ Ecosystem
                   </th>
-                  <th class="border p-1 text-center" :class="getHeaderClass(type)">
-                    Vegetative Stage (ha)
+                  <th colspan="5" class="border-2 p-2 text-center font-semibold bg-yellow-50">
+                    YELLOW
                   </th>
-                  <th class="border p-1 text-center" :class="getHeaderClass(type)">
-                    Reproductive Stage (ha)
+                  <th colspan="5" class="border-2 p-2 text-center font-semibold bg-gray-50">
+                    WHITE
                   </th>
-                  <th class="border p-1 text-center" :class="getHeaderClass(type)">
-                    Maturing Stage (ha)
+                  <th colspan="5" class="border-2 p-2 text-center font-semibold bg-blue-50">
+                    GRAND TOTAL
                   </th>
-                  <th class="border p-1 text-center font-bold" :class="getHeaderClass(type)">
-                    TOTAL
-                  </th>
+                </tr>
+                <tr>
+                  <template v-for="type in ['YELLOW', 'WHITE', 'GRAND TOTAL']" :key="type">
+                    <th class="border p-1 text-center" :class="getHeaderClass(type)">
+                      Newly Planted/ Seedling Stage (ha)
+                    </th>
+                    <th class="border p-1 text-center" :class="getHeaderClass(type)">
+                      Vegetative Stage (ha)
+                    </th>
+                    <th class="border p-1 text-center" :class="getHeaderClass(type)">
+                      Reproductive Stage (ha)
+                    </th>
+                    <th class="border p-1 text-center" :class="getHeaderClass(type)">
+                      Maturing Stage (ha)
+                    </th>
+                    <th class="border p-1 text-center font-bold" :class="getHeaderClass(type)">
+                      TOTAL
+                    </th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Province Row -->
+                <tr>
+                  <td colspan="16" class="border-2 p-2 text-left font-bold bg-teal-50">
+                    MARINDUQUE
+                  </td>
+                </tr>
+
+                <!-- Municipality Row -->
+                <tr v-if="selectedMunicipality">
+                  <td colspan="16" class="border-2 p-2 text-left pl-4 font-semibold bg-teal-50/50">
+                    {{ selectedMunicipality.toUpperCase() }}
+                  </td>
+                </tr>
+
+                <!-- Barangay Data Rows -->
+                <template v-if="selectedMunicipality && barangays.length > 0">
+                  <tr v-for="barangay in barangays" :key="barangay" class="hover:bg-muted/50">
+                    <td class="border p-2 text-left">{{ barangay }}</td>
+                    <!-- YELLOW -->
+                    <td
+                      v-for="stage in stages"
+                      :key="'yellow-' + stage"
+                      class="border p-1 text-right"
+                    >
+                      {{ formatNumber(getCropData(barangay, 'YELLOW', stage)) }}
+                    </td>
+                    <td class="border p-1 text-right font-semibold bg-yellow-50/50">
+                      {{ formatNumber(getTotal(barangay, 'YELLOW')) }}
+                    </td>
+                    <!-- WHITE -->
+                    <td
+                      v-for="stage in stages"
+                      :key="'white-' + stage"
+                      class="border p-1 text-right"
+                    >
+                      {{ formatNumber(getCropData(barangay, 'WHITE', stage)) }}
+                    </td>
+                    <td class="border p-1 text-right font-semibold bg-gray-50/50">
+                      {{ formatNumber(getTotal(barangay, 'WHITE')) }}
+                    </td>
+                    <!-- GRAND TOTAL -->
+                    <td
+                      v-for="stage in stages"
+                      :key="'total-' + stage"
+                      class="border p-1 text-right"
+                    >
+                      {{ formatNumber(getCropData(barangay, 'GRAND TOTAL', stage)) }}
+                    </td>
+                    <td class="border p-1 text-right font-semibold bg-blue-50/50">
+                      {{ formatNumber(getTotal(barangay, 'GRAND TOTAL')) }}
+                    </td>
+                  </tr>
+
+                  <!-- Grand Total Row -->
+                  <tr class="font-bold bg-muted/50">
+                    <td class="border p-2 text-left">GRAND TOTAL</td>
+                    <!-- YELLOW Totals -->
+                    <td
+                      v-for="stage in stages"
+                      :key="'total-yellow-' + stage"
+                      class="border p-1 text-right"
+                    >
+                      {{ formatNumber(getColumnTotal('YELLOW', stage)) }}
+                    </td>
+                    <td class="border p-1 text-right bg-yellow-50/50">
+                      {{ formatNumber(getTypeTotal('YELLOW')) }}
+                    </td>
+                    <!-- WHITE Totals -->
+                    <td
+                      v-for="stage in stages"
+                      :key="'total-white-' + stage"
+                      class="border p-1 text-right"
+                    >
+                      {{ formatNumber(getColumnTotal('WHITE', stage)) }}
+                    </td>
+                    <td class="border p-1 text-right bg-gray-50/50">
+                      {{ formatNumber(getTypeTotal('WHITE')) }}
+                    </td>
+                    <!-- GRAND TOTAL Totals -->
+                    <td
+                      v-for="stage in stages"
+                      :key="'total-grand-' + stage"
+                      class="border p-1 text-right"
+                    >
+                      {{ formatNumber(getColumnTotal('GRAND TOTAL', stage)) }}
+                    </td>
+                    <td class="border p-1 text-right bg-blue-50/50">
+                      {{ formatNumber(getTypeTotal('GRAND TOTAL')) }}
+                    </td>
+                  </tr>
                 </template>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Province Row -->
-              <tr>
-                <td colspan="16" class="border-2 p-2 text-left font-bold bg-teal-50">MARINDUQUE</td>
-              </tr>
-
-              <!-- Municipality Row -->
-              <tr v-if="selectedMunicipality">
-                <td colspan="16" class="border-2 p-2 text-left pl-4 font-semibold bg-teal-50/50">
-                  {{ selectedMunicipality.toUpperCase() }}
-                </td>
-              </tr>
-
-              <!-- Barangay Data Rows -->
-              <template v-if="selectedMunicipality && barangays.length > 0">
-                <tr v-for="barangay in barangays" :key="barangay" class="hover:bg-muted/50">
-                  <td class="border p-2 text-left">{{ barangay }}</td>
-                  <!-- YELLOW -->
-                  <td
-                    v-for="stage in stages"
-                    :key="'yellow-' + stage"
-                    class="border p-1 text-right"
-                  >
-                    {{ formatNumber(getCropData(barangay, 'YELLOW', stage)) }}
-                  </td>
-                  <td class="border p-1 text-right font-semibold bg-yellow-50/50">
-                    {{ formatNumber(getTotal(barangay, 'YELLOW')) }}
-                  </td>
-                  <!-- WHITE -->
-                  <td v-for="stage in stages" :key="'white-' + stage" class="border p-1 text-right">
-                    {{ formatNumber(getCropData(barangay, 'WHITE', stage)) }}
-                  </td>
-                  <td class="border p-1 text-right font-semibold bg-gray-50/50">
-                    {{ formatNumber(getTotal(barangay, 'WHITE')) }}
-                  </td>
-                  <!-- GRAND TOTAL -->
-                  <td v-for="stage in stages" :key="'total-' + stage" class="border p-1 text-right">
-                    {{ formatNumber(getCropData(barangay, 'GRAND TOTAL', stage)) }}
-                  </td>
-                  <td class="border p-1 text-right font-semibold bg-blue-50/50">
-                    {{ formatNumber(getTotal(barangay, 'GRAND TOTAL')) }}
+                <tr v-else>
+                  <td colspan="16" class="text-center py-4 border">
+                    Please select a municipality to view the report
                   </td>
                 </tr>
-
-                <!-- Grand Total Row -->
-                <tr class="font-bold bg-muted/50">
-                  <td class="border p-2 text-left">GRAND TOTAL</td>
-                  <!-- YELLOW Totals -->
-                  <td
-                    v-for="stage in stages"
-                    :key="'total-yellow-' + stage"
-                    class="border p-1 text-right"
-                  >
-                    {{ formatNumber(getColumnTotal('YELLOW', stage)) }}
-                  </td>
-                  <td class="border p-1 text-right bg-yellow-50/50">
-                    {{ formatNumber(getTypeTotal('YELLOW')) }}
-                  </td>
-                  <!-- WHITE Totals -->
-                  <td
-                    v-for="stage in stages"
-                    :key="'total-white-' + stage"
-                    class="border p-1 text-right"
-                  >
-                    {{ formatNumber(getColumnTotal('WHITE', stage)) }}
-                  </td>
-                  <td class="border p-1 text-right bg-gray-50/50">
-                    {{ formatNumber(getTypeTotal('WHITE')) }}
-                  </td>
-                  <!-- GRAND TOTAL Totals -->
-                  <td
-                    v-for="stage in stages"
-                    :key="'total-grand-' + stage"
-                    class="border p-1 text-right"
-                  >
-                    {{ formatNumber(getColumnTotal('GRAND TOTAL', stage)) }}
-                  </td>
-                  <td class="border p-1 text-right bg-blue-50/50">
-                    {{ formatNumber(getTypeTotal('GRAND TOTAL')) }}
-                  </td>
-                </tr>
-              </template>
-              <tr v-else>
-                <td colspan="16" class="text-center py-4 border">
-                  Please select a municipality to view the report
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Signatures -->
-        <div class="mt-12 flex justify-between text-foreground">
-          <div class="w-48">
-            <p>Prepared by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
-            <p class="text-sm text-muted-foreground">
-              {{ user?.position || 'Agricultural Technician' }}
-            </p>
+              </tbody>
+            </table>
           </div>
-          <div class="w-48">
-            <p>Noted by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">{{ notedByName }}</p>
-            <p class="text-sm text-muted-foreground">{{ notedByTitle }}</p>
+
+          <!-- Signatures -->
+          <div class="mt-12 flex justify-between text-foreground">
+            <div class="w-48">
+              <p>Prepared by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
+              <p class="text-sm text-muted-foreground">
+                {{ user?.position || 'Agricultural Technician' }}
+              </p>
+            </div>
+            <div class="w-48">
+              <p>Noted by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">{{ notedByName }}</p>
+              <p class="text-sm text-muted-foreground">{{ notedByTitle }}</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Print version - absolutely positioned outside of Vue layout -->
+  <!-- Print version -->
   <div class="print-only" v-if="reportData">
     <div id="report-content">
       <!-- Header -->

@@ -33,13 +33,15 @@ const showDevSettings = ref(false)
       <header
         class="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background transition-[width,height] ease-linear"
       >
-        <div class="flex items-center justify-between w-full px-4">
-          <div class="flex items-center gap-2">
-            <SidebarTrigger class="-ml-1" />
-            <Separator orientation="vertical" class="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
+        <div class="flex items-center justify-between w-full px-2 sm:px-4">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="flex items-center shrink-0">
+              <SidebarTrigger class="-ml-1" />
+              <Separator orientation="vertical" class="mx-2 h-4 hidden sm:block" />
+            </div>
+            <Breadcrumb class="min-w-0">
+              <BreadcrumbList class="flex-wrap items-center">
+                <BreadcrumbItem class="shrink-0">
                   <RouterLink
                     :to="{ name: 'dashboard' }"
                     class="transition-colors hover:text-foreground"
@@ -47,15 +49,17 @@ const showDevSettings = ref(false)
                     Dashboard
                   </RouterLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{{ route.meta.title || 'Current Page' }}</BreadcrumbPage>
+                <BreadcrumbSeparator class="shrink-0" />
+                <BreadcrumbItem class="min-w-0">
+                  <BreadcrumbPage class="truncate">{{
+                    route.meta.title || 'Current Page'
+                  }}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
 
-          <div>
+          <div class="flex items-center gap-2 shrink-0 ml-4">
             <NotificationPopover />
             <!-- Dev Settings Button -->
             <Button

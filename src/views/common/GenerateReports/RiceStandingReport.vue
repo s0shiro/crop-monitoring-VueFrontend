@@ -74,119 +74,133 @@ function printReport() {
 
 <template>
   <!-- Screen version -->
-  <div class="screen-only p-4">
+  <div class="screen-only">
     <!-- Controls -->
-    <div class="bg-card text-card-foreground rounded-lg shadow p-4 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold flex items-center gap-2 text-foreground">
-          <FileText class="h-5 w-5" />
-          Rice Standing Report
+    <div class="flex flex-col gap-6">
+      <div class="flex justify-between items-center">
+        <h2
+          class="text-xl sm:text-2xl lg:text-3xl flex items-center gap-2 font-extrabold text-primary break-words"
+        >
+          <FileText class="h-6 w-6 text-primary flex-shrink-0" />
+          <span class="min-w-0">Rice Standing Report</span>
         </h2>
-        <Button @click="printReport" variant="default" class="flex items-center gap-2">
+        <Button @click="printReport" variant="outline" class="hidden md:flex items-center gap-2">
           <Printer class="h-4 w-4" />
           Print Report
         </Button>
       </div>
+    </div>
 
-      <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <Label class="text-foreground">Prepared by</Label>
-          <Input type="text" :value="user?.name" disabled class="text-foreground" />
-        </div>
-        <div>
-          <Label class="text-foreground">Date</Label>
-          <Input type="text" :value="currentDate" disabled class="text-foreground" />
-        </div>
+    <!-- Mobile message -->
+    <div class="block md:hidden text-center py-12 bg-muted/10 rounded-lg mt-6">
+      <FileText class="h-16 w-16 mx-auto mb-4 text-primary opacity-80" />
+      <h3 class="text-xl font-semibold mb-3">Desktop View Recommended</h3>
+      <p class="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+        This report is optimized for desktop viewing. Please use a larger screen to view the full
+        report preview.
+      </p>
+      <Button @click="printReport" variant="default" class="flex items-center gap-2 mx-auto">
+        <Printer class="h-4 w-4" />
+        Print Report
+      </Button>
+    </div>
+
+    <!-- Desktop preview -->
+    <div class="hidden md:block mt-6">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex items-center justify-center py-12">
+        <Loader2Icon class="w-10 h-10 animate-spin text-primary" />
       </div>
-    </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
-    </div>
+      <!-- Error State -->
+      <div v-else-if="error" class="text-center text-destructive py-12">
+        <AlertCircle class="w-8 h-8 mx-auto mb-3" />
+        <p class="font-medium">
+          {{ error?.response?.data?.message || 'Failed to load report data' }}
+        </p>
+      </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center text-destructive py-8">
-      <AlertCircle class="w-6 h-6 mx-auto mb-2" />
-      <p>{{ error?.response?.data?.message || 'Failed to load report data' }}</p>
-    </div>
-
-    <!-- Report Content -->
-    <div v-else-if="reportData" class="printable-report">
-      <div id="report-content" class="text-card-foreground">
-        <!-- Header -->
-        <div class="text-center mb-6">
-          <h1 class="text-xl font-bold text-foreground">RICE STANDING CROP REPORT</h1>
-          <p class="text-sm text-foreground">As of {{ currentDate }}</p>
-          <div class="mt-4 text-left">
-            <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
-            <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+      <!-- Report Content -->
+      <div v-else-if="reportData" class="printable-report">
+        <div id="report-content" class="text-card-foreground">
+          <!-- Header -->
+          <div class="text-center mb-6">
+            <h1 class="text-xl font-bold text-foreground">RICE STANDING CROP REPORT</h1>
+            <p class="text-sm text-foreground">As of {{ currentDate }}</p>
+            <div class="mt-4 text-left">
+              <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
+              <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+            </div>
           </div>
-        </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th rowspan="2" class="border p-2">MUNICIPALITY</th>
-                <template v-for="category in reportData.categories" :key="category">
-                  <th :colspan="5" class="border p-2 text-center" :class="getHeaderClass(category)">
-                    {{ category.toUpperCase() }} (ha)
-                  </th>
-                </template>
-              </tr>
-              <tr>
-                <template v-for="category in reportData.categories" :key="category">
-                  <template v-for="stage in reportData.stages" :key="stage">
-                    <th class="border p-2 text-center text-sm" :class="getCellClass(category)">
-                      {{ stage }}
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th rowspan="2" class="border p-2">MUNICIPALITY</th>
+                  <template v-for="category in reportData.categories" :key="category">
+                    <th
+                      :colspan="5"
+                      class="border p-2 text-center"
+                      :class="getHeaderClass(category)"
+                    >
+                      {{ category.toUpperCase() }} (ha)
                     </th>
                   </template>
-                </template>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="municipality in reportData.municipalities"
-                :key="municipality"
-                :class="{ 'font-bold bg-gray-50': municipality === 'Marinduque' }"
-              >
-                <td class="border p-2">{{ municipality }}</td>
-                <template v-for="category in reportData.categories" :key="category">
-                  <template v-for="stage in reportData.stages" :key="stage">
-                    <td class="border p-2 text-center">
-                      {{ formatValue(getValue(municipality, category, stage)) }}
-                    </td>
+                </tr>
+                <tr>
+                  <template v-for="category in reportData.categories" :key="category">
+                    <template v-for="stage in reportData.stages" :key="stage">
+                      <th class="border p-2 text-center text-sm" :class="getCellClass(category)">
+                        {{ stage }}
+                      </th>
+                    </template>
                   </template>
-                </template>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Signatures -->
-        <div class="mt-12 flex justify-between text-foreground">
-          <div class="w-48">
-            <p>Prepared by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
-            <p class="text-sm text-muted-foreground">
-              {{ user?.position || 'Agricultural Technician' }}
-            </p>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="municipality in reportData.municipalities"
+                  :key="municipality"
+                  :class="{ 'font-bold bg-gray-50': municipality === 'Marinduque' }"
+                >
+                  <td class="border p-2">{{ municipality }}</td>
+                  <template v-for="category in reportData.categories" :key="category">
+                    <template v-for="stage in reportData.stages" :key="stage">
+                      <td class="border p-2 text-center">
+                        {{ formatValue(getValue(municipality, category, stage)) }}
+                      </td>
+                    </template>
+                  </template>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div class="w-48">
-            <p>Noted by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">VANESSA TAYABA</p>
-            <p class="text-sm text-muted-foreground">Municipal Agricultural Officer</p>
+
+          <!-- Signatures -->
+          <div class="mt-12 flex justify-between text-foreground">
+            <div class="w-48">
+              <p>Prepared by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
+              <p class="text-sm text-muted-foreground">
+                {{ user?.position || 'Agricultural Technician' }}
+              </p>
+            </div>
+            <div class="w-48">
+              <p>Noted by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">VANESSA TAYABA</p>
+              <p class="text-sm text-muted-foreground">Municipal Agricultural Officer</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Print version - absolutely positioned outside of Vue layout -->
+  <!-- Print version -->
   <div class="print-only">
     <div id="report-content">
       <!-- Header -->

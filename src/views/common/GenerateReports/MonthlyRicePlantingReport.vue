@@ -1,8 +1,6 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { FileText, Printer, Loader2Icon, AlertCircle } from 'lucide-vue-next'
 import { useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/lib/axios'
@@ -139,63 +137,6 @@ function formatValue(value) {
   return Number(value).toFixed(4)
 }
 
-function renderTotalsRow() {
-  if (!municipalities.value.municipalities['Marinduque']) return []
-
-  const { irrigated, rainfedLowland, rainfedUpland } =
-    municipalities.value.municipalities['Marinduque']
-  const irrigatedTotal = Object.values(irrigated).reduce((a, b) => a + b, 0)
-  const rainfedTotalLowland = Object.values(rainfedLowland).reduce((a, b) => a + b, 0)
-  const rainfedTotalUpland = Object.values(rainfedUpland).reduce((a, b) => a + b, 0)
-
-  return [
-    irrigated.hybrid,
-    irrigated.registered,
-    irrigated.certified,
-    irrigated.goodQuality,
-    irrigated.farmersSaved,
-    irrigatedTotal,
-    rainfedLowland.hybrid,
-    rainfedLowland.registered,
-    rainfedLowland.certified,
-    rainfedLowland.goodQuality,
-    rainfedLowland.farmersSaved,
-    rainfedUpland.hybrid,
-    rainfedUpland.registered,
-    rainfedUpland.certified,
-    rainfedUpland.goodQuality,
-    rainfedUpland.farmersSaved,
-    rainfedTotalLowland + rainfedTotalUpland,
-  ]
-}
-
-function renderMunicipalityRow(municipalityData) {
-  const { irrigated, rainfedLowland, rainfedUpland } = municipalityData
-  const irrigatedTotal = Object.values(irrigated).reduce((a, b) => a + b, 0)
-  const rainfedTotalLowland = Object.values(rainfedLowland).reduce((a, b) => a + b, 0)
-  const rainfedTotalUpland = Object.values(rainfedUpland).reduce((a, b) => a + b, 0)
-
-  return [
-    irrigated.hybrid,
-    irrigated.registered,
-    irrigated.certified,
-    irrigated.goodQuality,
-    irrigated.farmersSaved,
-    irrigatedTotal,
-    rainfedLowland.hybrid,
-    rainfedLowland.registered,
-    rainfedLowland.certified,
-    rainfedLowland.goodQuality,
-    rainfedLowland.farmersSaved,
-    rainfedUpland.hybrid,
-    rainfedUpland.registered,
-    rainfedUpland.certified,
-    rainfedUpland.goodQuality,
-    rainfedUpland.farmersSaved,
-    rainfedTotalLowland + rainfedTotalUpland,
-  ]
-}
-
 function generateRandomFilename() {
   const timestamp = new Date().toISOString().slice(0, 10)
   const uuid = crypto.randomUUID()
@@ -216,247 +157,268 @@ function printReport() {
 
 <template>
   <!-- Screen version -->
-  <div class="screen-only p-4">
+  <div class="screen-only">
     <!-- Controls -->
-    <div class="bg-card text-card-foreground rounded-lg shadow p-4 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold flex items-center gap-2 text-foreground">
-          <FileText class="h-5 w-5" />
-          Monthly Rice Planting Report
+    <!-- Header section -->
+    <div class="mb-6">
+      <div
+        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0"
+      >
+        <h2
+          class="text-xl sm:text-2xl lg:text-3xl flex items-center gap-2 font-extrabold text-primary break-words"
+        >
+          <FileText class="h-6 w-6 text-primary flex-shrink-0" />
+          <span class="min-w-0">Monthly Rice Planting Report</span>
         </h2>
-        <Button @click="printReport" variant="default" class="flex items-center gap-2">
-          <Printer class="h-4 w-4" />
+        <Button
+          @click="printReport"
+          variant="default"
+          class="w-full sm:w-auto flex items-center justify-center gap-1.5 text-sm sm:text-base px-3 py-1.5 sm:px-4 sm:py-2"
+        >
+          <Printer class="h-4 w-4 flex-shrink-0" />
           Print Report
         </Button>
       </div>
+    </div>
 
-      <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <Label class="text-foreground">Prepared by</Label>
-          <Input type="text" :value="user?.name" disabled class="text-foreground" />
-        </div>
-        <div>
-          <Label class="text-foreground">Date</Label>
-          <Input type="text" :value="currentDate" disabled class="text-foreground" />
-        </div>
+    <!-- Mobile message -->
+    <div class="block md:hidden text-center py-8 px-4">
+      <FileText class="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+      <h3 class="text-lg font-semibold mb-3">Desktop View Recommended</h3>
+      <p class="text-sm text-muted-foreground max-w-[300px] mx-auto">
+        This report is optimized for desktop viewing. Please use a larger screen to view the full
+        report preview.
+      </p>
+    </div>
+
+    <!-- Desktop preview -->
+    <div class="hidden md:block">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex items-center justify-center py-8">
+        <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
       </div>
-    </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
-    </div>
+      <!-- Error State -->
+      <div v-else-if="error" class="text-center text-destructive py-8">
+        <AlertCircle class="w-6 h-6 mx-auto mb-2" />
+        <p>{{ error?.response?.data?.message || 'Failed to load report data' }}</p>
+      </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center text-destructive py-8">
-      <AlertCircle class="w-6 h-6 mx-auto mb-2" />
-      <p>{{ error?.response?.data?.message || 'Failed to load report data' }}</p>
-    </div>
-
-    <!-- Report Content -->
-    <div v-else-if="reportData" class="printable-report">
-      <div id="report-content" class="text-card-foreground">
-        <!-- Header -->
-        <div class="text-center mb-6">
-          <h1 class="text-xl font-bold text-foreground">RICE PLANTING REPORT</h1>
-          <h2 class="text-lg font-bold text-foreground">MONTHLY PLANTING ACCOMPLISHMENT REPORT</h2>
-          <p class="text-sm text-foreground">For the Month of: {{ currentDate }}</p>
-          <div class="mt-4 text-left">
-            <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
-            <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+      <!-- Report Content -->
+      <div v-else-if="reportData" class="printable-report">
+        <div id="report-content" class="text-card-foreground">
+          <!-- Header -->
+          <div class="text-center mb-6">
+            <h1 class="text-xl font-bold text-foreground">RICE PLANTING REPORT</h1>
+            <h2 class="text-lg font-bold text-foreground">
+              MONTHLY PLANTING ACCOMPLISHMENT REPORT
+            </h2>
+            <p class="text-sm text-foreground">For the Month of: {{ currentDate }}</p>
+            <div class="mt-4 text-left">
+              <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
+              <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+            </div>
           </div>
-        </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th rowspan="3" class="border p-2">MUNICIPALITY</th>
-                <th rowspan="3" class="border p-2">NO. OF FARMERS PLANTED</th>
-                <th class="irrigated border p-2" colspan="6">IRRIGATED</th>
-                <th class="rainfed border p-2" colspan="11">RAINFED</th>
-              </tr>
-              <tr>
-                <th class="irrigated border p-2" rowspan="2">HYBRID</th>
-                <th class="irrigated border p-2" rowspan="2">REGISTERED</th>
-                <th class="irrigated border p-2" rowspan="2">CERTIFIED</th>
-                <th class="irrigated border p-2" rowspan="2">GOOD QUALITY</th>
-                <th class="irrigated border p-2" rowspan="2">FARMER SAVED SEEDS</th>
-                <th class="irrigated border p-2" rowspan="2">TOTAL</th>
-                <th class="rainfed-lowland border p-2" colspan="5">LOWLAND</th>
-                <th class="rainfed-upland border p-2" colspan="6">UPLAND</th>
-              </tr>
-              <tr>
-                <th class="rainfed-lowland border p-2">HYBRID</th>
-                <th class="rainfed-lowland border p-2">REGISTERED</th>
-                <th class="rainfed-lowland border p-2">CERTIFIED</th>
-                <th class="rainfed-lowland border p-2">GOOD QUALITY</th>
-                <th class="rainfed-lowland border p-2">FARMER SAVED SEEDS</th>
-                <th class="rainfed-upland border p-2">HYBRID</th>
-                <th class="rainfed-upland border p-2">REGISTERED</th>
-                <th class="rainfed-upland border p-2">CERTIFIED</th>
-                <th class="rainfed-upland border p-2">GOOD QUALITY</th>
-                <th class="rainfed-upland border p-2">FARMER SAVED SEEDS</th>
-                <th class="rainfed-upland border p-2">TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Municipality Rows -->
-              <template v-if="municipalities?.orderedMunicipalities">
-                <tr
-                  v-for="municipality in municipalities.orderedMunicipalities"
-                  :key="municipality"
-                  :class="{ 'font-bold bg-gray-50': municipality === 'Marinduque' }"
-                >
-                  <td class="border p-2">{{ municipality }}</td>
-                  <td class="border text-center">
-                    {{ municipalities.municipalities[municipality]?.farmers || 0 }}
-                  </td>
-                  <!-- Irrigated Fields -->
-                  <td class="border text-center">
-                    {{ formatValue(municipalities.municipalities[municipality]?.irrigated.hybrid) }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(municipalities.municipalities[municipality]?.irrigated.registered)
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(municipalities.municipalities[municipality]?.irrigated.certified)
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.irrigated.goodQuality,
-                      )
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.irrigated.farmersSaved,
-                      )
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        Object.values(
-                          municipalities.municipalities[municipality]?.irrigated || {},
-                        ).reduce((a, b) => a + b, 0),
-                      )
-                    }}
-                  </td>
-
-                  <!-- Rainfed Lowland Fields -->
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.rainfedLowland.hybrid,
-                      )
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.rainfedLowland.registered,
-                      )
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.rainfedLowland.certified,
-                      )
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.rainfedLowland.goodQuality,
-                      )
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.rainfedLowland.farmersSaved,
-                      )
-                    }}
-                  </td>
-
-                  <!-- Rainfed Upland Fields -->
-                  <td class="border text-center">
-                    {{
-                      formatValue(municipalities.municipalities[municipality]?.rainfedUpland.hybrid)
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.rainfedUpland.registered,
-                      )
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.rainfedUpland.certified,
-                      )
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.rainfedUpland.goodQuality,
-                      )
-                    }}
-                  </td>
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        municipalities.municipalities[municipality]?.rainfedUpland.farmersSaved,
-                      )
-                    }}
-                  </td>
-
-                  <!-- Total Rainfed -->
-                  <td class="border text-center">
-                    {{
-                      formatValue(
-                        Object.values(
-                          municipalities.municipalities[municipality]?.rainfedLowland || {},
-                        ).reduce((a, b) => a + b, 0) +
-                          Object.values(
-                            municipalities.municipalities[municipality]?.rainfedUpland || {},
-                          ).reduce((a, b) => a + b, 0),
-                      )
-                    }}
-                  </td>
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th rowspan="3" class="border p-2">MUNICIPALITY</th>
+                  <th rowspan="3" class="border p-2">NO. OF FARMERS PLANTED</th>
+                  <th class="irrigated border p-2" colspan="6">IRRIGATED</th>
+                  <th class="rainfed border p-2" colspan="11">RAINFED</th>
                 </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
+                <tr>
+                  <th class="irrigated border p-2" rowspan="2">HYBRID</th>
+                  <th class="irrigated border p-2" rowspan="2">REGISTERED</th>
+                  <th class="irrigated border p-2" rowspan="2">CERTIFIED</th>
+                  <th class="irrigated border p-2" rowspan="2">GOOD QUALITY</th>
+                  <th class="irrigated border p-2" rowspan="2">FARMER SAVED SEEDS</th>
+                  <th class="irrigated border p-2" rowspan="2">TOTAL</th>
+                  <th class="rainfed-lowland border p-2" colspan="5">LOWLAND</th>
+                  <th class="rainfed-upland border p-2" colspan="6">UPLAND</th>
+                </tr>
+                <tr>
+                  <th class="rainfed-lowland border p-2">HYBRID</th>
+                  <th class="rainfed-lowland border p-2">REGISTERED</th>
+                  <th class="rainfed-lowland border p-2">CERTIFIED</th>
+                  <th class="rainfed-lowland border p-2">GOOD QUALITY</th>
+                  <th class="rainfed-lowland border p-2">FARMER SAVED SEEDS</th>
+                  <th class="rainfed-upland border p-2">HYBRID</th>
+                  <th class="rainfed-upland border p-2">REGISTERED</th>
+                  <th class="rainfed-upland border p-2">CERTIFIED</th>
+                  <th class="rainfed-upland border p-2">GOOD QUALITY</th>
+                  <th class="rainfed-upland border p-2">FARMER SAVED SEEDS</th>
+                  <th class="rainfed-upland border p-2">TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Municipality Rows -->
+                <template v-if="municipalities?.orderedMunicipalities">
+                  <tr
+                    v-for="municipality in municipalities.orderedMunicipalities"
+                    :key="municipality"
+                    :class="{ 'font-bold bg-gray-50': municipality === 'Marinduque' }"
+                  >
+                    <td class="border p-2">{{ municipality }}</td>
+                    <td class="border text-center">
+                      {{ municipalities.municipalities[municipality]?.farmers || 0 }}
+                    </td>
+                    <!-- Irrigated Fields -->
+                    <td class="border text-center">
+                      {{
+                        formatValue(municipalities.municipalities[municipality]?.irrigated.hybrid)
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.irrigated.registered,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.irrigated.certified,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.irrigated.goodQuality,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.irrigated.farmersSaved,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          Object.values(
+                            municipalities.municipalities[municipality]?.irrigated || {},
+                          ).reduce((a, b) => a + b, 0),
+                        )
+                      }}
+                    </td>
 
-        <!-- Signatures -->
-        <div class="mt-12 flex justify-between text-foreground">
-          <div class="w-48">
-            <p>Prepared by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
-            <p class="text-sm text-muted-foreground">
-              {{ user?.position || 'Agricultural Technician' }}
-            </p>
+                    <!-- Rainfed Lowland Fields -->
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedLowland.hybrid,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedLowland.registered,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedLowland.certified,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedLowland.goodQuality,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedLowland.farmersSaved,
+                        )
+                      }}
+                    </td>
+
+                    <!-- Rainfed Upland Fields -->
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedUpland.hybrid,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedUpland.registered,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedUpland.certified,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedUpland.goodQuality,
+                        )
+                      }}
+                    </td>
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          municipalities.municipalities[municipality]?.rainfedUpland.farmersSaved,
+                        )
+                      }}
+                    </td>
+
+                    <!-- Total Rainfed -->
+                    <td class="border text-center">
+                      {{
+                        formatValue(
+                          Object.values(
+                            municipalities.municipalities[municipality]?.rainfedLowland || {},
+                          ).reduce((a, b) => a + b, 0) +
+                            Object.values(
+                              municipalities.municipalities[municipality]?.rainfedUpland || {},
+                            ).reduce((a, b) => a + b, 0),
+                        )
+                      }}
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
           </div>
-          <div class="w-48">
-            <p>Noted by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">VANESSA TAYABA</p>
-            <p class="text-sm text-muted-foreground">Municipal Agricultural Officer</p>
+
+          <!-- Signatures -->
+          <div class="mt-12 flex justify-between text-foreground">
+            <div class="w-48">
+              <p>Prepared by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
+              <p class="text-sm text-muted-foreground">
+                {{ user?.position || 'Agricultural Technician' }}
+              </p>
+            </div>
+            <div class="w-48">
+              <p>Noted by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">VANESSA TAYABA</p>
+              <p class="text-sm text-muted-foreground">Municipal Agricultural Officer</p>
+            </div>
           </div>
         </div>
       </div>
@@ -701,30 +663,30 @@ function printReport() {
 }
 
 /* First two columns (Municipality & Farmers) */
-.screen-only .report-table th[rowspan="3"]:first-child {
+.screen-only .report-table th[rowspan='3']:first-child {
   width: 110px;
 }
 
-.screen-only .report-table th[rowspan="3"]:nth-child(2) {
+.screen-only .report-table th[rowspan='3']:nth-child(2) {
   width: 70px;
 }
 
 /* Category columns */
-.screen-only .report-table th[colspan="6"] {
+.screen-only .report-table th[colspan='6'] {
   font-size: 0.75rem;
 }
 
-.screen-only .report-table th[colspan="11"] {
+.screen-only .report-table th[colspan='11'] {
   font-size: 0.75rem;
 }
 
-.screen-only .report-table th[colspan="5"],
-.screen-only .report-table th[colspan="6"] {
+.screen-only .report-table th[colspan='5'],
+.screen-only .report-table th[colspan='6'] {
   font-size: 0.7rem;
 }
 
 /* Individual columns */
-.screen-only .report-table th[rowspan="2"] {
+.screen-only .report-table th[rowspan='2'] {
   width: 40px;
   font-size: 0.65rem;
 }

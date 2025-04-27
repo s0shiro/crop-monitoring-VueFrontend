@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,14 +15,26 @@ import { FileText, Printer, Loader2Icon, AlertCircle } from 'lucide-vue-next'
 import { useQuery } from '@tanstack/vue-query'
 import axiosInstance from '@/lib/axios'
 
+// Helper functions to get first and last day of current month
+function getFirstDayOfCurrentMonth() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+}
+
+function getLastDayOfCurrentMonth() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
+}
+
+// Component setup
 const authStore = useAuthStore()
 const user = authStore.user
 
 // Filter states
 const selectedMunicipality = ref('Boac')
 const selectedWaterSupply = ref('irrigated')
-const startDate = ref('')
-const endDate = ref('')
+const startDate = ref(getFirstDayOfCurrentMonth())
+const endDate = ref(getLastDayOfCurrentMonth())
 
 // Constants
 const municipalities = ['Boac', 'Buenavista', 'Gasan', 'Mogpog', 'Santa Cruz', 'Torrijos']
@@ -140,13 +152,15 @@ function printReport() {
   <!-- Screen version -->
   <div class="screen-only">
     <!-- Controls -->
-    <div class="bg-card text-card-foreground rounded-lg shadow">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold flex items-center gap-2 text-foreground">
-          <FileText class="h-5 w-5" />
-          Rice Harvesting Report
+    <div class="flex flex-col gap-6">
+      <div class="flex justify-between items-center">
+        <h2
+          class="text-xl sm:text-2xl lg:text-3xl flex items-center gap-2 font-extrabold text-primary break-words"
+        >
+          <FileText class="h-6 w-6 text-primary flex-shrink-0" />
+          <span class="min-w-0">Rice Harvest Report</span>
         </h2>
-        <Button @click="printReport" variant="default" class="flex items-center gap-2">
+        <Button @click="printReport" variant="outline" class="hidden md:flex items-center gap-2">
           <Printer class="h-4 w-4" />
           Print Report
         </Button>
@@ -207,166 +221,187 @@ function printReport() {
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
+    <!-- Mobile message -->
+    <div class="block md:hidden text-center py-12 bg-muted/10 rounded-lg mt-6">
+      <FileText class="h-16 w-16 mx-auto mb-4 text-primary opacity-80" />
+      <h3 class="text-xl font-semibold mb-3">Desktop View Recommended</h3>
+      <p class="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+        This report is optimized for desktop viewing. Please use a larger screen to view the full
+        report preview.
+      </p>
+      <Button @click="printReport" variant="default" class="flex items-center gap-2 mx-auto">
+        <Printer class="h-4 w-4" />
+        Print Report
+      </Button>
     </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center text-destructive py-8">
-      <AlertCircle class="w-6 h-6 mx-auto mb-2" />
-      <p>{{ error?.response?.data?.message || 'Failed to load report data' }}</p>
-    </div>
+    <!-- Desktop preview -->
+    <div class="hidden md:block mt-6">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex items-center justify-center py-12">
+        <Loader2Icon class="w-10 h-10 animate-spin text-primary" />
+      </div>
 
-    <!-- Report Content -->
-    <div v-else-if="reportData" class="printable-report">
-      <div id="report-content" class="text-card-foreground">
-        <!-- Header -->
-        <div class="text-center mb-6">
-          <h1 class="text-xl font-bold text-foreground">RICE HARVESTING REPORT</h1>
-          <h2 class="text-xl font-bold text-foreground">HARVESTING ACCOMPLISHMENT REPORT</h2>
-          <p class="text-lg font-bold text-foreground">{{ reportData.meta.season_year }}</p>
-          <p class="text-sm text-foreground">For the Month of: {{ reportData.meta.date_range }}</p>
-          <div class="mt-4 text-left">
-            <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
-            <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
-            <p class="font-semibold text-foreground">
-              MUNICIPALITY: {{ reportData.meta.municipality.toUpperCase() }}
+      <!-- Error State -->
+      <div v-else-if="error" class="text-center text-destructive py-12">
+        <AlertCircle class="w-8 h-8 mx-auto mb-3" />
+        <p class="font-medium">
+          {{ error?.response?.data?.message || 'Failed to load report data' }}
+        </p>
+      </div>
+
+      <!-- Report Content -->
+      <div v-else-if="reportData" class="printable-report">
+        <div id="report-content" class="text-card-foreground">
+          <!-- Header -->
+          <div class="text-center mb-6">
+            <h1 class="text-xl font-bold text-foreground">RICE HARVESTING REPORT</h1>
+            <h2 class="text-xl font-bold text-foreground">HARVESTING ACCOMPLISHMENT REPORT</h2>
+            <p class="text-lg font-bold text-foreground">{{ reportData.meta.season_year }}</p>
+            <p class="text-sm text-foreground">
+              For the Month of: {{ reportData.meta.date_range }}
             </p>
+            <div class="mt-4 text-left">
+              <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
+              <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+              <p class="font-semibold text-foreground">
+                MUNICIPALITY: {{ reportData.meta.municipality.toUpperCase() }}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="report-table">
-            <thead>
-              <tr>
-                <th rowspan="3" class="border p-2 min-w-[120px]">BARANGAY</th>
-                <th rowspan="3" class="border p-2">No. of Farmer Harvested</th>
-                <th
-                  colspan="18"
-                  class="border text-center"
-                  :class="getHeaderClass(selectedWaterSupply)"
-                >
-                  {{ selectedWaterSupply.toUpperCase() }}
-                </th>
-              </tr>
-              <tr>
-                <th
-                  v-for="type in [
-                    'HYBRID SEEDS',
-                    'REGISTERED SEEDS',
-                    'CERTIFIED SEEDS',
-                    'GOOD QUALITY SEEDS',
-                    'FARMER SAVED SEEDS',
-                    'TOTAL',
-                  ]"
-                  :key="type"
-                  colspan="3"
-                  class="border text-center"
-                >
-                  {{ type }}
-                </th>
-              </tr>
-              <tr>
-                <template v-for="i in 6" :key="i">
-                  <th class="border text-center">Area<br />(ha)</th>
-                  <th class="border text-center">Average Yield<br />(mt/ha)</th>
-                  <th class="border text-center">Production<br />(mt)</th>
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th rowspan="3" class="border p-2 min-w-[120px]">BARANGAY</th>
+                  <th rowspan="3" class="border p-2">No. of Farmer Harvested</th>
+                  <th
+                    colspan="18"
+                    class="border text-center"
+                    :class="getHeaderClass(selectedWaterSupply)"
+                  >
+                    {{ selectedWaterSupply.toUpperCase() }}
+                  </th>
+                </tr>
+                <tr>
+                  <th
+                    v-for="type in [
+                      'HYBRID SEEDS',
+                      'REGISTERED SEEDS',
+                      'CERTIFIED SEEDS',
+                      'GOOD QUALITY SEEDS',
+                      'FARMER SAVED SEEDS',
+                      'TOTAL',
+                    ]"
+                    :key="type"
+                    colspan="3"
+                    class="border text-center"
+                  >
+                    {{ type }}
+                  </th>
+                </tr>
+                <tr>
+                  <template v-for="i in 6" :key="i">
+                    <th class="border text-center">Area<br />(ha)</th>
+                    <th class="border text-center">Average Yield<br />(mt/ha)</th>
+                    <th class="border text-center">Production<br />(mt)</th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-if="Object.keys(reportData.data).length">
+                  <tr v-for="(barangayData, barangay) in reportData.data" :key="barangay">
+                    <td class="border p-2">{{ barangay }}</td>
+                    <td class="border text-center">{{ barangayData.noOfFarmerHarvested }}</td>
+                    <!-- Hybrid Seeds -->
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.hybridSeeds.area) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.hybridSeeds.averageYield) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.hybridSeeds.production) }}
+                    </td>
+                    <!-- Registered Seeds -->
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.registeredSeeds.area) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.registeredSeeds.averageYield) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.registeredSeeds.production) }}
+                    </td>
+                    <!-- Certified Seeds -->
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.certifiedSeeds.area) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.certifiedSeeds.averageYield) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.certifiedSeeds.production) }}
+                    </td>
+                    <!-- Good Quality Seeds -->
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.goodQualitySeeds.area) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.goodQualitySeeds.averageYield) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.goodQualitySeeds.production) }}
+                    </td>
+                    <!-- Farmer Saved Seeds -->
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.farmerSavedSeeds.area) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.farmerSavedSeeds.averageYield) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(barangayData.farmerSavedSeeds.production) }}
+                    </td>
+                    <!-- Total -->
+                    <td class="border text-center">
+                      {{ formatValue(calculateTotalArea(barangayData)) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(calculateAverageYield(barangayData)) }}
+                    </td>
+                    <td class="border text-center">
+                      {{ formatValue(calculateTotalProduction(barangayData)) }}
+                    </td>
+                  </tr>
                 </template>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-if="Object.keys(reportData.data).length">
-                <tr v-for="(barangayData, barangay) in reportData.data" :key="barangay">
-                  <td class="border p-2">{{ barangay }}</td>
-                  <td class="border text-center">{{ barangayData.noOfFarmerHarvested }}</td>
-                  <!-- Hybrid Seeds -->
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.hybridSeeds.area) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.hybridSeeds.averageYield) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.hybridSeeds.production) }}
-                  </td>
-                  <!-- Registered Seeds -->
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.registeredSeeds.area) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.registeredSeeds.averageYield) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.registeredSeeds.production) }}
-                  </td>
-                  <!-- Certified Seeds -->
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.certifiedSeeds.area) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.certifiedSeeds.averageYield) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.certifiedSeeds.production) }}
-                  </td>
-                  <!-- Good Quality Seeds -->
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.goodQualitySeeds.area) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.goodQualitySeeds.averageYield) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.goodQualitySeeds.production) }}
-                  </td>
-                  <!-- Farmer Saved Seeds -->
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.farmerSavedSeeds.area) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.farmerSavedSeeds.averageYield) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(barangayData.farmerSavedSeeds.production) }}
-                  </td>
-                  <!-- Total -->
-                  <td class="border text-center">
-                    {{ formatValue(calculateTotalArea(barangayData)) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(calculateAverageYield(barangayData)) }}
-                  </td>
-                  <td class="border text-center">
-                    {{ formatValue(calculateTotalProduction(barangayData)) }}
+                <tr v-else>
+                  <td colspan="20" class="border text-center py-4">
+                    No harvesting data available for {{ selectedMunicipality }}
                   </td>
                 </tr>
-              </template>
-              <tr v-else>
-                <td colspan="20" class="border text-center py-4">
-                  No harvesting data available for {{ selectedMunicipality }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Signatures -->
-        <div class="mt-12 flex justify-between text-foreground">
-          <div class="w-48">
-            <p>Prepared by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
-            <p class="text-sm text-muted-foreground">
-              {{ user?.position || 'Agricultural Technician' }}
-            </p>
+              </tbody>
+            </table>
           </div>
-          <div class="w-48">
-            <p>Noted by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">VANESSA TAYABA</p>
-            <p class="text-sm text-muted-foreground">Municipal Agricultural Officer</p>
+
+          <!-- Signatures -->
+          <div class="mt-12 flex justify-between text-foreground">
+            <div class="w-48">
+              <p>Prepared by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
+              <p class="text-sm text-muted-foreground">
+                {{ user?.position || 'Agricultural Technician' }}
+              </p>
+            </div>
+            <div class="w-48">
+              <p>Noted by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">VANESSA TAYABA</p>
+              <p class="text-sm text-muted-foreground">Municipal Agricultural Officer</p>
+            </div>
           </div>
         </div>
       </div>

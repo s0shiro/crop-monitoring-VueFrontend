@@ -1,13 +1,15 @@
 <template>
-  <div class="screen-only p-4">
+  <div class="screen-only">
     <!-- Controls -->
-    <div class="bg-card text-card-foreground rounded-lg shadow p-4 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold flex items-center gap-2 text-foreground">
-          <FileText class="h-5 w-5" />
-          Monthly Corn Planting Report
+    <div class="flex flex-col gap-6">
+      <div class="flex justify-between items-center">
+        <h2
+          class="text-xl sm:text-2xl lg:text-3xl flex items-center gap-2 font-extrabold text-primary break-words"
+        >
+          <FileText class="h-6 w-6 text-primary flex-shrink-0" />
+          <span class="min-w-0">Monthly Corn Planting Report</span>
         </h2>
-        <Button @click="printReport" variant="default" class="flex items-center gap-2">
+        <Button @click="printReport" variant="outline" class="hidden md:flex items-center gap-2">
           <Printer class="h-4 w-4" />
           Print Report
         </Button>
@@ -31,170 +33,180 @@
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <Label class="text-foreground">Prepared by</Label>
-          <Input type="text" :value="user?.name" disabled class="text-foreground" />
-        </div>
-        <div>
-          <Label class="text-foreground">Date</Label>
-          <Input type="text" :value="currentDate" disabled class="text-foreground" />
-        </div>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
+    <!-- Mobile message -->
+    <div class="block md:hidden text-center py-12 bg-muted/10 rounded-lg mt-6">
+      <FileText class="h-16 w-16 mx-auto mb-4 text-primary opacity-80" />
+      <h3 class="text-xl font-semibold mb-3">Desktop View Recommended</h3>
+      <p class="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+        This report is optimized for desktop viewing. Please use a larger screen to view the full
+        report preview.
+      </p>
+      <Button @click="printReport" variant="default" class="flex items-center gap-2 mx-auto">
+        <Printer class="h-4 w-4" />
+        Print Report
+      </Button>
     </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center text-destructive py-8">
-      <AlertCircle class="w-6 h-6 mx-auto mb-2" />
-      <p>{{ error?.response?.data?.message || 'Failed to load report data' }}</p>
-    </div>
+    <!-- Desktop preview -->
+    <div class="hidden md:block mt-6">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex items-center justify-center py-12">
+        <Loader2Icon class="w-10 h-10 animate-spin text-primary" />
+      </div>
 
-    <!-- Report Content -->
-    <div
-      v-else-if="reportData"
-      class="printable-report bg-card text-card-foreground rounded-lg shadow"
-    >
-      <div ref="printableRef" class="p-4">
-        <!-- Header -->
-        <div class="text-center mb-6">
-          <h1 class="text-xl font-bold text-foreground">CORN PROGRAM</h1>
-          <h2 class="text-lg font-bold text-foreground">MONTHLY PLANTING ACCOMPLISHMENT REPORT</h2>
-          <p class="text-sm text-foreground">For the Month of: {{ currentDate }}</p>
-          <div class="mt-4 text-left">
-            <p class="font-semibold text-foreground">REGION: IVB</p>
-            <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
-            <div class="flex gap-4 mt-2">
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="january-june" />
-                <label for="january-june">JANUARY - JUNE</label>
-              </div>
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="july-december" />
-                <label for="july-december">JULY - DECEMBER</label>
+      <!-- Error State -->
+      <div v-else-if="error" class="text-center text-destructive py-12">
+        <AlertCircle class="w-8 h-8 mx-auto mb-3" />
+        <p class="font-medium">
+          {{ error?.response?.data?.message || 'Failed to load report data' }}
+        </p>
+      </div>
+
+      <!-- Report Content -->
+      <div v-else-if="reportData" class="printable-report">
+        <div ref="printableRef" class="p-4">
+          <!-- Header -->
+          <div class="text-center mb-6">
+            <h1 class="text-xl font-bold text-foreground">CORN PROGRAM</h1>
+            <h2 class="text-lg font-bold text-foreground">
+              MONTHLY PLANTING ACCOMPLISHMENT REPORT
+            </h2>
+            <p class="text-sm text-foreground">For the Month of: {{ currentDate }}</p>
+            <div class="mt-4 text-left">
+              <p class="font-semibold text-foreground">REGION: IVB</p>
+              <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+              <div class="flex gap-4 mt-2">
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" id="january-june" />
+                  <label for="january-june">JANUARY - JUNE</label>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" id="july-december" />
+                  <label for="july-december">JULY - DECEMBER</label>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full border-collapse border-2 text-xs">
-            <thead>
-              <tr>
-                <th colspan="5" class="border p-2 text-center">As of {{ currentDate }}</th>
-              </tr>
-              <tr>
-                <th rowspan="2" class="border p-2">MUNICIPALITY</th>
-                <th rowspan="2" class="border p-2 text-center">
-                  VARIETY (GMO, HYBRID,<br />
-                  OPV, GREEN CORN/SWEET<br />
-                  CORN, TRADITIONAL)
-                </th>
-                <th class="border p-2 text-center">Yellow</th>
-                <th class="border p-2 text-center">White</th>
-                <th class="border p-2 text-center">Total</th>
-              </tr>
-              <tr>
-                <th class="border p-2 text-center">Area Planted (ha)</th>
-                <th class="border p-2 text-center">Area Planted (ha)</th>
-                <th class="border p-2 text-center">Area Planted (ha)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Municipality row with blue background -->
-              <tr class="bg-blue-100">
-                <td colspan="5" class="border p-2 font-bold">
-                  {{ selectedMunicipality.toUpperCase() }}
-                </td>
-              </tr>
-              <template v-if="Object.keys(processedData).length">
-                <template v-for="(barangayData, barangay) in processedData" :key="barangay">
-                  <!-- Barangay Header -->
-                  <tr>
-                    <td class="border p-2">{{ barangay }}</td>
-                    <td class="border p-2"></td>
-                    <td class="border p-2"></td>
-                    <td class="border p-2"></td>
-                    <td class="border p-2 text-right">{{ formatNumber(barangayData.total) }}</td>
-                  </tr>
-
-                  <!-- Yellow Corn Entries -->
-                  <template
-                    v-for="(variety, varietyName) in barangayData.Yellow"
-                    :key="`${barangay}-Yellow-${varietyName}`"
-                  >
-                    <template
-                      v-for="(entry, index) in variety.entries"
-                      :key="`${barangay}-Yellow-${varietyName}-${index}`"
-                    >
-                      <tr v-if="Number(entry.area) > 0">
-                        <td class="border p-2 pl-8">{{ entry.farmer }}</td>
-                        <td class="border p-2">{{ varietyName }}</td>
-                        <td class="border p-2 text-right">
-                          {{ formatNumber(Number(entry.area)) }}
-                        </td>
-                        <td class="border p-2"></td>
-                        <td class="border p-2"></td>
-                      </tr>
-                    </template>
-                  </template>
-
-                  <!-- White Corn Entries -->
-                  <template
-                    v-for="(variety, varietyName) in barangayData.White"
-                    :key="`${barangay}-White-${varietyName}`"
-                  >
-                    <template
-                      v-for="(entry, index) in variety.entries"
-                      :key="`${barangay}-White-${varietyName}-${index}`"
-                    >
-                      <tr v-if="Number(entry.area) > 0">
-                        <td class="border p-2 pl-8">{{ entry.farmer }}</td>
-                        <td class="border p-2">{{ varietyName }}</td>
-                        <td class="border p-2"></td>
-                        <td class="border p-2 text-right">
-                          {{ formatNumber(Number(entry.area)) }}
-                        </td>
-                        <td class="border p-2"></td>
-                      </tr>
-                    </template>
-                  </template>
-                </template>
-
-                <!-- Updated Grand Total Row -->
-                <tr class="font-bold grand-total bg-green-500 text-white">
-                  <td colspan="2" class="border p-2 text-right">TOTAL:</td>
-                  <td class="border p-2 text-right">{{ formatNumber(yellowTotal) }}</td>
-                  <td class="border p-2 text-right">{{ formatNumber(whiteTotal) }}</td>
-                  <td class="border p-2 text-right">{{ formatNumber(grandTotal) }}</td>
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse border-2 text-xs">
+              <thead>
+                <tr>
+                  <th colspan="5" class="border p-2 text-center">As of {{ currentDate }}</th>
                 </tr>
-              </template>
-              <tr v-else>
-                <td colspan="5" class="text-center py-4 border">
-                  No data available for {{ selectedMunicipality }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                <tr>
+                  <th rowspan="2" class="border p-2">MUNICIPALITY</th>
+                  <th rowspan="2" class="border p-2 text-center">
+                    VARIETY (GMO, HYBRID,<br />
+                    OPV, GREEN CORN/SWEET<br />
+                    CORN, TRADITIONAL)
+                  </th>
+                  <th class="border p-2 text-center">Yellow</th>
+                  <th class="border p-2 text-center">White</th>
+                  <th class="border p-2 text-center">Total</th>
+                </tr>
+                <tr>
+                  <th class="border p-2 text-center">Area Planted (ha)</th>
+                  <th class="border p-2 text-center">Area Planted (ha)</th>
+                  <th class="border p-2 text-center">Area Planted (ha)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Municipality row with blue background -->
+                <tr class="bg-blue-100">
+                  <td colspan="5" class="border p-2 font-bold">
+                    {{ selectedMunicipality.toUpperCase() }}
+                  </td>
+                </tr>
+                <template v-if="Object.keys(processedData).length">
+                  <template v-for="(barangayData, barangay) in processedData" :key="barangay">
+                    <!-- Barangay Header -->
+                    <tr>
+                      <td class="border p-2">{{ barangay }}</td>
+                      <td class="border p-2"></td>
+                      <td class="border p-2"></td>
+                      <td class="border p-2"></td>
+                      <td class="border p-2 text-right">{{ formatNumber(barangayData.total) }}</td>
+                    </tr>
 
-        <!-- Signatures -->
-        <div class="mt-12 flex justify-between">
-          <div class="w-48">
-            <p>Prepared by:</p>
-            <div class="mt-8 border-t border-black"></div>
-            <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
-            <p class="text-sm">{{ user?.position || 'Corn AEW' }}</p>
+                    <!-- Yellow Corn Entries -->
+                    <template
+                      v-for="(variety, varietyName) in barangayData.Yellow"
+                      :key="`${barangay}-Yellow-${varietyName}`"
+                    >
+                      <template
+                        v-for="(entry, index) in variety.entries"
+                        :key="`${barangay}-Yellow-${varietyName}-${index}`"
+                      >
+                        <tr v-if="Number(entry.area) > 0">
+                          <td class="border p-2 pl-8">{{ entry.farmer }}</td>
+                          <td class="border p-2">{{ varietyName }}</td>
+                          <td class="border p-2 text-right">
+                            {{ formatNumber(Number(entry.area)) }}
+                          </td>
+                          <td class="border p-2"></td>
+                          <td class="border p-2"></td>
+                        </tr>
+                      </template>
+                    </template>
+
+                    <!-- White Corn Entries -->
+                    <template
+                      v-for="(variety, varietyName) in barangayData.White"
+                      :key="`${barangay}-White-${varietyName}`"
+                    >
+                      <template
+                        v-for="(entry, index) in variety.entries"
+                        :key="`${barangay}-White-${varietyName}-${index}`"
+                      >
+                        <tr v-if="Number(entry.area) > 0">
+                          <td class="border p-2 pl-8">{{ entry.farmer }}</td>
+                          <td class="border p-2">{{ varietyName }}</td>
+                          <td class="border p-2"></td>
+                          <td class="border p-2 text-right">
+                            {{ formatNumber(Number(entry.area)) }}
+                          </td>
+                          <td class="border p-2"></td>
+                        </tr>
+                      </template>
+                    </template>
+                  </template>
+
+                  <!-- Updated Grand Total Row -->
+                  <tr class="font-bold grand-total bg-green-500 text-white">
+                    <td colspan="2" class="border p-2 text-right">TOTAL:</td>
+                    <td class="border p-2 text-right">{{ formatNumber(yellowTotal) }}</td>
+                    <td class="border p-2 text-right">{{ formatNumber(whiteTotal) }}</td>
+                    <td class="border p-2 text-right">{{ formatNumber(grandTotal) }}</td>
+                  </tr>
+                </template>
+                <tr v-else>
+                  <td colspan="5" class="text-center py-4 border">
+                    No data available for {{ selectedMunicipality }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div class="w-48">
-            <p>Noted by:</p>
-            <div class="mt-8 border-t border-black"></div>
-            <p class="font-bold">{{ notedByName }}</p>
-            <p class="text-sm">{{ notedByTitle }}</p>
+
+          <!-- Signatures -->
+          <div class="mt-12 flex justify-between">
+            <div class="w-48">
+              <p>Prepared by:</p>
+              <div class="mt-8 border-t border-black"></div>
+              <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
+              <p class="text-sm">{{ user?.position || 'Corn AEW' }}</p>
+            </div>
+            <div class="w-48">
+              <p>Noted by:</p>
+              <div class="mt-8 border-t border-black"></div>
+              <p class="font-bold">{{ notedByName }}</p>
+              <p class="text-sm">{{ notedByTitle }}</p>
+            </div>
           </div>
         </div>
       </div>

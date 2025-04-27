@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { FileText, Printer, Loader2Icon, AlertCircle } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -140,15 +139,18 @@ function printReport() {
 </script>
 
 <template>
-  <div class="screen-only p-4">
+  <!-- Screen version -->
+  <div class="screen-only">
     <!-- Controls -->
-    <div class="bg-card text-card-foreground rounded-lg shadow p-4 mb-6">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-semibold flex items-center gap-2 text-foreground">
-          <FileText class="h-5 w-5" />
-          Monthly Corn Harvest Report
+    <div class="flex flex-col gap-6">
+      <div class="flex justify-between items-center">
+        <h2
+          class="text-xl sm:text-2xl lg:text-3xl flex items-center gap-2 font-extrabold text-primary break-words"
+        >
+          <FileText class="h-6 w-6 text-primary flex-shrink-0" />
+          <span class="min-w-0">Monthly Corn Harvest Report</span>
         </h2>
-        <Button @click="printReport" variant="default" class="flex items-center gap-2">
+        <Button @click="printReport" variant="outline" class="hidden md:flex items-center gap-2">
           <Printer class="h-4 w-4" />
           Print Report
         </Button>
@@ -172,182 +174,194 @@ function printReport() {
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <Label class="text-foreground">Prepared by</Label>
-          <Input type="text" :value="user?.name" disabled class="text-foreground" />
-        </div>
-        <div>
-          <Label class="text-foreground">Date</Label>
-          <Input type="text" :value="currentDate" disabled class="text-foreground" />
-        </div>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="isLoading" class="flex items-center justify-center py-8">
-      <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
+    <!-- Mobile message -->
+    <div class="block md:hidden text-center py-12 bg-muted/10 rounded-lg mt-6">
+      <FileText class="h-16 w-16 mx-auto mb-4 text-primary opacity-80" />
+      <h3 class="text-xl font-semibold mb-3">Desktop View Recommended</h3>
+      <p class="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+        This report is optimized for desktop viewing. Please use a larger screen to view the full
+        report preview.
+      </p>
+      <Button @click="printReport" variant="default" class="flex items-center gap-2 mx-auto">
+        <Printer class="h-4 w-4" />
+        Print Report
+      </Button>
     </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="text-center text-destructive py-8">
-      <AlertCircle class="w-6 h-6 mx-auto mb-2" />
-      <p>{{ error?.response?.data?.message || 'Failed to load report data' }}</p>
-    </div>
+    <!-- Desktop preview -->
+    <div class="hidden md:block mt-6">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex items-center justify-center py-12">
+        <Loader2Icon class="w-10 h-10 animate-spin text-primary" />
+      </div>
 
-    <!-- Report Content -->
-    <div
-      v-else-if="reportData"
-      class="printable-report bg-card text-card-foreground rounded-lg shadow"
-    >
-      <div ref="printableRef" class="p-4">
-        <!-- Header -->
-        <div class="text-center mb-6">
-          <h1 class="text-xl font-bold text-foreground">CORN HARVEST REPORT</h1>
-          <h2 class="text-lg font-bold text-foreground">MONTHLY HARVEST ACCOMPLISHMENT REPORT</h2>
-          <p class="text-sm text-foreground">For the Month of: {{ currentDate }}</p>
-          <div class="mt-4 text-left">
-            <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
-            <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+      <!-- Error State -->
+      <div v-else-if="error" class="text-center text-destructive py-12">
+        <AlertCircle class="w-8 h-8 mx-auto mb-3" />
+        <p class="font-medium">
+          {{ error?.response?.data?.message || 'Failed to load report data' }}
+        </p>
+      </div>
+
+      <!-- Report Content -->
+      <div v-else-if="reportData" class="printable-report">
+        <div ref="printableRef" class="p-4">
+          <!-- Header -->
+          <div class="text-center mb-6">
+            <h1 class="text-xl font-bold text-foreground">CORN HARVEST REPORT</h1>
+            <h2 class="text-lg font-bold text-foreground">MONTHLY HARVEST ACCOMPLISHMENT REPORT</h2>
+            <p class="text-sm text-foreground">For the Month of: {{ currentDate }}</p>
+            <div class="mt-4 text-left">
+              <p class="font-semibold text-foreground">REGION: IV - MIMAROPA</p>
+              <p class="font-semibold text-foreground">PROVINCE: MARINDUQUE</p>
+            </div>
           </div>
-        </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-          <table class="w-full border-collapse border-2 border-black text-xs">
-            <thead>
-              <tr>
-                <th rowspan="3" class="border border-black p-1">MUNICIPALITY</th>
-                <th colspan="3" class="border border-black p-1 bg-yellow-100">HYBRID</th>
-                <th colspan="3" class="border border-black p-1 bg-green-100">
-                  GREEN CORN/SWEET CORN
-                </th>
-                <th colspan="3" class="border border-black p-1 bg-blue-100">TRADITIONAL</th>
-                <th colspan="6" class="border border-black p-1 bg-gray-100">TOTAL</th>
-              </tr>
-              <tr>
-                <th colspan="3" class="border border-black p-1 bg-yellow-100">YELLOW</th>
-                <th colspan="3" class="border border-black p-1 bg-yellow-50">WHITE</th>
-                <th colspan="3" class="border border-black p-1 bg-gray-50">WHITE</th>
-                <th colspan="3" class="border border-black p-1 bg-yellow-100">YELLOW</th>
-                <th colspan="3" class="border border-black p-1 bg-gray-50">WHITE</th>
-              </tr>
-              <tr>
-                <template v-for="n in 5" :key="n">
-                  <th class="border border-black p-1 text-center text-[10px]">
-                    Area Harvested (ha)
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse border-2 border-black text-xs">
+              <thead>
+                <tr>
+                  <th rowspan="3" class="border border-black p-1">MUNICIPALITY</th>
+                  <th colspan="3" class="border border-black p-1 bg-yellow-100">HYBRID</th>
+                  <th colspan="3" class="border border-black p-1 bg-green-100">
+                    GREEN CORN/SWEET CORN
                   </th>
-                  <th class="border border-black p-1 text-center text-[10px]">Ave Yield (MT/ha)</th>
-                  <th class="border border-black p-1 text-center text-[10px]">Production (MT)</th>
-                </template>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="selectedMunicipality" class="bg-teal-50">
-                <td :colspan="16" class="border border-black p-1 font-bold">
-                  {{ selectedMunicipality.toUpperCase() }}
-                </td>
-              </tr>
-              <template v-if="Object.keys(processedData).length">
-                <tr v-for="(data, barangay) in processedData" :key="barangay">
-                  <td class="border border-black p-1">{{ barangay }}</td>
-                  <!-- HYBRID YELLOW -->
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.hybrid.yellow.area) }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.hybrid.yellow.averageYield) }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.hybrid.yellow.production) }}
-                  </td>
-                  <!-- GREEN CORN/SWEET CORN WHITE -->
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.greenCornSweetCorn.white.area) }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.greenCornSweetCorn.white.averageYield) }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.greenCornSweetCorn.white.production) }}
-                  </td>
-                  <!-- TRADITIONAL WHITE -->
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.traditional.white.area) }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.traditional.white.averageYield) }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.traditional.white.production) }}
-                  </td>
-                  <!-- TOTAL YELLOW -->
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.hybrid.yellow.area) }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.hybrid.yellow.averageYield) }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{ formatNumber(data.hybrid.yellow.production) }}
-                  </td>
-                  <!-- TOTAL WHITE -->
-                  <td class="border border-black p-1 text-right">
-                    {{
-                      formatNumber(data.greenCornSweetCorn.white.area + data.traditional.white.area)
-                    }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{
-                      formatNumber(
-                        calculateAverageYield(
-                          data.greenCornSweetCorn.white.production +
-                            data.traditional.white.production,
-                          data.greenCornSweetCorn.white.area + data.traditional.white.area,
-                        ),
-                      )
-                    }}
-                  </td>
-                  <td class="border border-black p-1 text-right">
-                    {{
-                      formatNumber(
-                        data.greenCornSweetCorn.white.production +
-                          data.traditional.white.production,
-                      )
-                    }}
+                  <th colspan="3" class="border border-black p-1 bg-blue-100">TRADITIONAL</th>
+                  <th colspan="6" class="border border-black p-1 bg-gray-100">TOTAL</th>
+                </tr>
+                <tr>
+                  <th colspan="3" class="border border-black p-1 bg-yellow-100">YELLOW</th>
+                  <th colspan="3" class="border border-black p-1 bg-yellow-50">WHITE</th>
+                  <th colspan="3" class="border border-black p-1 bg-gray-50">WHITE</th>
+                  <th colspan="3" class="border border-black p-1 bg-yellow-100">YELLOW</th>
+                  <th colspan="3" class="border border-black p-1 bg-gray-50">WHITE</th>
+                </tr>
+                <tr>
+                  <template v-for="n in 5" :key="n">
+                    <th class="border border-black p-1 text-center text-[10px]">
+                      Area Harvested (ha)
+                    </th>
+                    <th class="border border-black p-1 text-center text-[10px]">
+                      Ave Yield (MT/ha)
+                    </th>
+                    <th class="border border-black p-1 text-center text-[10px]">Production (MT)</th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="selectedMunicipality" class="bg-teal-50">
+                  <td :colspan="16" class="border border-black p-1 font-bold">
+                    {{ selectedMunicipality.toUpperCase() }}
                   </td>
                 </tr>
-              </template>
-              <tr v-else>
-                <td colspan="16" class="text-center py-4 border border-black">
-                  No data available for {{ selectedMunicipality }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Signatures -->
-        <div class="mt-12 flex justify-between text-foreground">
-          <div class="w-48">
-            <p>Prepared by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
-            <p class="text-sm text-muted-foreground">
-              {{ user?.position || 'Agricultural Technician' }}
-            </p>
+                <template v-if="Object.keys(processedData).length">
+                  <tr v-for="(data, barangay) in processedData" :key="barangay">
+                    <td class="border border-black p-1">{{ barangay }}</td>
+                    <!-- HYBRID YELLOW -->
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.hybrid.yellow.area) }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.hybrid.yellow.averageYield) }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.hybrid.yellow.production) }}
+                    </td>
+                    <!-- GREEN CORN/SWEET CORN WHITE -->
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.greenCornSweetCorn.white.area) }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.greenCornSweetCorn.white.averageYield) }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.greenCornSweetCorn.white.production) }}
+                    </td>
+                    <!-- TRADITIONAL WHITE -->
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.traditional.white.area) }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.traditional.white.averageYield) }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.traditional.white.production) }}
+                    </td>
+                    <!-- TOTAL YELLOW -->
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.hybrid.yellow.area) }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.hybrid.yellow.averageYield) }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{ formatNumber(data.hybrid.yellow.production) }}
+                    </td>
+                    <!-- TOTAL WHITE -->
+                    <td class="border border-black p-1 text-right">
+                      {{
+                        formatNumber(
+                          data.greenCornSweetCorn.white.area + data.traditional.white.area,
+                        )
+                      }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{
+                        formatNumber(
+                          calculateAverageYield(
+                            data.greenCornSweetCorn.white.production +
+                              data.traditional.white.production,
+                            data.greenCornSweetCorn.white.area + data.traditional.white.area,
+                          ),
+                        )
+                      }}
+                    </td>
+                    <td class="border border-black p-1 text-right">
+                      {{
+                        formatNumber(
+                          data.greenCornSweetCorn.white.production +
+                            data.traditional.white.production,
+                        )
+                      }}
+                    </td>
+                  </tr>
+                </template>
+                <tr v-else>
+                  <td colspan="16" class="text-center py-4 border border-black">
+                    No data available for {{ selectedMunicipality }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div class="w-48">
-            <p>Noted by:</p>
-            <div class="mt-8 border-t border-border"></div>
-            <p class="font-bold">{{ notedByName }}</p>
-            <p class="text-sm text-muted-foreground">{{ notedByTitle }}</p>
+
+          <!-- Signatures -->
+          <div class="mt-12 flex justify-between text-foreground">
+            <div class="w-48">
+              <p>Prepared by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">{{ user?.name?.toUpperCase() }}</p>
+              <p class="text-sm text-muted-foreground">
+                {{ user?.position || 'Agricultural Technician' }}
+              </p>
+            </div>
+            <div class="w-48">
+              <p>Noted by:</p>
+              <div class="mt-8 border-t border-border"></div>
+              <p class="font-bold">{{ notedByName }}</p>
+              <p class="text-sm text-muted-foreground">{{ notedByTitle }}</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Print version - absolutely positioned outside of Vue layout -->
+  <!-- Print version -->
   <div class="print-only" v-if="reportData">
     <div id="report-content">
       <!-- Header -->
