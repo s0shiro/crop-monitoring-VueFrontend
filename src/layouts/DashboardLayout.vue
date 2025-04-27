@@ -15,6 +15,7 @@ import AppSidebar from '@/components/AppSidebar.vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { Settings } from 'lucide-vue-next'
 import { ref } from 'vue'
+import NotificationPopover from '@/components/NotificationPopover.vue'
 
 const isDevelopment = import.meta.env.VITE_MODE === 'development'
 const route = useRoute()
@@ -54,16 +55,19 @@ const showDevSettings = ref(false)
             </Breadcrumb>
           </div>
 
-          <!-- Dev Settings Button -->
-          <Button
-            v-if="isDevelopment"
-            variant="ghost"
-            size="icon"
-            @click="showDevSettings = true"
-            class="rounded-full"
-          >
-            <Settings class="h-5 w-5" />
-          </Button>
+          <div>
+            <NotificationPopover />
+            <!-- Dev Settings Button -->
+            <Button
+              v-if="isDevelopment"
+              variant="ghost"
+              size="icon"
+              @click="showDevSettings = true"
+              class="rounded-full"
+            >
+              <Settings class="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
