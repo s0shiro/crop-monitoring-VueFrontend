@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { toast } from '@/components/ui/toast'
 import NotFound from '../views/NotFound.vue'
 import Register from '@/views/auth/Register.vue'
 import Login from '@/views/auth/Login.vue'
@@ -291,6 +292,11 @@ router.beforeEach(async (to, from, next) => {
 
       const hasAccess = await checkAuthAndRoles(authStore, to)
       if (!hasAccess) {
+        toast({
+          title: 'Access Denied',
+          description: "You don't have sufficient privileges to access this page.",
+          variant: 'destructive',
+        })
         console.log('Access denied: insufficient privileges')
         return next({ name: 'dashboard' })
       }

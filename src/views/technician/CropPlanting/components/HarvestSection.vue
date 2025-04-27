@@ -131,7 +131,9 @@ const handleHarvestSubmit = () => {
 </script>
 
 <template>
-  <Card class="lg:col-span-3 group hover:shadow-md transition-shadow">
+  <Card
+    class="lg:col-span-3 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+  >
     <CardHeader class="border-b">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
@@ -147,7 +149,7 @@ const handleHarvestSubmit = () => {
           v-if="planting?.status === 'harvest' || planting?.status === 'partially harvested'"
           @click="showHarvestDialog = true"
           variant="default"
-          class="gap-2"
+          class="gap-2 whitespace-nowrap"
         >
           <Plus class="w-4 h-4" />
           Add Harvest Report
@@ -180,49 +182,56 @@ const handleHarvestSubmit = () => {
         <div
           v-for="harvest in harvestsData?.pages.flatMap((page) => page.data)"
           :key="harvest.id"
-          class="p-4 rounded-lg border group/item hover:bg-muted/50 transition-colors"
+          class="group/item p-4 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-primary/5 transition-all duration-200"
         >
           <div class="flex flex-col gap-4">
             <!-- Header -->
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-2">
-                <Calendar class="w-4 h-4 text-muted-foreground" />
-                <span class="font-medium">
+                <Calendar class="w-4 h-4 text-primary" />
+                <span class="font-medium text-lg text-primary">
                   {{ format(new Date(harvest.harvest_date), 'MMMM d, yyyy') }}
                 </span>
               </div>
-              <Badge variant="outline" class="bg-primary/10 text-primary">
+              <Badge variant="outline" class="bg-primary/10 text-primary whitespace-nowrap">
                 {{ harvest.area_harvested }} ha harvested
               </Badge>
             </div>
 
             <!-- Harvest Details -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Scale class="w-4 h-4" />
-                  <span>Total Yield</span>
+              <div
+                class="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <Scale class="w-4 h-4 text-yellow-500" />
+                <div>
+                  <p class="text-sm text-muted-foreground">Total Yield</p>
+                  <p class="font-semibold">{{ harvest.total_yield }} kg</p>
                 </div>
-                <p class="mt-1 font-medium">{{ harvest.total_yield }} kg</p>
               </div>
-              <div>
-                <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Coins class="w-4 h-4" />
-                  <span>Profit</span>
+              <div
+                class="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <Coins class="w-4 h-4 text-green-500" />
+                <div>
+                  <p class="text-sm text-muted-foreground">Profit</p>
+                  <p class="font-semibold">₱{{ harvest.profit.toLocaleString() }}</p>
                 </div>
-                <p class="mt-1 font-medium">₱{{ harvest.profit.toLocaleString() }}</p>
               </div>
-              <div v-if="harvest.damage_quantity">
-                <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                  <AlertCircle class="w-4 h-4" />
-                  <span>Damaged</span>
+              <div
+                v-if="harvest.damage_quantity"
+                class="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+              >
+                <AlertCircle class="w-4 h-4 text-destructive" />
+                <div>
+                  <p class="text-sm text-muted-foreground">Damaged</p>
+                  <p class="font-semibold">{{ harvest.damage_quantity }} kg</p>
                 </div>
-                <p class="mt-1 font-medium">{{ harvest.damage_quantity }} kg</p>
               </div>
             </div>
 
             <!-- Footer -->
-            <div class="flex items-center gap-2 text-xs text-muted-foreground">
+            <div class="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
               <User class="w-3 h-3" />
               <span>Recorded by {{ harvest.technician.name }}</span>
             </div>
@@ -235,13 +244,16 @@ const handleHarvestSubmit = () => {
             variant="outline"
             @click="fetchNextHarvests"
             :disabled="isFetchingNextHarvests"
-            class="min-w-[200px]"
+            class="min-w-[200px] gap-2"
           >
             <template v-if="isFetchingNextHarvests">
-              <Loader2 class="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 class="w-4 h-4 animate-spin" />
               Loading...
             </template>
-            <template v-else>Load More</template>
+            <template v-else>
+              <span>Load More</span>
+              <Wheat class="w-4 h-4" />
+            </template>
           </Button>
         </div>
       </div>

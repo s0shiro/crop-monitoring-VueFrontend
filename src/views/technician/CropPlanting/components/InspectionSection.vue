@@ -132,7 +132,9 @@ const handleInspectionSubmit = () => {
 </script>
 
 <template>
-  <Card class="lg:col-span-3 group hover:shadow-md transition-shadow">
+  <Card
+    class="lg:col-span-3 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+  >
     <CardHeader class="border-b">
       <div class="flex flex-col gap-2">
         <div class="flex items-center justify-between">
@@ -144,14 +146,14 @@ const handleInspectionSubmit = () => {
             v-if="planting?.status === 'standing' && hasPermission('create_inspections')"
             @click="showInspectionDialog = true"
             variant="default"
-            class="gap-2"
+            class="gap-2 whitespace-nowrap"
           >
             <PlusIcon class="w-4 h-4" />
             Add Inspection
           </Button>
         </div>
         <div v-if="planting?.damaged_area > 0" class="flex items-center gap-2">
-          <Badge variant="outline" class="bg-destructive/10 text-destructive">
+          <Badge variant="outline" class="bg-destructive/10 text-destructive whitespace-nowrap">
             Total damaged area: {{ planting?.damaged_area }} ha
           </Badge>
         </div>
@@ -183,29 +185,29 @@ const handleInspectionSubmit = () => {
         <div
           v-for="inspection in inspectionsData?.pages.flatMap((page) => page.data)"
           :key="inspection.id"
-          class="p-4 rounded-lg border group/item hover:bg-muted/50 transition-colors"
+          class="group/item p-4 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-primary/5 transition-all duration-200"
         >
           <div class="flex flex-col gap-4">
             <!-- Header -->
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-2">
-                <CalendarIcon class="w-4 h-4 text-muted-foreground" />
-                <span class="font-medium">
+                <CalendarIcon class="w-4 h-4 text-primary" />
+                <span class="font-medium text-lg text-primary">
                   {{ format(new Date(inspection.inspection_date), 'MMMM d, yyyy') }}
                 </span>
               </div>
-              <Badge variant="outline" class="bg-destructive/10 text-destructive">
+              <Badge variant="outline" class="bg-destructive/10 text-destructive whitespace-nowrap">
                 {{ inspection.damaged_area }} ha damaged
               </Badge>
             </div>
 
             <!-- Remarks -->
-            <div class="text-sm text-muted-foreground">
-              {{ inspection.remarks }}
+            <div class="p-3 rounded-lg bg-muted/50">
+              <p class="text-sm text-muted-foreground">{{ inspection.remarks }}</p>
             </div>
 
             <!-- Footer -->
-            <div class="flex items-center gap-2 text-xs text-muted-foreground">
+            <div class="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
               <UserIcon class="w-3 h-3" />
               <span>Inspected by {{ inspection.technician.name }}</span>
             </div>
@@ -218,13 +220,16 @@ const handleInspectionSubmit = () => {
             variant="outline"
             @click="fetchNextInspections"
             :disabled="isFetchingNextInspections"
-            class="min-w-[200px]"
+            class="min-w-[200px] gap-2"
           >
             <template v-if="isFetchingNextInspections">
-              <Loader2Icon class="w-4 h-4 mr-2 animate-spin" />
+              <Loader2Icon class="w-4 h-4 animate-spin" />
               Loading...
             </template>
-            <template v-else>Load More</template>
+            <template v-else>
+              <span>Load More</span>
+              <ClipboardListIcon class="w-4 h-4" />
+            </template>
           </Button>
         </div>
       </div>

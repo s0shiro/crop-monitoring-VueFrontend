@@ -121,6 +121,7 @@ const data = {
       title: 'Management',
       url: '#',
       icon: Settings,
+      isActive: true,
       items: [
         {
           title: 'Users',
@@ -144,6 +145,7 @@ const data = {
       title: 'Production',
       url: '#',
       icon: Sprout,
+      isActive: true,
       items: [
         {
           title: 'Crops',
@@ -162,6 +164,7 @@ const data = {
       title: 'Rice Production',
       url: '#',
       icon: Wheat,
+      isActive: true,
       items: [
         {
           title: 'Monthly Planting',
@@ -185,6 +188,7 @@ const data = {
       title: 'Corn Production',
       url: '#',
       icon: LeafyGreen,
+      isActive: true,
       items: [
         {
           title: 'Monthly Planting',
@@ -208,6 +212,7 @@ const data = {
       title: 'HVC Production',
       url: '#',
       icon: Apple,
+      isActive: true,
       items: [
         {
           title: 'HVC Report',
@@ -244,7 +249,7 @@ const data = {
     </SidebarHeader>
     <SidebarContent>
       <NavMain :items="filteredNavMain" />
-      <NavProjects :projects="data.projects" />
+      <!-- <NavProjects :projects="data.projects" /> -->
     </SidebarContent>
     <SidebarFooter>
       <NavUser :user="data.user" />
