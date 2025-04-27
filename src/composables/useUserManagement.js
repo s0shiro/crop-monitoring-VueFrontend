@@ -1,10 +1,16 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/vue-query'
-import axiosInstance from '@/lib/axios'
+import { ref } from 'vue'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import axios from '@/lib/axios'
 
-export function useUserManagement() {
+export function useUserManagement(params = {}) {
+  const {
+    search = ref(''),
+    role = ref('all'),
+    sortBy = ref('created_at'),
+    sortDirection = ref('desc'),
+  } = params
   const queryClient = useQueryClient()
 
-  // Fetch users with infinite query
   const {
     data: usersData,
     isLoading: isLoadingUsers,
@@ -12,119 +18,85 @@ export function useUserManagement() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch: refreshUsers,
   } = useInfiniteQuery({
-    queryKey: ['users'],
+    queryKey: ['users', search.value, role.value, sortBy.value, sortDirection.value],
     queryFn: async ({ pageParam = 0 }) => {
-      const { data } = await axiosInstance.get('/api/users', {
-        params: { cursor: pageParam },
+      const { data } = await axios.get('/api/users', {
+        params: {
+          cursor: pageParam,
+          search: search.value,
+          role: role.value,
+          sortBy: sortBy.value,
+          sortDirection: sortDirection.value,
+        },
       })
       return data
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    refetchOnWindowFocus: false,
   })
 
-  // Get user details query
-  const getUserDetails = async (userId) => {
-    const { data } = await axiosInstance.get(`/api/users/${userId}/profile`)
+  const { mutateAsync: createUser, isPending: isCreating } = useMutation({
+    mutationFn: async (userData) => {
+      const { data } = await axios.post('/api/users', userData)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
+    },
+  })
+
+  const { mutateAsync: updateUser, isLoading: isUpdating } = useMutation({
+    mutationFn: async ({ id, userData }) => {
+      const { data } = await axios.put(`/api/users/${id}`, userData)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
+    },
+  })
+
+  const { mutateAsync: deleteUser, isLoading: isDeleting } = useMutation({
+    mutationFn: async (id) => {
+      const { data } = await axios.delete(`/api/users/${id}`)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
+    },
+  })
+
+  const getUserDetails = async (id) => {
+    const { data } = await axios.get(`/api/users/${id}/profile`)
     return data
   }
 
-  // Create user mutation
-  const {
-    mutateAsync: createUser,
-    isPending: isCreating,
-    isError: isCreateError,
-    error: createError,
-  } = useMutation({
-    mutationFn: async (userData) => {
-      const { data } = await axiosInstance.post('/api/users', userData)
-      return data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] })
-    },
-  })
-
-  // Update user mutation
-  const {
-    mutateAsync: updateUser,
-    isPending: isUpdating,
-    isError: isUpdateError,
-    error: updateError,
-  } = useMutation({
-    mutationFn: async (userData) => {
-      const { data } = await axiosInstance.put(`/api/users/${userData.id}`, userData)
-      return data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] })
-    },
-  })
-
-  // Delete user mutation
-  const {
-    mutateAsync: deleteUser,
-    isPending: isDeleting,
-    isError: isDeleteError,
-    error: deleteError,
-  } = useMutation({
-    mutationFn: async (userId) => {
-      const { data } = await axiosInstance.delete(`/api/users/${userId}`)
-      return data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] })
-    },
-  })
-
-  // Update user permissions mutation
-  const {
-    mutateAsync: updateUserPermissions,
-    isPending: isUpdatingPermissions,
-    isError: isUpdatePermissionsError,
-    error: updatePermissionsError,
-  } = useMutation({
+  const { mutateAsync: updateUserPermissions } = useMutation({
     mutationFn: async ({ id, permissions }) => {
-      const { data } = await axiosInstance.patch(`/api/users/${id}/permissions`, { permissions })
+      const { data } = await axios.put(`/api/users/${id}/permissions`, { permissions })
       return data
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['user', variables.id] })
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users'])
     },
   })
 
   return {
-    // Queries
     usersData,
     isLoadingUsers,
     fetchError,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    getUserDetails,
-
-    // Create mutation
     createUser,
     isCreating,
-    isCreateError,
-    createError,
-
-    // Update mutation
     updateUser,
     isUpdating,
-    isUpdateError,
-    updateError,
-
-    // Delete mutation
     deleteUser,
     isDeleting,
-    isDeleteError,
-    deleteError,
-
-    // Update Permissions mutation
+    refreshUsers,
+    getUserDetails,
     updateUserPermissions,
-    isUpdatingPermissions,
-    isUpdatePermissionsError,
-    updatePermissionsError,
   }
 }
