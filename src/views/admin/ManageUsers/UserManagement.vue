@@ -13,166 +13,60 @@
           <p class="text-sm text-muted-foreground mt-1">Manage system users and their roles</p>
         </div>
       </div>
-      <Dialog>
-        <DialogTrigger as-child>
-          <Button
-            class="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Plus class="w-4 h-4" />
-            Add User
-          </Button>
-        </DialogTrigger>
-        <DialogContent
-          class="sm:max-w-[600px] p-0 overflow-hidden duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[2%]"
+      <Button
+        @click="showCreateDialog = true"
+        class="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+      >
+        <Plus class="w-4 h-4" />
+        Add User
+      </Button>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="flex flex-col sm:flex-row gap-4 mb-6">
+      <div class="flex-1">
+        <div class="relative">
+          <Search class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            v-model="searchQuery"
+            placeholder="Search users..."
+            class="pl-9 w-full"
+            @input="debounceSearch"
+          />
+        </div>
+      </div>
+      <div class="flex gap-4">
+        <Select v-model="filterRole" @update:modelValue="applyFilters">
+          <SelectTrigger class="w-[180px]">
+            <SelectValue placeholder="Filter by role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
+            <SelectItem value="technician">Technician</SelectItem>
+            <SelectItem value="coordinator">Coordinator</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select v-model="sortBy" @update:modelValue="applyFilters">
+          <SelectTrigger class="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Name</SelectItem>
+            <SelectItem value="email">Email</SelectItem>
+            <SelectItem value="created_at">Date Created</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button
+          variant="outline"
+          class="w-10 p-0"
+          @click="toggleSortDirection"
+          :title="sortDirection === 'asc' ? 'Sort Ascending' : 'Sort Descending'"
         >
-          <div class="p-6 pb-0">
-            <DialogHeader>
-              <DialogTitle class="flex items-center gap-2 text-xl font-semibold text-primary">
-                <User class="w-5 h-5" />
-                Create New User
-              </DialogTitle>
-              <DialogDescription class="text-muted-foreground mt-1.5">
-                Add a new user to the system with their role and permissions.
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-
-          <form ref="formRef" @submit.prevent="handleCreateUser" class="p-6 pt-4">
-            <div class="grid md:grid-cols-2 gap-4">
-              <!-- Username field -->
-              <div class="space-y-2 group">
-                <Label
-                  for="username"
-                  class="text-sm font-medium group-focus-within:text-primary transition-colors"
-                  >Username</Label
-                >
-                <div class="relative">
-                  <User
-                    class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors"
-                  />
-                  <Input
-                    id="username"
-                    v-model="formData.username"
-                    class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    placeholder="Enter username"
-                    required
-                  />
-                </div>
-              </div>
-
-              <!-- Name field -->
-              <div class="space-y-2">
-                <Label for="name" class="text-sm font-medium">Full Name</Label>
-                <Input
-                  id="name"
-                  v-model="formData.name"
-                  class="ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  placeholder="Enter full name"
-                  required
-                />
-              </div>
-
-              <!-- Email field -->
-              <div class="space-y-2 group">
-                <Label
-                  for="email"
-                  class="text-sm font-medium group-focus-within:text-primary transition-colors"
-                  >Email</Label
-                >
-                <div class="relative">
-                  <Mail
-                    class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors"
-                  />
-                  <Input
-                    id="email"
-                    type="email"
-                    v-model="formData.email"
-                    class="pl-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    placeholder="Enter email"
-                    required
-                  />
-                </div>
-              </div>
-
-              <!-- Password field -->
-              <div class="space-y-2 group">
-                <Label
-                  for="password"
-                  class="text-sm font-medium group-focus-within:text-primary transition-colors"
-                  >Password</Label
-                >
-                <div class="relative">
-                  <Input
-                    id="password"
-                    :type="showPassword ? 'text' : 'password'"
-                    v-model="formData.password"
-                    class="pr-9 ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    placeholder="Enter password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    class="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
-                    @click="showPassword = !showPassword"
-                  >
-                    <Eye v-if="!showPassword" class="h-4 w-4" />
-                    <EyeOff v-else class="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <!-- Role field -->
-              <div class="space-y-2 md:col-span-2">
-                <Label for="role" class="text-sm font-medium">Role</Label>
-                <Select v-model="formData.role" required>
-                  <SelectTrigger
-                    class="ring-offset-background transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="technician">
-                      <div class="flex items-center">
-                        <Users class="h-4 w-4 mr-2 text-blue-500" />
-                        Technician
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="coordinator">
-                      <div class="flex items-center">
-                        <Shield class="h-4 w-4 mr-2 text-green-500" />
-                        Coordinator
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <DialogFooter class="mt-6 gap-2">
-              <DialogTrigger as-child>
-                <Button
-                  type="button"
-                  variant="outline"
-                  class="transition-colors hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-                >
-                  Cancel
-                </Button>
-              </DialogTrigger>
-              <Button
-                type="submit"
-                :disabled="isCreating"
-                class="transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Loading v-if="isCreating" description="Creating user...">Please wait</Loading>
-                <template v-else>
-                  <Plus class="w-4 h-4 mr-2" />
-                  Create User
-                </template>
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          <ArrowUpDown class="h-4 w-4" :class="{ 'rotate-180': sortDirection === 'desc' }" />
+        </Button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -439,11 +333,10 @@
               :disabled="isCreating"
               class="transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              <Loading v-if="isCreating" description="Creating user...">Please wait</Loading>
-              <template v-else>
-                <Plus class="w-4 h-4 mr-2" />
-                Create User
-              </template>
+              <div class="flex items-center gap-2">
+                <Plus class="w-4 h-4" />
+                {{ isCreating ? 'Creating...' : 'Create User' }}
+              </div>
             </Button>
           </DialogFooter>
         </form>
@@ -456,6 +349,7 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserManagement } from '@/composables/useUserManagement'
+import { useUtilsStore } from '@/stores/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loading } from '@/components/ui/loading'
 import {
@@ -488,8 +382,8 @@ import {
   EyeOff,
   MoreHorizontal,
   Plus,
-  Loader2,
-  X,
+  Search,
+  ArrowUpDown,
   User,
   Mail,
   Shield,
@@ -500,8 +394,15 @@ import { useToast } from '@/components/ui/toast/use-toast'
 
 const { toast } = useToast()
 const router = useRouter()
+const utilsStore = useUtilsStore()
 
-// State from composable
+// Search and filter state
+const searchQuery = ref('')
+const filterRole = ref('all')
+const sortBy = ref('created_at')
+const sortDirection = ref('desc')
+
+// State from composable with search params
 const {
   usersData,
   isLoadingUsers,
@@ -511,7 +412,32 @@ const {
   isFetchingNextPage,
   createUser,
   isCreating,
-} = useUserManagement()
+  refreshUsers,
+} = useUserManagement({
+  search: searchQuery,
+  role: filterRole,
+  sortBy: sortBy,
+  sortDirection: sortDirection,
+})
+
+// Use debounce from store
+const debounceSearch = utilsStore.debounce(
+  () => {
+    refreshUsers()
+  },
+  300,
+  'userSearch',
+)
+
+// Filter and sort handlers
+function applyFilters() {
+  refreshUsers()
+}
+
+function toggleSortDirection() {
+  sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  refreshUsers()
+}
 
 // Dialog state
 const showCreateDialog = ref(false)

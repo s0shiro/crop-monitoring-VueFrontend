@@ -194,11 +194,14 @@ async function handleDeleteUser() {
 
 function handleDetailsSubmit() {
   updateUserMutation({
-    username: detailsForm.value.username,
-    name: detailsForm.value.name,
-    email: detailsForm.value.email,
-    password: detailsForm.value.password,
-    role: detailsForm.value.role,
+    id: route.params.id,
+    userData: {
+      username: detailsForm.value.username,
+      name: detailsForm.value.name,
+      email: detailsForm.value.email,
+      password: detailsForm.value.password,
+      role: detailsForm.value.role,
+    },
   })
 }
 
