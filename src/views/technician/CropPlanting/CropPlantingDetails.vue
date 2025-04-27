@@ -175,82 +175,89 @@ onMounted(() => {
     <!-- Content -->
     <div v-else-if="planting" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Basic Information -->
-      <Card class="lg:col-span-2 group hover:shadow-md transition-shadow">
+      <Card
+        class="lg:col-span-2 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+      >
         <CardHeader class="border-b">
-          <CardTitle class="flex items-center gap-2 text-lg">
-            <Wheat class="w-5 h-5 text-primary" />
-            Basic Information
-          </CardTitle>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <Wheat class="w-5 h-5 text-primary" />
+              <CardTitle class="text-lg">Basic Information</CardTitle>
+            </div>
+            <Badge
+              :class="{
+                'bg-yellow-500/10 text-yellow-600': planting.status === 'standing',
+                'bg-green-500/10 text-green-600': planting.status === 'harvest',
+                'bg-blue-500/10 text-blue-600': planting.status === 'partially harvested',
+                'bg-gray-500/10 text-gray-600': planting.status === 'harvested',
+              }"
+              class="px-3 py-1 text-sm capitalize transition-colors"
+            >
+              <div class="flex items-center gap-1.5">
+                <div
+                  :class="{
+                    'bg-yellow-500': planting.status === 'standing',
+                    'bg-green-500': planting.status === 'harvest',
+                    'bg-blue-500': planting.status === 'partially harvested',
+                    'bg-gray-500': planting.status === 'harvested',
+                  }"
+                  class="w-1.5 h-1.5 rounded-full"
+                ></div>
+                {{ planting.status }}
+              </div>
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent class="p-6">
-          <div class="space-y-6">
-            <!-- Status Badge -->
-            <div class="flex items-center gap-2 mb-4">
-              <Badge
-                :class="{
-                  'bg-yellow-500 hover:bg-yellow-600': planting.status === 'standing',
-                  'bg-green-500 hover:bg-green-600': planting.status === 'harvest',
-                  'bg-blue-500 hover:bg-blue-600': planting.status === 'partially harvested',
-                  'bg-gray-500 hover:bg-gray-600': planting.status === 'harvested',
-                }"
-                class="px-3 py-1 text-sm capitalize transition-colors"
-              >
-                <div class="flex items-center gap-1.5">
-                  <div class="w-1.5 h-1.5 rounded-full bg-white/80"></div>
-                  {{ planting.status }}
-                </div>
-              </Badge>
+          <div class="grid gap-6 sm:grid-cols-2">
+            <!-- Farmer Info -->
+            <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <UserIcon class="w-4 h-4" />
+                <span class="text-sm font-medium">Farmer</span>
+              </div>
+              <p class="mt-2 text-lg font-semibold tracking-tight">{{ planting.farmer.name }}</p>
             </div>
 
-            <!-- Info Grid -->
-            <div class="grid gap-6 sm:grid-cols-2">
-              <!-- Farmer Info -->
-              <div class="space-y-2 group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
-                <div class="flex items-center gap-2 text-muted-foreground">
-                  <UserIcon class="w-4 h-4" />
-                  <span class="text-sm font-medium">Farmer</span>
-                </div>
-                <p class="text-lg font-semibold tracking-tight">{{ planting.farmer.name }}</p>
+            <!-- Crop Info -->
+            <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <SproutIcon class="w-4 h-4" />
+                <span class="text-sm font-medium">Crop</span>
               </div>
+              <p class="mt-2 text-lg font-semibold tracking-tight">{{ planting.crop.name }}</p>
+            </div>
 
-              <!-- Crop Info -->
-              <div class="space-y-2 group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
-                <div class="flex items-center gap-2 text-muted-foreground">
-                  <SproutIcon class="w-4 h-4" />
-                  <span class="text-sm font-medium">Crop</span>
-                </div>
-                <p class="text-lg font-semibold tracking-tight">{{ planting.crop.name }}</p>
+            <!-- Variety Info -->
+            <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <LeafIcon class="w-4 h-4" />
+                <span class="text-sm font-medium">Variety</span>
               </div>
+              <p class="mt-2 text-lg font-semibold tracking-tight">{{ planting.variety.name }}</p>
+            </div>
 
-              <!-- Variety Info -->
-              <div class="space-y-2 group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
-                <div class="flex items-center gap-2 text-muted-foreground">
-                  <LeafIcon class="w-4 h-4" />
-                  <span class="text-sm font-medium">Variety</span>
-                </div>
-                <p class="text-lg font-semibold tracking-tight">{{ planting.variety.name }}</p>
+            <!-- Category Info -->
+            <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <LayersIcon class="w-4 h-4" />
+                <span class="text-sm font-medium">Category</span>
               </div>
-
-              <!-- Category Info -->
-              <div class="space-y-2 group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
-                <div class="flex items-center gap-2 text-muted-foreground">
-                  <LayersIcon class="w-4 h-4" />
-                  <span class="text-sm font-medium">Category</span>
-                </div>
-                <p class="text-lg font-semibold tracking-tight">{{ planting.category.name }}</p>
-              </div>
+              <p class="mt-2 text-lg font-semibold tracking-tight">{{ planting.category.name }}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <!-- Location Details -->
-      <Card class="lg:col-span-1 group hover:shadow-md transition-shadow">
+      <Card
+        class="lg:col-span-1 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+      >
         <CardHeader class="border-b">
-          <CardTitle class="flex items-center gap-2 text-lg">
+          <div class="flex items-center gap-2">
             <MapPinIcon class="w-5 h-5 text-primary" />
-            Location Details
-          </CardTitle>
+            <CardTitle class="text-lg">Location Details</CardTitle>
+          </div>
         </CardHeader>
         <CardContent class="p-6">
           <div class="space-y-6">
@@ -278,7 +285,6 @@ onMounted(() => {
 
             <!-- Location -->
             <div class="space-y-4">
-              <!-- Barangay -->
               <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
                 <div class="flex items-center gap-2 text-muted-foreground">
                   <HomeIcon class="w-4 h-4" />
@@ -287,15 +293,12 @@ onMounted(() => {
                 <p class="mt-2 text-lg font-semibold tracking-tight">{{ planting.barangay }}</p>
               </div>
 
-              <!-- Municipality -->
               <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
                 <div class="flex items-center gap-2 text-muted-foreground">
                   <BuildingIcon class="w-4 h-4" />
                   <span class="text-sm font-medium">Municipality</span>
                 </div>
-                <p class="mt-2 text-lg font-semibold tracking-tight">
-                  {{ planting.municipality }}
-                </p>
+                <p class="mt-2 text-lg font-semibold tracking-tight">{{ planting.municipality }}</p>
               </div>
             </div>
           </div>
@@ -303,14 +306,16 @@ onMounted(() => {
       </Card>
 
       <!-- Map View -->
-      <Card class="lg:col-span-3">
-        <CardHeader>
-          <CardTitle class="flex items-center gap-2 text-lg">
+      <Card
+        class="lg:col-span-3 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+      >
+        <CardHeader class="border-b">
+          <div class="flex items-center gap-2">
             <MapPinIcon class="w-5 h-5 text-primary" />
-            Location Map
-          </CardTitle>
+            <CardTitle class="text-lg">Location Map</CardTitle>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent class="p-6">
           <div class="relative h-[400px] rounded-lg border overflow-hidden">
             <l-map v-model:zoom="zoom" :center="center" class="h-[400px] w-full z-0">
               <l-tile-layer
@@ -329,74 +334,53 @@ onMounted(() => {
       </Card>
 
       <!-- Planting Details -->
-      <Card class="lg:col-span-3 group hover:shadow-md transition-shadow">
+      <Card
+        class="lg:col-span-3 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+      >
         <CardHeader class="border-b">
-          <CardTitle class="flex items-center gap-2 text-lg">
+          <div class="flex items-center gap-2">
             <CalendarIcon class="w-5 h-5 text-primary" />
-            Planting Details
-          </CardTitle>
+            <CardTitle class="text-lg">Planting Details</CardTitle>
+          </div>
         </CardHeader>
         <CardContent class="p-6">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Planting Date -->
-            <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
-              <div class="flex items-center gap-2 text-muted-foreground">
-                <CalendarIcon class="w-4 h-4" />
-                <span class="text-sm font-medium">Planting Date</span>
-              </div>
-              <p class="mt-2 text-lg font-semibold tracking-tight">
-                {{ format(new Date(planting.planting_date), 'MMMM d, yyyy') }}
-              </p>
-            </div>
-
-            <!-- Expected Harvest Date -->
             <div
-              v-if="planting.expected_harvest_date"
+              v-for="detail in [
+                {
+                  icon: CalendarIcon,
+                  label: 'Planting Date',
+                  value: format(new Date(planting.planting_date), 'MMMM d, yyyy'),
+                },
+                planting.expected_harvest_date && {
+                  icon: CalendarDaysIcon,
+                  label: 'Expected Harvest',
+                  value: format(new Date(planting.expected_harvest_date), 'MMMM d, yyyy'),
+                },
+                {
+                  icon: SquareIcon,
+                  label: 'Area Planted',
+                  value: `${planting.area_planted} hectares`,
+                },
+                {
+                  icon: ScaleIcon,
+                  label: 'Quantity',
+                  value: planting.quantity,
+                },
+                planting.expenses && {
+                  icon: WalletIcon,
+                  label: 'Expenses',
+                  value: `₱${planting.expenses.toLocaleString()}`,
+                },
+              ].filter(Boolean)"
+              :key="detail.label"
               class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors"
             >
               <div class="flex items-center gap-2 text-muted-foreground">
-                <CalendarDaysIcon class="w-4 h-4" />
-                <span class="text-sm font-medium">Expected Harvest</span>
+                <component :is="detail.icon" class="w-4 h-4" />
+                <span class="text-sm font-medium">{{ detail.label }}</span>
               </div>
-              <p class="mt-2 text-lg font-semibold tracking-tight">
-                {{ format(new Date(planting.expected_harvest_date), 'MMMM d, yyyy') }}
-              </p>
-            </div>
-
-            <!-- Area Planted -->
-            <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
-              <div class="flex items-center gap-2 text-muted-foreground">
-                <SquareIcon class="w-4 h-4" />
-                <span class="text-sm font-medium">Area Planted</span>
-              </div>
-              <p class="mt-2 text-lg font-semibold tracking-tight">
-                {{ planting.area_planted }} hectares
-              </p>
-            </div>
-
-            <!-- Quantity -->
-            <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
-              <div class="flex items-center gap-2 text-muted-foreground">
-                <ScaleIcon class="w-4 h-4" />
-                <span class="text-sm font-medium">Quantity</span>
-              </div>
-              <p class="mt-2 text-lg font-semibold tracking-tight">
-                {{ planting.quantity }}
-              </p>
-            </div>
-
-            <!-- Expenses -->
-            <div
-              v-if="planting.expenses"
-              class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors"
-            >
-              <div class="flex items-center gap-2 text-muted-foreground">
-                <WalletIcon class="w-4 h-4" />
-                <span class="text-sm font-medium">Expenses</span>
-              </div>
-              <p class="mt-2 text-lg font-semibold tracking-tight">
-                ₱{{ planting.expenses.toLocaleString() }}
-              </p>
+              <p class="mt-2 text-lg font-semibold tracking-tight">{{ detail.value }}</p>
             </div>
 
             <!-- Remarks -->
@@ -408,7 +392,7 @@ onMounted(() => {
                 <MessageSquareIcon class="w-4 h-4" />
                 <span class="text-sm font-medium">Remarks</span>
               </div>
-              <p class="mt-2 text-base tracking-tight">{{ planting.remarks }}</p>
+              <p class="mt-2 text-base text-muted-foreground">{{ planting.remarks }}</p>
             </div>
           </div>
         </CardContent>
@@ -417,13 +401,13 @@ onMounted(() => {
       <!-- Category Specific Details -->
       <Card
         v-if="planting.hvc_detail || planting.rice_detail"
-        class="lg:col-span-3 group hover:shadow-md transition-shadow"
+        class="lg:col-span-3 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
       >
         <CardHeader class="border-b">
-          <CardTitle class="flex items-center gap-2 text-lg">
+          <div class="flex items-center gap-2">
             <ListIcon class="w-5 h-5 text-primary" />
-            Additional Details
-          </CardTitle>
+            <CardTitle class="text-lg">Additional Details</CardTitle>
+          </div>
         </CardHeader>
         <CardContent class="p-6">
           <div class="space-y-6">
@@ -432,18 +416,17 @@ onMounted(() => {
               v-if="planting.hvc_detail"
               class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors"
             >
-              <div class="flex items-center gap-2 text-muted-foreground mb-4">
+              <div class="flex items-center gap-2 text-muted-foreground">
                 <TagIcon class="w-4 h-4" />
                 <span class="text-sm font-medium">HVC Classification</span>
               </div>
-              <p class="text-lg font-semibold tracking-tight">
+              <p class="mt-2 text-lg font-semibold tracking-tight">
                 {{ planting.hvc_detail.classification }}
               </p>
             </div>
 
             <!-- Rice Details -->
             <div v-if="planting.rice_detail" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <!-- Rice Classification -->
               <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
                 <div class="flex items-center gap-2 text-muted-foreground">
                   <TagIcon class="w-4 h-4" />
@@ -454,7 +437,6 @@ onMounted(() => {
                 </p>
               </div>
 
-              <!-- Water Supply -->
               <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
                 <div class="flex items-center gap-2 text-muted-foreground">
                   <DropletIcon class="w-4 h-4" />
@@ -465,7 +447,6 @@ onMounted(() => {
                 </p>
               </div>
 
-              <!-- Land Type -->
               <div
                 v-if="planting.rice_detail.land_type"
                 class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors"
