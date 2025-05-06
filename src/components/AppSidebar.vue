@@ -212,7 +212,6 @@ const data = {
       title: 'HVC Production',
       url: '#',
       icon: Apple,
-      isActive: true,
       items: [
         {
           title: 'HVC Report',

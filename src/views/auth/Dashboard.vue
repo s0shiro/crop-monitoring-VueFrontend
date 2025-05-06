@@ -1,69 +1,70 @@
 <script setup>
-import { useFetchUser } from '@/composables/useFetchUser'
+import { ref, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { useQuery } from '@tanstack/vue-query'
+import axiosInstance from '@/lib/axios'
+import { Loading } from '@/components/ui/loading'
+import AdminDashboard from '@/components/dashboard/AdminDashboard.vue'
+import TechnicianDashboard from '@/components/dashboard/TechnicianDashboard.vue'
+import { useUserAuth } from '@/composables/useUserAuth'
 
-const { data: userData, isLoading, error } = useFetchUser()
+const authStore = useAuthStore()
+const { hasRole } = useUserAuth()
 
-// Simple helper function
-const hasPermission = (permName) => userData?.permissions?.includes(permName)
+const isAdmin = computed(() => hasRole('admin'))
+const isTechnician = computed(() => hasRole('technician'))
+
+// Check if data matches the expected structure for each role
+const hasAdminData = computed(
+  () => dashboardStats.value?.system_overview && dashboardStats.value?.analytics,
+)
+const hasTechnicianData = computed(
+  () => dashboardStats.value?.overview && dashboardStats.value?.monitoring,
+)
+
+// Dashboard stats query
+const {
+  data: dashboardStats,
+  isLoading: statsLoading,
+  error: statsError,
+  refetch: refetchStats,
+} = useQuery({
+  queryKey: ['dashboard-stats'],
+  queryFn: async () => {
+    const { data } = await axiosInstance.get('/api/dashboard/stats')
+    return data
+  },
+  refetchOnWindowFocus: false,
+  enabled: true,
+})
 </script>
 
 <template>
-  <div class="space-y-4">
-    <h1 class="text-2xl font-bold">Dashboard</h1>
-
+  <div class="min-h-screen">
     <!-- Loading state -->
-    <div v-if="isLoading">Loading user data...</div>
-
-    <!-- Error state -->
-    <div v-else-if="error" class="text-red-500">Error loading user data: {{ error.message }}</div>
+    <Loading v-if="statsLoading" description="Fetching dashboard statistics...">
+      Loading Dashboard Data
+    </Loading>
 
     <!-- Success state -->
-    <div v-else-if="userData" class="space-y-4">
-      <!-- User info -->
-      <div class="p-4 bg-white dark:bg-gray-800 rounded shadow">
-        <h2 class="text-xl">Welcome, {{ userData.user.name }}!</h2>
-        <div>Email: {{ userData.user.email }}</div>
-      </div>
-
-      <!-- Roles section -->
-      <div class="p-4 bg-white dark:bg-gray-800 rounded shadow">
-        <h3 class="font-bold mb-2">Your Roles</h3>
-        <div v-if="userData.roles?.length" class="flex flex-wrap gap-2">
-          <span
-            v-for="role in userData.roles"
-            :key="role"
-            class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 rounded-full text-sm"
-          >
-            {{ role }}
-          </span>
-        </div>
-        <p v-else class="text-gray-500 dark:text-gray-400">No roles assigned</p>
-      </div>
-
-      <!-- Permissions section -->
-      <div v-if="userData.permissions?.length" class="p-4 bg-white dark:bg-gray-800 rounded shadow">
-        <h3 class="font-bold mb-2">Your Permissions</h3>
-        <div class="flex flex-wrap gap-1">
-          <span
-            v-for="permission in userData.permissions"
-            :key="permission"
-            class="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 rounded text-xs mb-1"
-          >
-            {{ permission }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Admin access section example -->
+    <div v-else-if="dashboardStats" class="space-y-8">
+      <!-- Welcome section -->
       <div
-        v-if="hasPermission('manage_users')"
-        class="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded"
+        class="relative overflow-hidden bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-lg border shadow-sm"
       >
-        <h3 class="font-bold text-amber-800 dark:text-amber-300">Admin Features</h3>
-        <p class="text-amber-700 dark:text-amber-400">
-          You have admin privileges to manage users and system settings.
-        </p>
+        <div class="relative p-8">
+          <h2 class="text-3xl font-bold text-foreground">
+            Welcome back, {{ authStore.user?.name || 'User' }}! 👋
+          </h2>
+          <p class="mt-2 text-muted-foreground">
+            Here's what's happening in your agricultural monitoring system.
+          </p>
+        </div>
       </div>
+
+      <!-- Role-specific Dashboard -->
+      <AdminDashboard v-if="isAdmin && hasAdminData" :stats="dashboardStats" />
+      <TechnicianDashboard v-else-if="isTechnician && hasTechnicianData" :stats="dashboardStats" />
     </div>
   </div>
 </template>
