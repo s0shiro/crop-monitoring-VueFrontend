@@ -38,45 +38,38 @@ const props = defineProps({
   class: { type: null, required: false },
 })
 
-const { hasPermission } = useUserAuth()
+const { hasRole } = useUserAuth()
 
-// Filter navigation items based on permissions
+// Filter navigation items based on roles
 const filteredNavMain = computed(() => {
   return data.navMain
     .map((section) => {
+      // Hide production reports for coordinator role
+      if (
+        ['Rice Production', 'Corn Production', 'HVC Production'].includes(section.title) &&
+        hasRole('coordinator')
+      ) {
+        return null
+      }
+
       // First check if any items in the section should be visible
       const filteredItems =
         section.items?.filter((item) => {
           switch (item.title) {
             case 'Users':
-              return hasPermission('manage_users')
+              return hasRole('admin')
+            case 'My Technicians':
+              return hasRole('coordinator')
             case 'Crops':
-              return (
-                hasPermission('create_crops') ||
-                hasPermission('update_crops') ||
-                hasPermission('view_reports')
-              )
+              return hasRole('admin') || hasRole('technician')
             case 'Associations':
-              return (
-                hasPermission('create_associations') ||
-                hasPermission('update_associations') ||
-                hasPermission('view_associations')
-              )
+              return hasRole('admin') || hasRole('coordinator')
             case 'Farmers':
-              return (
-                hasPermission('create_farmers') ||
-                hasPermission('update_farmers') ||
-                hasPermission('view_farmers')
-              )
+              return hasRole('admin') || hasRole('technician')
             case 'Crop Plantings':
-              return hasPermission('view_crop_planting') || hasPermission('manage_crop_planting')
-            // For reports, check if user has view_reports permission
+              return hasRole('admin') || hasRole('technician')
             default:
-              return ['Rice Production', 'Corn Production', 'HVC Production'].includes(
-                section.title,
-              )
-                ? hasPermission('view_reports')
-                : true
+              return true
           }
         }) || []
 
@@ -127,6 +120,11 @@ const data = {
           title: 'Users',
           url: '/users',
           icon: UserCog,
+        },
+        {
+          title: 'My Technicians',
+          url: '/my-technicians',
+          icon: Users,
         },
         {
           title: 'Farmers',

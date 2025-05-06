@@ -23,6 +23,7 @@ import RiceStandingReport from '@/views/common/GenerateReports/RiceStandingRepor
 import RiceHarvestReport from '@/views/common/GenerateReports/RiceHarvestReport.vue'
 import CornStandingReport from '@/views/common/GenerateReports/CornStandingReport.vue'
 import ExampleUsage from '@/views/common/ExampleUsage.vue'
+import TechnicianManagement from '@/views/coordinator/TechnicianManagement.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -55,6 +56,15 @@ const router = createRouter({
           path: '',
           name: 'dashboard',
           component: Dashboard,
+        },
+        {
+          path: 'my-technicians',
+          name: 'my-technicians',
+          component: TechnicianManagement,
+          meta: {
+            requiredRoles: ['coordinator'],
+            title: 'My Technicians',
+          },
         },
         {
           path: 'users',
@@ -97,7 +107,7 @@ const router = createRouter({
           name: 'associations-management',
           component: AssociationsManagement,
           meta: {
-            requiredRoles: ['admin'],
+            requiredRoles: ['admin', 'coordinator'],
             title: 'Associations Management',
           },
         },
@@ -115,7 +125,7 @@ const router = createRouter({
           name: 'farmer-management',
           component: FarmerManagement,
           meta: {
-            requiredRoles: ['admin', 'technician', 'coordinator'],
+            requiredRoles: ['admin', 'technician'],
             title: 'Farmer Management',
           },
         },
