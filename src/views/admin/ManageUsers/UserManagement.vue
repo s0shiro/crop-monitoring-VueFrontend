@@ -154,6 +154,14 @@
                   </div>
                 </div>
 
+                <!-- Add coordinator information if user is technician -->
+                <div v-if="user.roles.includes('technician') && user.coordinator" class="flex items-center gap-2">
+                  <UsersRound class="w-4 h-4 text-violet-500" />
+                  <p class="text-sm">
+                    Coordinator: <span class="text-violet-500">{{ user.coordinator.name }}</span>
+                  </p>
+                </div>
+
                 <div class="flex items-center gap-2">
                   <CalendarDays class="w-4 h-4 text-orange-500" />
                   <p class="text-sm text-muted-foreground">
@@ -316,6 +324,35 @@
                 </SelectContent>
               </Select>
             </div>
+
+            <!-- Coordinator field (shows only when role is technician) -->
+            <div v-if="showCoordinatorField" class="space-y-2 md:col-span-2">
+              <Label for="coordinator" class="text-sm font-medium">Assign to Coordinator</Label>
+              <Select v-model="formData.coordinator_id" required>
+                <SelectTrigger
+                  class="ring-offset-background transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  :disabled="isLoadingCoordinators"
+                >
+                  <SelectValue
+                    :placeholder="
+                      isLoadingCoordinators ? 'Loading coordinators...' : 'Select a coordinator'
+                    "
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="coordinator in coordinators"
+                    :key="coordinator.id"
+                    :value="coordinator.id"
+                  >
+                    <div class="flex items-center">
+                      <Shield class="h-4 w-4 mr-2 text-green-500" />
+                      {{ coordinator.name }}
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <DialogFooter class="mt-6 gap-2">
@@ -346,7 +383,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserManagement } from '@/composables/useUserManagement'
 import { useUtilsStore } from '@/stores/utils'
@@ -389,8 +426,10 @@ import {
   Shield,
   Users,
   CalendarDays,
+  UsersRound,
 } from 'lucide-vue-next'
 import { useToast } from '@/components/ui/toast/use-toast'
+import axiosInstance from '@/lib/axios'
 
 const { toast } = useToast()
 const router = useRouter()
@@ -450,16 +489,31 @@ const formData = ref({
   email: '',
   password: '',
   role: '',
+  coordinator_id: null,
 })
 
 // Add new refs for password visibility and form validation
 const showPassword = ref(false)
 const formRef = ref(null)
 
+// Coordinator state
+const coordinators = ref([])
+const isLoadingCoordinators = ref(false)
+
+// Computed property for showing coordinator field
+const showCoordinatorField = computed(() => formData.value.role === 'technician')
+
 // Watch for dialog changes to reset form
 watch(showCreateDialog, (newValue) => {
   if (newValue) {
     resetForm()
+  }
+})
+
+// Watch for role changes to fetch coordinators
+watch(showCoordinatorField, async (show) => {
+  if (show) {
+    await fetchCoordinators()
   }
 })
 
@@ -497,7 +551,26 @@ function resetForm() {
     email: '',
     password: '',
     role: '',
+    coordinator_id: null,
   }
   selectedUser.value = null
+}
+
+// Fetch coordinators
+async function fetchCoordinators() {
+  try {
+    isLoadingCoordinators.value = true
+    const response = await axiosInstance.get('/api/coordinators')
+    coordinators.value = response.data
+  } catch (error) {
+    console.error('Failed to fetch coordinators:', error)
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to load coordinators',
+    })
+  } finally {
+    isLoadingCoordinators.value = false
+  }
 }
 </script>

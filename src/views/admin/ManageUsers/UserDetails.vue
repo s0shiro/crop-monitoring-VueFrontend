@@ -43,6 +43,7 @@ const detailsForm = ref({
   email: '',
   password: '',
   role: '',
+  coordinator_id: null,
 })
 
 // State for editing direct permissions independently
@@ -50,6 +51,10 @@ const isEditingPermissions = ref(false)
 const permissionsForm = ref({
   direct_permissions: [], // Direct permissions managed separately
 })
+
+// State for coordinators
+const coordinators = ref([])
+const isLoadingCoordinators = ref(false)
 
 // Use TanStack Query for fetching permissions dynamically
 const {
@@ -100,12 +105,22 @@ watch(
         email: newDetails.user.email,
         password: '',
         role: newDetails.roles[0],
+        coordinator_id: newDetails.user.coordinator?.id || null,
       }
       permissionsForm.value.direct_permissions = newDetails.direct_permissions || []
     }
   },
   { immediate: true },
 )
+
+// Watch for role changes to fetch coordinators
+watch(computed(() => detailsForm.value.role === 'technician'), async (show) => {
+  if (show) {
+    await fetchCoordinators()
+  } else {
+    detailsForm.value.coordinator_id = null
+  }
+})
 
 // Mutation for updating basic user details
 const { mutate: updateUserMutation, isPending: isUpdatingDetails } = useMutation({
@@ -169,6 +184,24 @@ function handleEditPermissions() {
   isEditingPermissions.value = true
 }
 
+// Fetch coordinators
+async function fetchCoordinators() {
+  try {
+    isLoadingCoordinators.value = true
+    const response = await axiosInstance.get('/api/coordinators')
+    coordinators.value = response.data
+  } catch (error) {
+    console.error('Failed to fetch coordinators:', error)
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: 'Failed to load coordinators',
+    })
+  } finally {
+    isLoadingCoordinators.value = false
+  }
+}
+
 async function handleDeleteUser() {
   if (!userDetails.value) return
 
@@ -193,15 +226,22 @@ async function handleDeleteUser() {
 }
 
 function handleDetailsSubmit() {
+  const userData = {
+    username: detailsForm.value.username,
+    name: detailsForm.value.name,
+    email: detailsForm.value.email,
+    password: detailsForm.value.password,
+    role: detailsForm.value.role,
+  }
+
+  // Add coordinator_id if role is technician
+  if (detailsForm.value.role === 'technician') {
+    userData.coordinator_id = detailsForm.value.coordinator_id
+  }
+
   updateUserMutation({
     id: route.params.id,
-    userData: {
-      username: detailsForm.value.username,
-      name: detailsForm.value.name,
-      email: detailsForm.value.email,
-      password: detailsForm.value.password,
-      role: detailsForm.value.role,
-    },
+    userData,
   })
 }
 
@@ -359,6 +399,27 @@ const allPermissions = computed(() => {
                   <SelectItem value="coordinator">Coordinator</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div v-if="isEditMode && detailsForm.role === 'technician'" class="space-y-3">
+              <Label class="text-sm font-medium text-foreground/80">Coordinator</Label>
+              <Select v-model="detailsForm.coordinator_id">
+                <SelectTrigger class="w-full border-muted focus:ring-primary">
+                  <SelectValue placeholder="Select a coordinator" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="coordinator in coordinators"
+                    :key="coordinator.id"
+                    :value="coordinator.id"
+                  >
+                    {{ coordinator.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <div v-if="isLoadingCoordinators" class="text-sm text-muted-foreground flex items-center">
+                <Loader2 class="w-5 h-5 animate-spin mr-2" />
+                Loading coordinators...
+              </div>
             </div>
           </div>
           <div v-else class="text-sm text-muted-foreground flex items-center justify-center py-8">
