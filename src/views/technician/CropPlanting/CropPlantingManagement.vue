@@ -123,9 +123,9 @@ const addNewPlanting = () => {
     <!-- Header Section -->
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-extrabold text-primary">Crop Plantings</h1>
-      <Button 
-        v-if="hasPermission('manage_crop_planting')" 
-        @click="addNewPlanting" 
+      <Button
+        v-if="hasPermission('manage_crop_planting')"
+        @click="addNewPlanting"
         variant="default"
       >
         Add New Planting
@@ -227,7 +227,7 @@ const addNewPlanting = () => {
       <Card
         v-for="planting in plantingsData?.pages.flatMap((page) => page.data)"
         :key="planting.id"
-        class="hover:shadow-lg transition-shadow cursor-pointer"
+        class="group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-background to-muted/20 border border-border/50 hover:border-primary/20"
         @click="viewPlantingDetails(planting.id)"
       >
         <div class="p-6 space-y-4">

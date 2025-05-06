@@ -162,10 +162,14 @@ const resetForm = () => {
 
 <template>
   <div class="space-y-8">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-3">
+    <div
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-3"
+    >
       <div class="flex items-center gap-3">
         <Users2 class="h-8 w-8 text-primary shrink-0" />
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-primary break-words">Farmer Management</h1>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-primary break-words">
+          Farmer Management
+        </h1>
       </div>
       <Button @click="showAddFarmerDialog = true" variant="default" class="gap-2 whitespace-nowrap">
         <User class="h-4 w-4" />
@@ -195,7 +199,7 @@ const resetForm = () => {
           <Card
             v-for="farmer in page.data"
             :key="farmer.id"
-            class="group flex flex-col p-6 shadow-md hover:shadow-lg transition-all duration-200 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-primary/5"
+            class="group flex flex-col p-6 hover:shadow-lg transition-all duration-300 rounded-lg border border-border/50 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20"
           >
             <div class="flex justify-between w-full">
               <div class="flex items-start gap-3">

@@ -1,6 +1,16 @@
 <script setup>
 import { Card } from '@/components/ui/card'
-import { Users, Activity, Building2, ChartBar, Calendar, Bell } from 'lucide-vue-next'
+import {
+  Users,
+  Activity,
+  Building2,
+  ChartBar,
+  Calendar,
+  Bell,
+  AlertTriangle,
+  Ruler,
+  MessageSquare,
+} from 'lucide-vue-next'
 
 const props = defineProps({
   stats: {
@@ -86,7 +96,23 @@ const props = defineProps({
               No upcoming inspections scheduled
             </div>
             <div v-else class="space-y-4">
-              <!-- Add upcoming inspections list here when data structure is known -->
+              <div
+                v-for="inspection in stats.monitoring.upcoming_inspections"
+                :key="inspection.date"
+                class="flex items-center justify-between p-3 rounded-lg border bg-card/50 hover:bg-accent/50 transition-colors"
+              >
+                <div class="flex items-center gap-3">
+                  <div class="p-2 bg-primary/10 rounded-full">
+                    <Calendar class="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p class="font-medium">{{ inspection.farmer_name }}</p>
+                    <p class="text-sm text-muted-foreground">
+                      {{ new Date(inspection.date).toLocaleDateString() }}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </Card>
@@ -107,7 +133,39 @@ const props = defineProps({
               No recent alerts
             </div>
             <div v-else class="space-y-4">
-              <!-- Add recent alerts list here when data structure is known -->
+              <div
+                v-for="alert in stats.monitoring.recent_alerts"
+                :key="alert.date"
+                class="p-4 rounded-lg border bg-card/50 hover:bg-destructive/5 transition-colors"
+              >
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-3">
+                    <div class="p-2 bg-destructive/10 rounded-full">
+                      <AlertTriangle class="h-4 w-4 text-destructive" />
+                    </div>
+                    <p class="font-medium">{{ alert.farmer_name }}</p>
+                  </div>
+                  <p class="text-sm text-muted-foreground">
+                    {{ new Date(alert.date).toLocaleDateString() }}
+                  </p>
+                </div>
+                <div class="ml-11 space-y-1">
+                  <div class="flex items-center gap-2">
+                    <Ruler class="h-4 w-4 text-muted-foreground" />
+                    <p class="text-sm">
+                      <span class="text-muted-foreground">Damaged Area:</span>
+                      <span class="font-medium">{{ alert.damaged_area }} hectares</span>
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <MessageSquare class="h-4 w-4 text-muted-foreground" />
+                    <p class="text-sm">
+                      <span class="text-muted-foreground">Remarks:</span>
+                      <span class="font-medium">{{ alert.remarks }}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </Card>

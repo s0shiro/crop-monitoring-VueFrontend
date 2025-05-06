@@ -120,7 +120,7 @@ const createAssociation = () => {
           <div
             v-for="association in page.data"
             :key="association.id"
-            class="group flex flex-col items-start p-6 shadow-md hover:shadow-lg transition-all duration-200 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-primary/5"
+            class="group flex flex-col items-start p-6 hover:shadow-lg transition-all duration-300 rounded-lg border border-border/50 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20"
           >
             <div class="flex justify-between w-full">
               <div class="flex items-start gap-3">
