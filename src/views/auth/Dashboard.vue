@@ -6,6 +6,7 @@ import axiosInstance from '@/lib/axios'
 import { Loading } from '@/components/ui/loading'
 import AdminDashboard from '@/components/dashboard/AdminDashboard.vue'
 import TechnicianDashboard from '@/components/dashboard/TechnicianDashboard.vue'
+import CoordinatorDashboard from '@/components/dashboard/CoordinatorDashboard.vue'
 import { useUserAuth } from '@/composables/useUserAuth'
 
 const authStore = useAuthStore()
@@ -13,12 +14,16 @@ const { hasRole } = useUserAuth()
 
 const isAdmin = computed(() => hasRole('admin'))
 const isTechnician = computed(() => hasRole('technician'))
+const isCoordinator = computed(() => hasRole('coordinator'))
 
 // Check if data matches the expected structure for each role
 const hasAdminData = computed(
   () => dashboardStats.value?.system_overview && dashboardStats.value?.analytics,
 )
 const hasTechnicianData = computed(
+  () => dashboardStats.value?.overview && dashboardStats.value?.monitoring,
+)
+const hasCoordinatorData = computed(
   () => dashboardStats.value?.overview && dashboardStats.value?.monitoring,
 )
 
@@ -65,6 +70,10 @@ const {
       <!-- Role-specific Dashboard -->
       <AdminDashboard v-if="isAdmin && hasAdminData" :stats="dashboardStats" />
       <TechnicianDashboard v-else-if="isTechnician && hasTechnicianData" :stats="dashboardStats" />
+      <CoordinatorDashboard
+        v-else-if="isCoordinator && hasCoordinatorData"
+        :stats="dashboardStats"
+      />
     </div>
   </div>
 </template>
