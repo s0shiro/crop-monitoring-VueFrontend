@@ -74,7 +74,7 @@ export function useUserManagement(params = {}) {
 
   const { mutateAsync: updateUserPermissions } = useMutation({
     mutationFn: async ({ id, permissions }) => {
-      const { data } = await axios.put(`/api/users/${id}/permissions`, { permissions })
+      const { data } = await axios.patch(`/api/users/${id}/permissions`, { permissions })
       return data
     },
     onSuccess: () => {
