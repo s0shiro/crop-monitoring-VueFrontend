@@ -162,7 +162,6 @@ const data = {
       title: 'Rice Production',
       url: '#',
       icon: Wheat,
-      isActive: true,
       items: [
         {
           title: 'Monthly Planting',
@@ -186,7 +185,6 @@ const data = {
       title: 'Corn Production',
       url: '#',
       icon: LeafyGreen,
-      isActive: true,
       items: [
         {
           title: 'Monthly Planting',

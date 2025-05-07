@@ -1,5 +1,16 @@
 <script setup>
 import { Card } from '@/components/ui/card'
+import { Line } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js'
 import {
   Users,
   Activity,
@@ -12,12 +23,130 @@ import {
   MessageSquare,
   User,
 } from 'lucide-vue-next'
+import { computed } from 'vue'
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
+
+// Common chart configurations
+const commonScales = {
+  x: {
+    grid: {
+      display: false,
+    },
+    ticks: {
+      font: {
+        size: 12,
+        family: 'system-ui',
+      },
+    },
+  },
+  y: {
+    beginAtZero: true,
+    grid: {
+      color: 'rgba(var(--muted), 0.1)',
+    },
+    ticks: {
+      font: {
+        size: 12,
+        family: 'system-ui',
+      },
+      padding: 8,
+    },
+  },
+}
+
+const commonLegendLabels = {
+  usePointStyle: true,
+  pointStyle: 'circle',
+  padding: 20,
+  font: {
+    size: 12,
+    family: 'system-ui',
+    weight: '500',
+  },
+  boxWidth: 8,
+  boxHeight: 8,
+}
+
+const commonTooltip = {
+  backgroundColor: 'rgba(var(--background), 0.9)',
+  titleColor: 'rgb(var(--foreground))',
+  bodyColor: 'rgb(var(--foreground))',
+  borderColor: 'rgba(var(--border), 0.2)',
+  borderWidth: 1,
+  padding: 12,
+  cornerRadius: 8,
+  titleFont: {
+    size: 13,
+    weight: '600',
+  },
+  bodyFont: {
+    size: 12,
+  },
+  displayColors: true,
+  boxWidth: 8,
+  boxHeight: 8,
+  usePointStyle: true,
+}
 
 const props = defineProps({
   stats: {
     type: Object,
     required: true,
   },
+})
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: {
+    mode: 'index',
+    intersect: false,
+  },
+  scales: commonScales,
+  plugins: {
+    legend: {
+      position: 'top',
+      labels: commonLegendLabels,
+    },
+    tooltip: {
+      ...commonTooltip,
+      callbacks: {
+        label: function (context) {
+          return `${context.dataset.label}: ${context.parsed.y} plantings`
+        },
+      },
+    },
+    title: {
+      display: true,
+      text: 'Monthly Crop Plantings',
+      font: {
+        size: 16,
+        family: 'system-ui',
+        weight: '600',
+      },
+      padding: {
+        bottom: 16,
+      },
+    },
+  },
+}
+
+// Process chart data with colors
+const processedChartData = computed(() => {
+  if (!props.stats?.trends) return null
+
+  return {
+    ...props.stats.trends,
+    datasets: props.stats.trends.datasets.map((dataset) => ({
+      ...dataset,
+      backgroundColor: 'rgba(34, 197, 94, 0.5)', // Green theme
+      borderColor: 'rgb(22, 163, 74)',
+      borderWidth: 2,
+      tension: 0.4,
+      fill: true,
+    })),
+  }
 })
 </script>
 
@@ -188,6 +317,21 @@ const props = defineProps({
           </div>
         </Card>
       </div>
+    </div>
+
+    <!-- Trends Section -->
+    <div>
+      <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <ChartBar class="h-5 w-5 text-primary" />
+        Planting Trends
+      </h3>
+      <Card class="overflow-hidden transition-all hover:shadow-lg">
+        <div class="p-6">
+          <div class="h-[400px]">
+            <Line v-if="processedChartData" :data="processedChartData" :options="chartOptions" />
+          </div>
+        </div>
+      </Card>
     </div>
   </div>
 </template>
