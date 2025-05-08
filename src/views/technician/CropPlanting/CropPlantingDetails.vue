@@ -141,23 +141,42 @@ onMounted(() => {
 <template>
   <div class="space-y-8">
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10 pb-4"
+    >
       <div class="flex items-center gap-4">
-        <Button @click="router.back()" variant="ghost" class="rounded-full">
+        <Button
+          @click="router.back()"
+          variant="ghost"
+          class="rounded-full hover:bg-primary/10 transition-colors"
+        >
           <ArrowLeftIcon class="w-4 h-4" />
         </Button>
-        <h1 class="text-3xl font-extrabold tracking-tight">Crop Planting Details</h1>
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight text-primary">Crop Planting Details</h1>
+          <p class="text-sm text-muted-foreground mt-1" v-if="planting?.updated_at">
+            Last updated:
+            {{
+              planting.updated_at ? format(new Date(planting.updated_at), 'MMMM d, yyyy') : 'N/A'
+            }}
+          </p>
+        </div>
       </div>
       <div class="flex items-center gap-2">
         <Button
           @click="router.push({ name: 'crop-planting-edit', params: { id: plantingId } })"
           variant="outline"
-          class="gap-2"
+          class="gap-2 hover:border-primary/50 transition-colors"
         >
           <PencilIcon class="w-4 h-4" />
           Edit Details
         </Button>
-        <Button @click="confirmDelete" variant="destructive" :disabled="isDeleting" class="gap-2">
+        <Button
+          @click="confirmDelete"
+          variant="destructive"
+          :disabled="isDeleting"
+          class="gap-2 hover:bg-destructive/90 transition-colors"
+        >
           <Trash2Icon class="w-4 h-4" />
           {{ isDeleting ? 'Deleting...' : 'Delete' }}
         </Button>
@@ -167,7 +186,9 @@ onMounted(() => {
     <!-- Loading State -->
     <div v-if="isLoadingPlanting" class="flex items-center justify-center min-h-[400px]">
       <div class="flex flex-col items-center gap-2">
-        <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
+        <div
+          class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"
+        ></div>
         <p class="text-muted-foreground">Loading planting details...</p>
       </div>
     </div>
@@ -176,7 +197,7 @@ onMounted(() => {
     <div v-else-if="planting" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Basic Information -->
       <Card
-        class="lg:col-span-2 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+        class="lg:col-span-2 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-primary/5 to-transparent border-border/50 hover:border-primary/20"
       >
         <CardHeader class="border-b">
           <div class="flex items-center justify-between">
@@ -184,28 +205,37 @@ onMounted(() => {
               <Wheat class="w-5 h-5 text-primary" />
               <CardTitle class="text-lg">Basic Information</CardTitle>
             </div>
-            <Badge
+            <div
               :class="{
-                'bg-yellow-500/10 text-yellow-600': planting.status === 'standing',
-                'bg-green-500/10 text-green-600': planting.status === 'harvest',
-                'bg-blue-500/10 text-blue-600': planting.status === 'partially harvested',
-                'bg-gray-500/10 text-gray-600': planting.status === 'harvested',
+                'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5': true,
+                'bg-yellow-100 text-yellow-800': planting.status === 'standing',
+                'bg-green-100 text-green-800': planting.status === 'harvested',
+                'bg-blue-100 text-blue-800': planting.status === 'partially harvested',
+                'bg-primary/10 text-primary': planting.status === 'harvest',
               }"
-              class="px-3 py-1 text-sm capitalize transition-colors"
             >
-              <div class="flex items-center gap-1.5">
-                <div
+              <span class="relative flex h-2 w-2">
+                <span
                   :class="{
-                    'bg-yellow-500': planting.status === 'standing',
-                    'bg-green-500': planting.status === 'harvest',
-                    'bg-blue-500': planting.status === 'partially harvested',
-                    'bg-gray-500': planting.status === 'harvested',
+                    'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75': true,
+                    'bg-yellow-400': planting.status === 'standing',
+                    'bg-green-400': planting.status === 'harvested',
+                    'bg-blue-400': planting.status === 'partially harvested',
+                    'bg-primary': planting.status === 'harvest',
                   }"
-                  class="w-1.5 h-1.5 rounded-full"
-                ></div>
-                {{ planting.status }}
-              </div>
-            </Badge>
+                ></span>
+                <span
+                  :class="{
+                    'relative inline-flex rounded-full h-2 w-2': true,
+                    'bg-yellow-500': planting.status === 'standing',
+                    'bg-green-500': planting.status === 'harvested',
+                    'bg-blue-500': planting.status === 'partially harvested',
+                    'bg-primary': planting.status === 'harvest',
+                  }"
+                ></span>
+              </span>
+              {{ planting.status }}
+            </div>
           </div>
         </CardHeader>
         <CardContent class="p-6">
@@ -251,7 +281,7 @@ onMounted(() => {
 
       <!-- Location Details -->
       <Card
-        class="lg:col-span-1 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+        class="lg:col-span-1 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-orange-500/5 to-transparent border-border/50 hover:border-primary/20"
       >
         <CardHeader class="border-b">
           <div class="flex items-center gap-2">
@@ -307,7 +337,7 @@ onMounted(() => {
 
       <!-- Map View -->
       <Card
-        class="lg:col-span-3 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+        class="lg:col-span-3 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-500/5 to-transparent border-border/50 hover:border-primary/20"
       >
         <CardHeader class="border-b">
           <div class="flex items-center gap-2">
@@ -335,7 +365,7 @@ onMounted(() => {
 
       <!-- Planting Details -->
       <Card
-        class="lg:col-span-3 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+        class="lg:col-span-3 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-500/5 to-transparent border-border/50 hover:border-primary/20"
       >
         <CardHeader class="border-b">
           <div class="flex items-center gap-2">
@@ -401,7 +431,7 @@ onMounted(() => {
       <!-- Category Specific Details -->
       <Card
         v-if="planting.hvc_detail || planting.rice_detail"
-        class="lg:col-span-3 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+        class="lg:col-span-3 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-purple-500/5 to-transparent border-border/50 hover:border-primary/20"
       >
         <CardHeader class="border-b">
           <div class="flex items-center gap-2">
@@ -480,17 +510,31 @@ onMounted(() => {
 
     <!-- Delete Confirmation Dialog -->
     <Dialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
-      <DialogContent>
+      <DialogContent class="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle class="text-lg font-semibold">Delete Crop Planting</DialogTitle>
-          <DialogDescription class="text-sm text-muted-foreground">
+          <DialogTitle class="flex items-center gap-2 text-lg font-semibold text-destructive">
+            <Trash2Icon class="w-5 h-5" />
+            Delete Crop Planting
+          </DialogTitle>
+          <DialogDescription class="text-sm text-muted-foreground mt-2">
             Are you sure you want to delete this crop planting record? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="ghost" @click="showDeleteDialog = false"> Cancel </Button>
-          <Button variant="destructive" :disabled="isDeleting" @click="handleDelete">
-            <Loader2Icon v-if="isDeleting" class="mr-2 h-4 w-4 animate-spin" />
+        <DialogFooter class="mt-4">
+          <Button
+            variant="ghost"
+            @click="showDeleteDialog = false"
+            class="hover:bg-muted/10 transition-colors"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            :disabled="isDeleting"
+            @click="handleDelete"
+            class="hover:bg-destructive/90 transition-colors gap-2"
+          >
+            <Loader2Icon v-if="isDeleting" class="h-4 w-4 animate-spin" />
             {{ isDeleting ? 'Deleting...' : 'Delete' }}
           </Button>
         </DialogFooter>

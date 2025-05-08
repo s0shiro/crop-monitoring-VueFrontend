@@ -28,6 +28,8 @@ import {
   CalendarIcon,
   BuildingIcon,
   ShieldIcon,
+  AlertTriangleIcon,
+  LeafIcon,
 } from 'lucide-vue-next'
 import axiosInstance from '@/lib/axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
@@ -581,6 +583,281 @@ const handleDelete = () => {
                         })
                       }}
                     </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- Crop Plantings Section -->
+        <Card
+          class="md:col-span-2 lg:col-span-4 mt-6 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-primary/20"
+        >
+          <CardHeader class="border-b">
+            <CardTitle class="flex items-center gap-2">
+              <CalendarIcon class="w-5 h-5 text-primary" />
+              Crop Plantings History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div class="space-y-6">
+              <!-- No Plantings State -->
+              <div v-if="!farmer.crop_plantings?.length" class="text-center py-12">
+                <div class="bg-muted/10 rounded-full p-4 w-fit mx-auto">
+                  <CalendarIcon class="w-12 h-12 text-muted-foreground/30" />
+                </div>
+                <p class="text-muted-foreground mt-4">No crop plantings recorded yet.</p>
+              </div>
+
+              <!-- Plantings List -->
+              <div v-else class="space-y-8 mt-4">
+                <div v-for="planting in farmer.crop_plantings" :key="planting.id" class="relative">
+                  <!-- Timeline Connector -->
+                  <div
+                    class="absolute left-6 top-14 bottom-0 w-0.5 bg-border -z-10"
+                    v-if="!$last"
+                  ></div>
+
+                  <div class="group relative flex gap-6">
+                    <!-- Timeline Dot -->
+                    <div class="relative">
+                      <div
+                        :class="{
+                          'w-12 h-12 rounded-full border-2 flex items-center justify-center': true,
+                          'border-yellow-500 bg-yellow-50': planting.status === 'standing',
+                          'border-green-500 bg-green-50': planting.status === 'harvested',
+                          'border-blue-500 bg-blue-50': planting.status === 'partially harvested',
+                          'border-primary bg-primary/5': planting.status === 'harvest',
+                        }"
+                      >
+                        <span
+                          :class="{
+                            'text-sm font-medium': true,
+                            'text-yellow-700': planting.status === 'standing',
+                            'text-green-700': planting.status === 'harvested',
+                            'text-blue-700': planting.status === 'partially harvested',
+                            'text-primary': planting.status === 'harvest',
+                          }"
+                        >
+                          {{
+                            new Date(planting.planting_date).toLocaleDateString('en-US', {
+                              month: 'short',
+                            })
+                          }}
+                        </span>
+                        <span
+                          :class="{
+                            'text-xs font-medium block -mt-1': true,
+                            'text-yellow-600': planting.status === 'standing',
+                            'text-green-600': planting.status === 'harvested',
+                            'text-blue-600': planting.status === 'partially harvested',
+                            'text-primary/80': planting.status === 'harvest',
+                          }"
+                        >
+                          {{
+                            new Date(planting.planting_date).toLocaleDateString('en-US', {
+                              day: '2-digit',
+                            })
+                          }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Content Card -->
+                    <div
+                      class="flex-1 bg-card rounded-lg border shadow-sm group-hover:shadow-md transition-all duration-200"
+                    >
+                      <!-- Header -->
+                      <div
+                        class="p-4 flex flex-wrap items-start justify-between gap-4 border-b bg-muted/5"
+                      >
+                        <div class="space-y-1">
+                          <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-primary">
+                              {{ planting.category?.name }} - {{ planting.crop?.name }}
+                            </h3>
+                            <span class="text-sm text-muted-foreground">
+                              ({{ planting.variety?.name }})
+                            </span>
+                          </div>
+                          <p class="text-sm text-muted-foreground">
+                            Maturity: {{ planting.variety?.maturity_days }} days
+                          </p>
+                        </div>
+
+                        <div
+                          :class="{
+                            'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5': true,
+                            'bg-yellow-100 text-yellow-800': planting.status === 'standing',
+                            'bg-green-100 text-green-800': planting.status === 'harvested',
+                            'bg-blue-100 text-blue-800': planting.status === 'partially harvested',
+                            'bg-primary/10 text-primary': planting.status === 'harvest',
+                          }"
+                        >
+                          <span class="relative flex h-2 w-2">
+                            <span
+                              :class="{
+                                'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75': true,
+                                'bg-yellow-400': planting.status === 'standing',
+                                'bg-green-400': planting.status === 'harvested',
+                                'bg-blue-400': planting.status === 'partially harvested',
+                                'bg-primary': planting.status === 'harvest',
+                              }"
+                            ></span>
+                            <span
+                              :class="{
+                                'relative inline-flex rounded-full h-2 w-2': true,
+                                'bg-yellow-500': planting.status === 'standing',
+                                'bg-green-500': planting.status === 'harvested',
+                                'bg-blue-500': planting.status === 'partially harvested',
+                                'bg-primary': planting.status === 'harvest',
+                              }"
+                            ></span>
+                          </span>
+                          {{ planting.status }}
+                        </div>
+                      </div>
+
+                      <!-- Content -->
+                      <div class="p-4 space-y-4">
+                        <!-- Progress Bar -->
+                        <div class="space-y-2">
+                          <div class="flex justify-between text-sm">
+                            <span class="text-muted-foreground">Harvest Progress</span>
+                            <span class="font-medium">
+                              {{
+                                ((planting.harvested_area / planting.area_planted) * 100).toFixed(
+                                  1,
+                                )
+                              }}%
+                            </span>
+                          </div>
+                          <div class="h-2 rounded-full bg-muted/20 overflow-hidden">
+                            <div
+                              :style="{
+                                width: `${(planting.harvested_area / planting.area_planted) * 100}%`,
+                              }"
+                              :class="{
+                                'h-full rounded-full transition-all': true,
+                                'bg-yellow-500': planting.status === 'standing',
+                                'bg-green-500': planting.status === 'harvested',
+                                'bg-blue-500': planting.status === 'partially harvested',
+                                'bg-primary': planting.status === 'harvest',
+                              }"
+                            ></div>
+                          </div>
+                        </div>
+
+                        <!-- Area Stats -->
+                        <div
+                          class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-lg bg-muted/5"
+                        >
+                          <div>
+                            <p class="text-sm text-muted-foreground">Area Planted</p>
+                            <p class="font-medium mt-0.5">{{ planting.area_planted }} ha</p>
+                          </div>
+                          <div>
+                            <p class="text-sm text-muted-foreground">Area Harvested</p>
+                            <p class="font-medium mt-0.5">{{ planting.harvested_area }} ha</p>
+                          </div>
+                          <div>
+                            <p class="text-sm text-muted-foreground">Damaged Area</p>
+                            <div class="flex items-baseline gap-1">
+                              <p class="font-medium mt-0.5">{{ planting.damaged_area }} ha</p>
+                              <span
+                                class="text-xs text-destructive"
+                                v-if="planting.damaged_area > 0"
+                              >
+                                ({{
+                                  ((planting.damaged_area / planting.area_planted) * 100).toFixed(
+                                    1,
+                                  )
+                                }}%)
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Timeline -->
+                        <div class="relative">
+                          <div class="absolute left-0 right-0 top-1/2 h-0.5 bg-border -z-10"></div>
+                          <div class="flex justify-between">
+                            <!-- Planting Date -->
+                            <div class="text-center bg-background px-2">
+                              <p class="text-xs text-muted-foreground">Planted</p>
+                              <p class="font-medium mt-1">
+                                {{ new Date(planting.planting_date).toLocaleDateString() }}
+                              </p>
+                            </div>
+                            <!-- Expected Harvest -->
+                            <div class="text-center bg-background px-2">
+                              <p class="text-xs text-muted-foreground">Expected Harvest</p>
+                              <p class="font-medium mt-1">
+                                {{ new Date(planting.expected_harvest_date).toLocaleDateString() }}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Monitoring Summary -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t">
+                          <!-- Inspections -->
+                          <div class="space-y-3">
+                            <p class="text-sm font-medium flex items-center gap-2">
+                              <ClipboardIcon class="w-4 h-4 text-muted-foreground" />
+                              Latest Inspections
+                            </p>
+                            <div v-if="planting.inspections?.length" class="space-y-2">
+                              <div
+                                v-for="inspection in planting.inspections.slice(0, 2)"
+                                :key="inspection.id"
+                                class="flex items-center gap-2 text-sm p-2 rounded-md bg-muted/5"
+                              >
+                                <span class="text-muted-foreground">
+                                  {{ new Date(inspection.inspection_date).toLocaleDateString() }}
+                                </span>
+                                <span class="text-destructive font-medium flex items-center gap-1">
+                                  <AlertTriangleIcon class="w-3.5 h-3.5" />
+                                  {{ inspection.damaged_area }} ha
+                                </span>
+                                <span class="text-muted-foreground">damaged</span>
+                              </div>
+                            </div>
+                            <p v-else class="text-sm text-muted-foreground italic">
+                              No inspections recorded
+                            </p>
+                          </div>
+
+                          <!-- Harvests -->
+                          <div class="space-y-3">
+                            <p class="text-sm font-medium flex items-center gap-2">
+                              <LeafIcon class="w-4 h-4 text-muted-foreground" />
+                              Harvest Reports
+                            </p>
+                            <div v-if="planting.harvest_reports?.length" class="space-y-2">
+                              <div
+                                v-for="harvest in planting.harvest_reports.slice(0, 2)"
+                                :key="harvest.id"
+                                class="flex items-center gap-2 text-sm p-2 rounded-md bg-muted/5"
+                              >
+                                <span class="text-muted-foreground">
+                                  {{ new Date(harvest.harvest_date).toLocaleDateString() }}
+                                </span>
+                                <span class="text-green-600 font-medium">
+                                  {{ harvest.total_yield }} kg
+                                </span>
+                                <span class="text-muted-foreground">from</span>
+                                <span class="font-medium">{{ harvest.area_harvested }} ha</span>
+                              </div>
+                            </div>
+                            <p v-else class="text-sm text-muted-foreground italic">
+                              No harvests recorded
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

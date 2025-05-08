@@ -133,9 +133,9 @@ const handleInspectionSubmit = () => {
 
 <template>
   <Card
-    class="lg:col-span-3 group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 hover:bg-primary/5"
+    class="lg:col-span-3 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-orange-500/5 to-transparent border-border/50 hover:border-primary/20"
   >
-    <CardHeader class="border-b">
+    <CardHeader class="border-b bg-muted/5">
       <div class="flex flex-col gap-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
@@ -146,14 +146,17 @@ const handleInspectionSubmit = () => {
             v-if="planting?.status === 'standing' && hasPermission('create_inspections')"
             @click="showInspectionDialog = true"
             variant="default"
-            class="gap-2 whitespace-nowrap"
+            class="gap-2 whitespace-nowrap bg-primary hover:bg-primary/90 text-white"
           >
             <PlusIcon class="w-4 h-4" />
             Add Inspection
           </Button>
         </div>
         <div v-if="planting?.damaged_area > 0" class="flex items-center gap-2">
-          <Badge variant="outline" class="bg-destructive/10 text-destructive whitespace-nowrap">
+          <Badge
+            variant="outline"
+            class="bg-destructive/10 text-destructive whitespace-nowrap border-destructive/20"
+          >
             Total damaged area: {{ planting?.damaged_area }} ha
           </Badge>
         </div>
@@ -163,21 +166,29 @@ const handleInspectionSubmit = () => {
     <CardContent class="p-6">
       <!-- Loading State -->
       <div v-if="isLoadingInspections" class="flex justify-center py-8">
-        <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
+        <div class="flex flex-col items-center gap-2">
+          <Loader2Icon class="w-8 h-8 animate-spin text-primary" />
+          <span class="text-sm text-muted-foreground">Loading inspections...</span>
+        </div>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="inspectionsError" class="text-center text-destructive py-8">
-        <AlertCircleIcon class="w-6 h-6 mx-auto mb-2" />
-        <p>Failed to load inspections.</p>
+      <div v-else-if="inspectionsError" class="text-center py-8">
+        <div class="flex flex-col items-center gap-2">
+          <AlertCircleIcon class="w-8 h-8 text-destructive" />
+          <p class="text-destructive font-medium">Failed to load inspections</p>
+          <p class="text-sm text-muted-foreground">Please try again later</p>
+        </div>
       </div>
 
       <!-- Empty State -->
-      <div
-        v-else-if="!inspectionsData?.pages[0]?.data?.length"
-        class="text-center text-muted-foreground py-8"
-      >
-        No inspections recorded yet.
+      <div v-else-if="!inspectionsData?.pages[0]?.data?.length" class="text-center py-12">
+        <div class="flex flex-col items-center gap-3">
+          <div class="p-3 rounded-full bg-muted/10 w-fit">
+            <ClipboardListIcon class="w-8 h-8 text-muted-foreground/50" />
+          </div>
+          <p class="text-muted-foreground">No inspections recorded yet.</p>
+        </div>
       </div>
 
       <!-- Inspections List -->
@@ -185,7 +196,7 @@ const handleInspectionSubmit = () => {
         <div
           v-for="inspection in inspectionsData?.pages.flatMap((page) => page.data)"
           :key="inspection.id"
-          class="group/item p-4 rounded-lg border border-border/50 hover:border-primary/20 hover:bg-primary/5 transition-all duration-200"
+          class="group/item p-4 rounded-lg border border-border/50 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20 hover:shadow-md transition-all duration-200"
         >
           <div class="flex flex-col gap-4">
             <!-- Header -->
@@ -196,7 +207,10 @@ const handleInspectionSubmit = () => {
                   {{ format(new Date(inspection.inspection_date), 'MMMM d, yyyy') }}
                 </span>
               </div>
-              <Badge variant="outline" class="bg-destructive/10 text-destructive whitespace-nowrap">
+              <Badge
+                variant="outline"
+                class="bg-destructive/10 text-destructive whitespace-nowrap border-destructive/20"
+              >
                 {{ inspection.damaged_area }} ha damaged
               </Badge>
             </div>
@@ -220,7 +234,7 @@ const handleInspectionSubmit = () => {
             variant="outline"
             @click="fetchNextInspections"
             :disabled="isFetchingNextInspections"
-            class="min-w-[200px] gap-2"
+            class="min-w-[200px] gap-2 hover:bg-primary/5"
           >
             <template v-if="isFetchingNextInspections">
               <Loader2Icon class="w-4 h-4 animate-spin" />
@@ -238,9 +252,12 @@ const handleInspectionSubmit = () => {
 
   <!-- Add Inspection Dialog -->
   <Dialog :open="showInspectionDialog" @update:open="showInspectionDialog = $event">
-    <DialogContent>
+    <DialogContent class="sm:max-w-[500px]">
       <DialogHeader>
-        <DialogTitle>Add Inspection</DialogTitle>
+        <DialogTitle class="flex items-center gap-2 text-lg">
+          <ClipboardListIcon class="w-5 h-5 text-primary" />
+          Add Inspection
+        </DialogTitle>
         <DialogDescription>
           Record a new inspection for this crop planting. The damaged area will be deducted from the
           remaining area.
@@ -307,9 +324,16 @@ const handleInspectionSubmit = () => {
         </div>
       </Form>
 
-      <DialogFooter>
-        <Button variant="ghost" @click="showInspectionDialog = false">Cancel</Button>
-        <Button type="submit" :disabled="isCreatingInspection" @click="handleInspectionSubmit">
+      <DialogFooter class="mt-4">
+        <Button variant="ghost" @click="showInspectionDialog = false" class="hover:bg-muted/10"
+          >Cancel</Button
+        >
+        <Button
+          type="submit"
+          :disabled="isCreatingInspection"
+          @click="handleInspectionSubmit"
+          class="bg-primary hover:bg-primary/90 text-white"
+        >
           <Loader2Icon v-if="isCreatingInspection" class="mr-2 h-4 w-4 animate-spin" />
           {{ isCreatingInspection ? 'Adding...' : 'Add Inspection' }}
         </Button>
