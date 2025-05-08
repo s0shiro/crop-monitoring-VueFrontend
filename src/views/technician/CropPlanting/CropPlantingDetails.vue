@@ -30,6 +30,7 @@ import {
   TagIcon,
   DropletIcon,
   LandmarkIcon,
+  ExternalLinkIcon,
 } from 'lucide-vue-next'
 import { format } from 'date-fns'
 import axiosInstance from '@/lib/axios'
@@ -102,17 +103,6 @@ const confirmDelete = () => {
 
 const handleDelete = () => {
   deletePlanting()
-}
-
-// Status badge color mapping
-const getStatusColor = (status) => {
-  const colors = {
-    standing: 'bg-yellow-500',
-    harvest: 'bg-green-500',
-    'partially harvested': 'bg-blue-500',
-    harvested: 'bg-gray-500',
-  }
-  return colors[status] || 'bg-gray-500'
 }
 
 // Map related refs
@@ -241,7 +231,15 @@ onMounted(() => {
         <CardContent class="p-6">
           <div class="grid gap-6 sm:grid-cols-2">
             <!-- Farmer Info -->
-            <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors">
+            <div class="group/item hover:bg-muted/50 p-3 rounded-lg transition-colors relative">
+              <RouterLink
+                :to="{ name: 'farmer-details', params: { id: planting.farmer.id } }"
+                class="absolute top-3 right-3 opacity-0 group-hover/item:opacity-100 transition-opacity"
+              >
+                <Button variant="ghost" size="icon" class="h-8 w-8 hover:bg-primary/10">
+                  <ExternalLinkIcon class="h-4 w-4" />
+                </Button>
+              </RouterLink>
               <div class="flex items-center gap-2 text-muted-foreground">
                 <UserIcon class="w-4 h-4" />
                 <span class="text-sm font-medium">Farmer</span>

@@ -30,6 +30,7 @@ import {
   ShieldIcon,
   AlertTriangleIcon,
   LeafIcon,
+  Eye,
 } from 'lucide-vue-next'
 import axiosInstance from '@/lib/axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
@@ -686,36 +687,45 @@ const handleDelete = () => {
                           </p>
                         </div>
 
-                        <div
-                          :class="{
-                            'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5': true,
-                            'bg-yellow-100 text-yellow-800': planting.status === 'standing',
-                            'bg-green-100 text-green-800': planting.status === 'harvested',
-                            'bg-blue-100 text-blue-800': planting.status === 'partially harvested',
-                            'bg-primary/10 text-primary': planting.status === 'harvest',
-                          }"
-                        >
-                          <span class="relative flex h-2 w-2">
-                            <span
-                              :class="{
-                                'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75': true,
-                                'bg-yellow-400': planting.status === 'standing',
-                                'bg-green-400': planting.status === 'harvested',
-                                'bg-blue-400': planting.status === 'partially harvested',
-                                'bg-primary': planting.status === 'harvest',
-                              }"
-                            ></span>
-                            <span
-                              :class="{
-                                'relative inline-flex rounded-full h-2 w-2': true,
-                                'bg-yellow-500': planting.status === 'standing',
-                                'bg-green-500': planting.status === 'harvested',
-                                'bg-blue-500': planting.status === 'partially harvested',
-                                'bg-primary': planting.status === 'harvest',
-                              }"
-                            ></span>
-                          </span>
-                          {{ planting.status }}
+                        <div class="flex items-center gap-2">
+                          <RouterLink :to="{ name: 'crop-planting-details', params: { id: planting.id }}">
+                            <Button variant="outline" class="gap-2 hover:bg-primary/5">
+                              <Eye class="w-4 h-4" />
+                              View Details
+                            </Button>
+                          </RouterLink>
+
+                          <div
+                            :class="{
+                              'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5': true,
+                              'bg-yellow-100 text-yellow-800': planting.status === 'standing',
+                              'bg-green-100 text-green-800': planting.status === 'harvested',
+                              'bg-blue-100 text-blue-800': planting.status === 'partially harvested',
+                              'bg-primary/10 text-primary': planting.status === 'harvest',
+                            }"
+                          >
+                            <span class="relative flex h-2 w-2">
+                              <span
+                                :class="{
+                                  'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75': true,
+                                  'bg-yellow-400': planting.status === 'standing',
+                                  'bg-green-400': planting.status === 'harvested',
+                                  'bg-blue-400': planting.status === 'partially harvested',
+                                  'bg-primary': planting.status === 'harvest',
+                                }"
+                              ></span>
+                              <span
+                                :class="{
+                                  'relative inline-flex rounded-full h-2 w-2': true,
+                                  'bg-yellow-500': planting.status === 'standing',
+                                  'bg-green-500': planting.status === 'harvested',
+                                  'bg-blue-500': planting.status === 'partially harvested',
+                                  'bg-primary': planting.status === 'harvest',
+                                }"
+                              ></span>
+                            </span>
+                            {{ planting.status }}
+                          </div>
                         </div>
                       </div>
 
@@ -750,9 +760,7 @@ const handleDelete = () => {
                         </div>
 
                         <!-- Area Stats -->
-                        <div
-                          class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-lg bg-muted/5"
-                        >
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-muted/5">
                           <div>
                             <p class="text-sm text-muted-foreground">Area Planted</p>
                             <p class="font-medium mt-0.5">{{ planting.area_planted }} ha</p>
