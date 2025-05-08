@@ -1,29 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { toast } from '@/components/ui/toast'
-import NotFound from '../views/NotFound.vue'
-import Register from '@/views/auth/Register.vue'
-import Login from '@/views/auth/Login.vue'
-import Dashboard from '@/views/auth/Dashboard.vue'
-import UserManagement from '@/views/admin/ManageUsers/UserManagement.vue'
-import UserDetails from '@/views/admin/ManageUsers/UserDetails.vue'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/api/authApi'
+import Login from '@/views/auth/Login.vue'
 import DashboardLayout from '@/layouts/DashboardLayout.vue'
-import CropManagement from '@/views/common/CropManagement/CropManagement.vue'
-import CropVarieties from '@/views/common/CropManagement/CropVarieties.vue'
-import AssociationsManagement from '@/views/common/AssociationsManagement/AssociationsManagement.vue'
-import AssociationDetails from '@/views/common/AssociationsManagement/AssociationDetails.vue'
-import FarmerManagement from '@/views/common/FarmerManagement/FarmerManagement.vue'
-import FarmerDetails from '@/views/common/FarmerManagement/FarmerDetails.vue'
-import CropPlantingManagement from '@/views/technician/CropPlanting/CropPlantingManagement.vue'
-import CropPlantingDetails from '@/views/technician/CropPlanting/CropPlantingDetails.vue'
-import CropPlantingForm from '@/views/technician/CropPlanting/CropPlantingForm.vue'
-import CropPlantingEditForm from '@/views/technician/CropPlanting/CropPlantingEditForm.vue'
-import RiceStandingReport from '@/views/common/GenerateReports/RiceStandingReport.vue'
-import RiceHarvestReport from '@/views/common/GenerateReports/RiceHarvestReport.vue'
-import CornStandingReport from '@/views/common/GenerateReports/CornStandingReport.vue'
-import ExampleUsage from '@/views/common/ExampleUsage.vue'
-import TechnicianManagement from '@/views/coordinator/TechnicianManagement.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,7 +24,7 @@ const router = createRouter({
     {
       path: '/register',
       name: 'register',
-      component: Register,
+      component: () => import('@/views/auth/Register.vue'),
       meta: { requiresGuest: true },
     },
     {
@@ -55,21 +35,30 @@ const router = createRouter({
         {
           path: '',
           name: 'dashboard',
-          component: Dashboard,
+          component: () => import('@/views/auth/Dashboard.vue'),
         },
         {
           path: 'my-technicians',
           name: 'my-technicians',
-          component: TechnicianManagement,
+          component: () => import('@/views/coordinator/TechnicianManagement.vue'),
           meta: {
             requiredRoles: ['coordinator'],
             title: 'My Technicians',
           },
         },
         {
+          path: 'my-technicians/:id',
+          name: 'technician-details',
+          component: () => import('@/views/coordinator/TechnicianDetails.vue'),
+          meta: {
+            requiredRoles: ['coordinator'],
+            title: 'Technician Details',
+          },
+        },
+        {
           path: 'users',
           name: 'user-management',
-          component: UserManagement,
+          component: () => import('@/views/admin/ManageUsers/UserManagement.vue'),
           meta: {
             requiredRoles: ['admin'],
             title: 'User Management',
@@ -78,7 +67,7 @@ const router = createRouter({
         {
           path: 'users/:id',
           name: 'user-details',
-          component: UserDetails,
+          component: () => import('@/views/admin/ManageUsers/UserDetails.vue'),
           meta: {
             requiredRoles: ['admin'],
             title: 'User Details',
@@ -87,7 +76,7 @@ const router = createRouter({
         {
           path: 'crops',
           name: 'crop-management',
-          component: CropManagement,
+          component: () => import('@/views/common/CropManagement/CropManagement.vue'),
           meta: {
             requiredRoles: ['admin', 'technician', 'coordinator'],
             title: 'Crop Management',
@@ -96,7 +85,7 @@ const router = createRouter({
         {
           path: 'crops/:cropId/varieties',
           name: 'crop-varieties',
-          component: CropVarieties,
+          component: () => import('@/views/common/CropManagement/CropVarieties.vue'),
           meta: {
             requiredRoles: ['admin', 'technician'],
             title: 'Crop Varieties',
@@ -105,7 +94,8 @@ const router = createRouter({
         {
           path: 'associations',
           name: 'associations-management',
-          component: AssociationsManagement,
+          component: () =>
+            import('@/views/common/AssociationsManagement/AssociationsManagement.vue'),
           meta: {
             requiredRoles: ['admin', 'coordinator'],
             title: 'Associations Management',
@@ -114,7 +104,7 @@ const router = createRouter({
         {
           path: 'associations/:id',
           name: 'association-details',
-          component: AssociationDetails,
+          component: () => import('@/views/common/AssociationsManagement/AssociationDetails.vue'),
           meta: {
             requiredRoles: ['admin'],
             title: 'Association Details',
@@ -123,7 +113,7 @@ const router = createRouter({
         {
           path: 'farmers',
           name: 'farmer-management',
-          component: FarmerManagement,
+          component: () => import('@/views/common/FarmerManagement/FarmerManagement.vue'),
           meta: {
             requiredRoles: ['admin', 'technician'],
             title: 'Farmer Management',
@@ -132,7 +122,7 @@ const router = createRouter({
         {
           path: 'farmers/:id',
           name: 'farmer-details',
-          component: FarmerDetails,
+          component: () => import('@/views/common/FarmerManagement/FarmerDetails.vue'),
           meta: {
             requiredRoles: ['admin', 'technician'],
             title: 'Farmer Details',
@@ -141,7 +131,7 @@ const router = createRouter({
         {
           path: 'crop-plantings',
           name: 'crop-planting-management',
-          component: CropPlantingManagement,
+          component: () => import('@/views/technician/CropPlanting/CropPlantingManagement.vue'),
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'Crop Planting Management',
@@ -150,7 +140,7 @@ const router = createRouter({
         {
           path: 'crop-plantings/new',
           name: 'crop-planting-form',
-          component: CropPlantingForm,
+          component: () => import('@/views/technician/CropPlanting/CropPlantingForm.vue'),
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'New Crop Planting',
@@ -159,7 +149,7 @@ const router = createRouter({
         {
           path: 'crop-plantings/:id',
           name: 'crop-planting-details',
-          component: CropPlantingDetails,
+          component: () => import('@/views/technician/CropPlanting/CropPlantingDetails.vue'),
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'Crop Planting Details',
@@ -168,7 +158,7 @@ const router = createRouter({
         {
           path: 'crop-plantings/:id/edit',
           name: 'crop-planting-edit',
-          component: CropPlantingEditForm,
+          component: () => import('@/views/technician/CropPlanting/CropPlantingEditForm.vue'),
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'Edit Crop Planting',
@@ -177,7 +167,7 @@ const router = createRouter({
         {
           path: 'reports/rice-standing',
           name: 'rice-standing-report',
-          component: RiceStandingReport,
+          component: () => import('@/views/common/GenerateReports/RiceStandingReport.vue'),
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'Rice Standing Report',
@@ -186,7 +176,7 @@ const router = createRouter({
         {
           path: 'reports/rice-harvest',
           name: 'rice-harvest-report',
-          component: RiceHarvestReport,
+          component: () => import('@/views/common/GenerateReports/RiceHarvestReport.vue'),
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'Rice Harvest Report',
@@ -222,7 +212,7 @@ const router = createRouter({
         {
           path: 'reports/corn-standing',
           name: 'corn-standing-report',
-          component: CornStandingReport,
+          component: () => import('@/views/common/GenerateReports/CornStandingReport.vue'),
           meta: {
             requiredRoles: ['technician', 'admin'],
             title: 'Corn Standing Report',
@@ -240,7 +230,7 @@ const router = createRouter({
         {
           path: 'example',
           name: 'example-usage',
-          component: ExampleUsage,
+          component: () => import('@/views/common/ExampleUsage.vue'),
           meta: {
             requiredRoles: ['admin', 'technician'],
             title: 'Example Loading States',
@@ -251,7 +241,7 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
-      component: NotFound,
+      component: () => import('@/views/NotFound.vue'),
     },
   ],
 })

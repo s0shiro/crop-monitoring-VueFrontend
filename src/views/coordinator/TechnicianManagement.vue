@@ -9,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useToast } from '@/components/ui/toast/use-toast'
 import axiosInstance from '@/lib/axios'
 import { useInfiniteQuery } from '@tanstack/vue-query'
 import { User, Users, MoreHorizontal, Eye, CalendarDays, Search } from 'lucide-vue-next'
@@ -17,7 +16,6 @@ import { useRouter } from 'vue-router'
 import { useUtilsStore } from '@/stores/utils'
 
 const router = useRouter()
-const { toast } = useToast()
 const utilsStore = useUtilsStore()
 const searchQuery = ref('')
 
@@ -45,7 +43,7 @@ const {
 
 // View technician details
 function viewTechnicianDetails(technician) {
-  router.push({ name: 'user-details', params: { id: technician.id } })
+  router.push({ name: 'technician-details', params: { id: technician.id } })
 }
 
 // Use debounce from store for search
