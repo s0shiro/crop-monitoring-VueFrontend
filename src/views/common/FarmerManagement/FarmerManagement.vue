@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast/use-toast'
 import axiosInstance from '@/lib/axios'
-import { useMutation, useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import {
   Dialog,
   DialogContent,
@@ -31,6 +31,8 @@ import {
   Building2,
   Ruler,
   FileText,
+  ArrowUpDown,
+  Search,
 } from 'lucide-vue-next'
 import {
   DropdownMenu,
@@ -38,21 +40,29 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useFarmerManagement } from '@/composables/useFarmerManagement'
+import { useUtilsStore } from '@/stores/utils'
 
 const showAddFarmerDialog = ref(false)
-const name = ref('')
-const gender = ref('')
-const rsbsa = ref('')
-const landsize = ref('')
-const barangay = ref('')
-const municipality = ref('')
-const associationId = ref('')
-const technicianId = ref('')
 const formErrors = ref({})
+const searchQuery = ref('')
+const associationFilter = ref('all')
+const sortBy = ref('created_at')
+const sortDirection = ref('desc')
+const formData = ref({
+  name: '',
+  gender: '',
+  rsbsa: '',
+  landsize: '',
+  barangay: '',
+  municipality: '',
+  association_id: '',
+  technician_id: '',
+})
 
 const { toast } = useToast()
 const authStore = useAuthStore()
-const queryClient = useQueryClient()
+const utilsStore = useUtilsStore()
 
 // Fetch associations for the dropdown
 const { data: associationsData, isLoading: isLoadingAssociations } = useQuery({
@@ -60,6 +70,15 @@ const { data: associationsData, isLoading: isLoadingAssociations } = useQuery({
   queryFn: async () => {
     const response = await axiosInstance.get('/api/associations')
     return response.data.data // Access the data array from the new structure
+  },
+})
+
+// Fetch associations for filtering
+const { data: associations } = useQuery({
+  queryKey: ['associations-dropdown'],
+  queryFn: async () => {
+    const response = await axiosInstance.get('/api/associations')
+    return response.data.data
   },
 })
 
@@ -73,88 +92,85 @@ const { data: technicians, isLoading: isLoadingTechnicians } = useQuery({
   enabled: authStore.hasRole('admin'),
 })
 
-// Fetch farmers with infinite scroll
-const fetchFarmers = async ({ pageParam = 0 }) => {
-  const response = await axiosInstance.get('/api/farmers', {
-    params: { cursor: pageParam },
-  })
-  return response.data
-}
-
+// State from composable with search params
 const {
-  data: farmersData,
-  error: farmersError,
+  farmersData,
+  isLoadingFarmers,
+  fetchError,
   fetchNextPage,
   hasNextPage,
   isFetchingNextPage,
-  isLoading: isLoadingFarmers,
-} = useInfiniteQuery({
-  queryKey: ['farmers'],
-  queryFn: fetchFarmers,
-  getNextPageParam: (lastPage) => lastPage.nextCursor,
-  onError: (error) => {
-    toast({
-      variant: 'destructive',
-      title: 'Error',
-      description: error.response?.data?.message || 'Failed to load farmers.',
-    })
-  },
+  createFarmer: createFarmerMutation,
+  isCreatingFarmer,
+  refreshFarmers,
+} = useFarmerManagement({
+  search: searchQuery,
+  association: associationFilter,
+  sortBy: sortBy,
+  sortDirection: sortDirection,
 })
 
-// Create farmer mutation
-const { mutate: createFarmerMutation, isPending: isCreatingFarmer } = useMutation({
-  mutationFn: async (newFarmer) => {
-    return await axiosInstance.post('/api/farmers', newFarmer)
+// Filter and sort handlers
+function applyFilters() {
+  refreshFarmers()
+}
+
+function toggleSortDirection() {
+  sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  refreshFarmers()
+}
+
+// Use debounce from store
+const debounceSearch = utilsStore.debounce(
+  () => {
+    refreshFarmers()
   },
-  onSuccess: () => {
+  300,
+  'farmerSearch',
+)
+
+const createFarmer = async () => {
+  try {
+    const farmerData = {
+      ...formData.value,
+      landsize: formData.value.landsize ? parseFloat(formData.value.landsize) : null,
+      association_id: formData.value.association_id || null,
+    }
+
+    // Add technician_id only if admin is creating the farmer
+    if (authStore.hasRole('admin') && formData.value.technician_id) {
+      farmerData.technician_id = formData.value.technician_id
+    }
+
+    const result = await createFarmerMutation(farmerData)
+    resetForm()
     toast({
       title: 'Success',
-      description: 'Farmer created successfully.',
+      description: result.message || 'Farmer created successfully',
     })
-    resetForm()
-    queryClient.invalidateQueries(['farmers'])
-  },
-  onError: (error) => {
-    if (error.response?.data?.errors) {
-      formErrors.value = error.response.data.errors
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to create farmer.',
-      })
-    }
-  },
-})
-
-const createFarmer = () => {
-  const farmerData = {
-    name: name.value,
-    gender: gender.value,
-    rsbsa: rsbsa.value,
-    landsize: landsize.value ? parseFloat(landsize.value) : null,
-    barangay: barangay.value,
-    municipality: municipality.value,
-    association_id: associationId.value || null,
+  } catch (error) {
+    const errorData = error.response?.data
+    toast({
+      variant: 'destructive',
+      title: 'Failed to create farmer!',
+      description: errorData?.errors
+        ? Object.values(errorData.errors).flat().join(', ')
+        : errorData?.message || 'Failed to create farmer',
+    })
   }
-
-  // Add technician_id only if admin is creating the farmer
-  if (authStore.hasRole('admin') && technicianId.value) {
-    farmerData.technician_id = technicianId.value
-  }
-
-  createFarmerMutation(farmerData)
 }
 
 const resetForm = () => {
-  name.value = ''
-  gender.value = ''
-  rsbsa.value = ''
-  landsize.value = ''
-  barangay.value = ''
-  municipality.value = ''
-  associationId.value = ''
-  technicianId.value = ''
+  formData.value = {
+    name: '',
+    gender: '',
+    rsbsa: '',
+    landsize: '',
+    barangay: '',
+    municipality: '',
+    association_id: '',
+    technician_id: '',
+  }
   formErrors.value = {}
   showAddFarmerDialog.value = false
 }
@@ -177,9 +193,63 @@ const resetForm = () => {
       </Button>
     </div>
 
+    <!-- Search and Filter Section -->
+    <div class="flex flex-col lg:flex-row gap-4">
+      <div class="w-full">
+        <div class="relative">
+          <Search class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            v-model="searchQuery"
+            @input="debounceSearch"
+            placeholder="Search farmers..."
+            class="w-full pl-9 border-muted focus:ring-primary rounded-lg"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-2/3 lg:justify-end">
+        <Select v-model="associationFilter" @update:modelValue="applyFilters">
+          <SelectTrigger class="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filter by association" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Associations</SelectItem>
+            <SelectItem
+              v-for="association in associations"
+              :key="association.id"
+              :value="association.id.toString()"
+            >
+              {{ association.name }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select v-model="sortBy" @update:modelValue="applyFilters">
+          <SelectTrigger class="w-full sm:w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Name</SelectItem>
+            <SelectItem value="created_at">Date Created</SelectItem>
+            <SelectItem value="barangay">Barangay</SelectItem>
+            <SelectItem value="municipality">Municipality</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button
+          variant="outline"
+          class="w-full sm:w-10 p-0"
+          @click="toggleSortDirection"
+          :title="sortDirection === 'asc' ? 'Sort Ascending' : 'Sort Descending'"
+        >
+          <ArrowUpDown class="h-4 w-4" :class="{ 'rotate-180': sortDirection === 'desc' }" />
+        </Button>
+      </div>
+    </div>
+
     <Loading v-if="isLoadingFarmers">Loading farmers...</Loading>
 
-    <div v-else-if="farmersError" class="text-center py-8 text-destructive">
+    <div v-else-if="fetchError" class="text-center py-8 text-destructive">
       Failed to load farmers. Please try again later.
     </div>
 
@@ -302,7 +372,7 @@ const resetForm = () => {
             <label for="name" class="block text-sm font-medium text-muted-foreground">Name</label>
             <Input
               id="name"
-              v-model="name"
+              v-model="formData.name"
               placeholder="Enter farmer name"
               :class="[
                 'border-muted focus:ring-primary rounded-lg',
@@ -315,7 +385,7 @@ const resetForm = () => {
             <label for="gender" class="block text-sm font-medium text-muted-foreground"
               >Gender</label
             >
-            <Select v-model="gender">
+            <Select v-model="formData.gender">
               <SelectTrigger
                 :class="[
                   'w-full border-muted focus:ring-primary rounded-lg',
@@ -337,7 +407,7 @@ const resetForm = () => {
             <label for="rsbsa" class="block text-sm font-medium text-muted-foreground">RSBSA</label>
             <Input
               id="rsbsa"
-              v-model="rsbsa"
+              v-model="formData.rsbsa"
               placeholder="Enter RSBSA number"
               :class="[
                 'border-muted focus:ring-primary rounded-lg',
@@ -354,7 +424,7 @@ const resetForm = () => {
             >
             <Input
               id="landsize"
-              v-model="landsize"
+              v-model="formData.landsize"
               type="number"
               step="0.01"
               min="0"
@@ -374,7 +444,7 @@ const resetForm = () => {
             >
             <Input
               id="barangay"
-              v-model="barangay"
+              v-model="formData.barangay"
               placeholder="Enter barangay"
               :class="[
                 'border-muted focus:ring-primary rounded-lg',
@@ -391,7 +461,7 @@ const resetForm = () => {
             >
             <Input
               id="municipality"
-              v-model="municipality"
+              v-model="formData.municipality"
               placeholder="Enter municipality"
               :class="[
                 'border-muted focus:ring-primary rounded-lg',
@@ -406,7 +476,7 @@ const resetForm = () => {
             <label for="association" class="block text-sm font-medium text-muted-foreground"
               >Association</label
             >
-            <Select v-model="associationId">
+            <Select v-model="formData.association_id">
               <SelectTrigger
                 :class="[
                   'w-full border-muted focus:ring-primary rounded-lg',
@@ -429,7 +499,7 @@ const resetForm = () => {
             <label for="technician" class="block text-sm font-medium text-muted-foreground"
               >Assign Technician</label
             >
-            <Select v-model="technicianId">
+            <Select v-model="formData.technician_id">
               <SelectTrigger
                 :class="[
                   'w-full border-muted focus:ring-primary rounded-lg',
