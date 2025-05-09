@@ -9,47 +9,32 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import axiosInstance from '@/lib/axios'
-import { useInfiniteQuery } from '@tanstack/vue-query'
+import { useTechnicianManagement } from '@/composables/useTechnicianManagement'
 import { User, Users, MoreHorizontal, Eye, CalendarDays, Search } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
 import { useUtilsStore } from '@/stores/utils'
 
-const router = useRouter()
 const utilsStore = useUtilsStore()
+
+// Search state
 const searchQuery = ref('')
 
-// Fetch technicians query
+// State from composable with search params
 const {
-  data: techniciansData,
-  isLoading,
-  error,
+  techniciansData,
+  isLoadingTechnicians,
+  fetchError,
   fetchNextPage,
   hasNextPage,
   isFetchingNextPage,
-} = useInfiniteQuery({
-  queryKey: ['my-technicians', searchQuery],
-  queryFn: async ({ pageParam = 0 }) => {
-    const { data } = await axiosInstance.get('/api/my-technicians', {
-      params: {
-        cursor: pageParam,
-        search: searchQuery.value,
-      },
-    })
-    return data
-  },
-  getNextPageParam: (lastPage) => lastPage.nextCursor,
+  refreshTechnicians,
+} = useTechnicianManagement({
+  search: searchQuery,
 })
 
-// View technician details
-function viewTechnicianDetails(technician) {
-  router.push({ name: 'technician-details', params: { id: technician.id } })
-}
-
-// Use debounce from store for search
+// Use debounce from store
 const debounceSearch = utilsStore.debounce(
   () => {
-    // The query will automatically refresh due to searchQuery being in the queryKey
+    refreshTechnicians()
   },
   300,
   'technicianSearch',
@@ -91,12 +76,12 @@ const debounceSearch = utilsStore.debounce(
     </div>
 
     <!-- Loading State -->
-    <div v-if="isLoading" class="text-center py-8 text-muted-foreground">
+    <div v-if="isLoadingTechnicians" class="text-center py-8 text-muted-foreground">
       Loading technicians...
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="text-center py-8 text-destructive">
+    <div v-else-if="fetchError" class="text-center py-8 text-destructive">
       Failed to load technicians. Please try again later.
     </div>
 
@@ -145,13 +130,12 @@ const debounceSearch = utilsStore.debounce(
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      @click="viewTechnicianDetails(technician)"
-                      class="cursor-pointer"
-                    >
-                      <Eye class="mr-2 h-4 w-4" />
-                      View Details
-                    </DropdownMenuItem>
+                    <RouterLink :to="{ name: 'technician-details', params: { id: technician.id } }">
+                      <DropdownMenuItem class="cursor-pointer">
+                        <Eye class="mr-2 h-4 w-4" />
+                        View Details
+                      </DropdownMenuItem>
+                    </RouterLink>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
