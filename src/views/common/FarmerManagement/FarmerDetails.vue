@@ -132,7 +132,7 @@ const onFarmerUpdated = (updatedFarmer) => {
     <!-- Content -->
     <div v-else-if="farmer" class="space-y-6">
       <!-- View Mode - Bento Grid Layout -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <!-- Name Card - Span 2 columns -->
         <Card
           class="md:col-span-2 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-primary/5 to-transparent"
@@ -284,34 +284,34 @@ const onFarmerUpdated = (updatedFarmer) => {
 
         <!-- Crop Plantings Section -->
         <Card
-          class="md:col-span-2 lg:col-span-4 mt-6 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-primary/20"
+          class="md:col-span-2 lg:col-span-4 mt-4 sm:mt-6 group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-background to-muted/20 border-border/50 hover:border-primary/20"
         >
-          <CardHeader class="border-b">
+          <CardHeader class="border-b px-4 sm:px-6">
             <CardTitle class="flex items-center gap-2">
               <CalendarIcon class="w-5 h-5 text-primary" />
               Crop Plantings History
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div class="space-y-6">
+          <CardContent class="p-4 sm:p-6">
+            <div class="space-y-4 sm:space-y-6">
               <!-- No Plantings State -->
-              <div v-if="!farmer.crop_plantings?.length" class="text-center py-12">
+              <div v-if="!farmer.crop_plantings?.length" class="text-center py-8 sm:py-12">
                 <div class="bg-muted/10 rounded-full p-4 w-fit mx-auto">
-                  <CalendarIcon class="w-12 h-12 text-muted-foreground/30" />
+                  <CalendarIcon class="w-10 sm:w-12 h-10 sm:h-12 text-muted-foreground/30" />
                 </div>
                 <p class="text-muted-foreground mt-4">No crop plantings recorded yet.</p>
               </div>
 
               <!-- Plantings List -->
-              <div v-else class="space-y-8 mt-4">
+              <div v-else class="space-y-6 sm:space-y-8">
                 <div v-for="planting in farmer.crop_plantings" :key="planting.id" class="relative">
                   <!-- Timeline Connector -->
                   <div
-                    class="absolute left-6 top-14 bottom-0 w-0.5 bg-border -z-10"
+                    class="absolute left-4 sm:left-6 top-14 bottom-0 w-0.5 bg-border -z-10"
                     v-if="!$last"
                   ></div>
 
-                  <div class="group relative flex gap-6">
+                  <div class="group relative flex gap-4 sm:gap-6">
                     <!-- Timeline Dot -->
                     <div class="relative">
                       <div
@@ -358,15 +358,15 @@ const onFarmerUpdated = (updatedFarmer) => {
 
                     <!-- Content Card -->
                     <div
-                      class="flex-1 bg-card rounded-lg border shadow-sm group-hover:shadow-md transition-all duration-200"
+                      class="flex-1 bg-card rounded-lg border shadow-sm group-hover:shadow-md transition-all duration-200 overflow-hidden"
                     >
                       <!-- Header -->
                       <div
-                        class="p-4 flex flex-wrap items-start justify-between gap-4 border-b bg-muted/5"
+                        class="p-3 sm:p-4 flex flex-wrap items-start justify-between gap-3 sm:gap-4 border-b bg-muted/5"
                       >
-                        <div class="space-y-1">
-                          <div class="flex items-center gap-2">
-                            <h3 class="text-lg font-semibold text-primary">
+                        <div class="space-y-1 min-w-0 flex-1">
+                          <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="text-base sm:text-lg font-semibold text-primary break-words">
                               {{ planting.category?.name }} - {{ planting.crop?.name }}
                             </h3>
                             <span class="text-sm text-muted-foreground">
@@ -378,19 +378,22 @@ const onFarmerUpdated = (updatedFarmer) => {
                           </p>
                         </div>
 
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-shrink-0">
                           <RouterLink
                             :to="{ name: 'crop-planting-details', params: { id: planting.id } }"
                           >
-                            <Button variant="outline" class="gap-2 hover:bg-primary/5">
-                              <Eye class="w-4 h-4" />
+                            <Button
+                              variant="outline"
+                              class="gap-2 hover:bg-primary/5 text-sm sm:text-base"
+                            >
+                              <Eye class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                               View Details
                             </Button>
                           </RouterLink>
 
                           <div
                             :class="{
-                              'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5': true,
+                              'px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5': true,
                               'bg-yellow-100 text-yellow-800': planting.status === 'standing',
                               'bg-green-100 text-green-800': planting.status === 'harvested',
                               'bg-blue-100 text-blue-800':
@@ -424,7 +427,7 @@ const onFarmerUpdated = (updatedFarmer) => {
                       </div>
 
                       <!-- Content -->
-                      <div class="p-4 space-y-4">
+                      <div class="p-3 sm:p-4 space-y-3 sm:space-y-4">
                         <!-- Progress Bar -->
                         <div class="space-y-2">
                           <div class="flex justify-between text-sm">
@@ -455,7 +458,7 @@ const onFarmerUpdated = (updatedFarmer) => {
 
                         <!-- Area Stats -->
                         <div
-                          class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-muted/5"
+                          class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-muted/5"
                         >
                           <div>
                             <p class="text-sm text-muted-foreground">Area Planted</p>
@@ -484,20 +487,20 @@ const onFarmerUpdated = (updatedFarmer) => {
                         </div>
 
                         <!-- Timeline -->
-                        <div class="relative">
+                        <div class="relative mt-4">
                           <div class="absolute left-0 right-0 top-1/2 h-0.5 bg-border -z-10"></div>
                           <div class="flex justify-between">
                             <!-- Planting Date -->
                             <div class="text-center bg-background px-2">
                               <p class="text-xs text-muted-foreground">Planted</p>
-                              <p class="font-medium mt-1">
+                              <p class="text-sm sm:text-base font-medium mt-1">
                                 {{ new Date(planting.planting_date).toLocaleDateString() }}
                               </p>
                             </div>
                             <!-- Expected Harvest -->
                             <div class="text-center bg-background px-2">
                               <p class="text-xs text-muted-foreground">Expected Harvest</p>
-                              <p class="font-medium mt-1">
+                              <p class="text-sm sm:text-base font-medium mt-1">
                                 {{ new Date(planting.expected_harvest_date).toLocaleDateString() }}
                               </p>
                             </div>
@@ -505,8 +508,9 @@ const onFarmerUpdated = (updatedFarmer) => {
                         </div>
 
                         <!-- Monitoring Summary -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t">
-                          <!-- Inspections -->
+                        <div
+                          class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-4 pt-4 border-t"
+                        >
                           <div class="space-y-3">
                             <p class="text-sm font-medium flex items-center gap-2">
                               <ClipboardIcon class="w-4 h-4 text-muted-foreground" />
@@ -533,7 +537,6 @@ const onFarmerUpdated = (updatedFarmer) => {
                             </p>
                           </div>
 
-                          <!-- Harvests -->
                           <div class="space-y-3">
                             <p class="text-sm font-medium flex items-center gap-2">
                               <LeafIcon class="w-4 h-4 text-muted-foreground" />

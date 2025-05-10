@@ -14,7 +14,7 @@ import {
 import { useToast } from '@/components/ui/toast/use-toast'
 import { ArrowLeftIcon, XIcon, SaveIcon, MapPinIcon, RefreshCwIcon } from 'lucide-vue-next'
 import axiosInstance from '@/lib/axios'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/vue-query'
 import 'leaflet/dist/leaflet.css'
 import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet'
 import L from 'leaflet'
@@ -108,13 +108,27 @@ watch(
   { immediate: true },
 )
 
-// Fetch farmers for dropdown
-const { data: farmers } = useQuery({
-  queryKey: ['farmers'],
-  queryFn: async () => {
-    const response = await axiosInstance.get('/api/farmers')
-    return response.data.data
+// Fetch farmers for dropdown with infinite loading
+const {
+  data: farmersData,
+  fetchNextPage: fetchNextFarmers,
+  hasNextPage: hasMoreFarmers,
+  isFetchingNextPage: isLoadingMoreFarmers,
+} = useInfiniteQuery({
+  queryKey: ['farmers-infinite'],
+  queryFn: async ({ pageParam = 0 }) => {
+    const response = await axiosInstance.get('/api/farmers', {
+      params: { cursor: pageParam },
+    })
+    return response.data
   },
+  getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
+})
+
+// Computed property to flatten farmers pages into a single array
+const allFarmers = computed(() => {
+  if (!farmersData.value) return []
+  return farmersData.value.pages.flatMap((page) => page.data)
 })
 
 // Fetch categories for dropdown
@@ -291,6 +305,18 @@ const handleMarkerDrag = async (event) => {
   await fetchLocationDetails(lat, lng)
 }
 
+// Handle farmer select scroll for infinite loading
+const handleFarmerSelectScroll = (e) => {
+  const target = e.target
+  if (
+    target.scrollHeight - target.scrollTop <= target.clientHeight + 50 &&
+    hasMoreFarmers.value &&
+    !isLoadingMoreFarmers.value
+  ) {
+    fetchNextFarmers()
+  }
+}
+
 onMounted(() => {
   fixLeafletIcon()
 })
@@ -329,14 +355,30 @@ onMounted(() => {
                 <Select
                   v-model="formData.farmer_id"
                   :class="{ 'border-destructive': formErrors.farmer_id }"
+                  @scroll="handleFarmerSelectScroll"
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select farmer" />
+                    <SelectValue placeholder="Select a farmer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="farmer in farmers" :key="farmer.id" :value="farmer.id">
-                      {{ farmer.name }}
-                    </SelectItem>
+                    <template v-if="allFarmers.length > 0">
+                      <SelectItem v-for="farmer in allFarmers" :key="farmer.id" :value="farmer.id">
+                        {{ farmer.name }}
+                      </SelectItem>
+                    </template>
+                    <div
+                      v-if="hasMoreFarmers"
+                      class="py-2 px-2 text-sm text-center text-muted-foreground"
+                    >
+                      <span v-if="isLoadingMoreFarmers">Loading more farmers...</span>
+                      <button
+                        v-else
+                        @click="fetchNextFarmers()"
+                        class="text-primary hover:underline focus:outline-none"
+                      >
+                        Load more farmers
+                      </button>
+                    </div>
                   </SelectContent>
                 </Select>
                 <p v-if="formErrors.farmer_id" class="text-sm text-destructive mt-1">
