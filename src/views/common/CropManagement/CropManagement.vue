@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -62,6 +62,24 @@ const {
     })
   },
 })
+
+// Set Rice as default tab if available
+const riceCategoryId = computed(() => {
+  if (!categories.value) return ''
+  const rice = categories.value.find((cat) => cat.name && cat.name.toLowerCase() === 'rice')
+  return rice ? rice.id : ''
+})
+
+// On categories load, set Rice as default if present
+watch(
+  () => categories.value,
+  (newCategories) => {
+    if (newCategories && riceCategoryId.value) {
+      selectedCategoryId.value = riceCategoryId.value
+    }
+  },
+  { immediate: true },
+)
 
 const fetchCrops = async ({ pageParam = 0 }) => {
   const response = await axiosInstance.get(`/api/crops/by-category`, {
@@ -164,7 +182,11 @@ const openAddVarietyDialog = (cropId) => {
       <Button @click="showAddCropDialog = true" variant="default"> Add Crop </Button>
     </div>
 
-    <Tabs default-value="">
+    <Tabs
+      :default-value="riceCategoryId || ''"
+      :model-value="selectedCategoryId"
+      @update:model-value="selectedCategoryId = $event"
+    >
       <TabsList>
         <template v-if="isLoadingCategories">
           <div class="flex space-x-4">
@@ -178,6 +200,7 @@ const openAddVarietyDialog = (cropId) => {
             :value="category.id"
             @click="selectedCategoryId = category.id"
             class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary focus:text-primary"
+            :class="{ 'bg-primary text-white': selectedCategoryId === category.id }"
           >
             {{ category.name }}
           </TabsTrigger>
@@ -185,8 +208,8 @@ const openAddVarietyDialog = (cropId) => {
       </TabsList>
     </Tabs>
 
-    <div v-if="!selectedCategoryId" class="text-center text-muted-foreground py-4 italic">
-      Please select a category.
+    <div v-if="isLoadingCategories" class="text-center text-muted-foreground py-4 italic">
+      Please wait...
     </div>
 
     <Loading v-else-if="isLoadingCrops">Loading crops...</Loading>
