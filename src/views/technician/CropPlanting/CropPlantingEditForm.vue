@@ -19,6 +19,7 @@ import 'leaflet/dist/leaflet.css'
 import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet'
 import L from 'leaflet'
 import axios from 'axios'
+import { useUtilsStore } from '@/stores/utils'
 
 // Fix Leaflet's default icon path issues
 const fixLeafletIcon = () => {
@@ -34,6 +35,7 @@ const route = useRoute()
 const router = useRouter()
 const { toast } = useToast()
 const queryClient = useQueryClient()
+const utils = useUtilsStore()
 
 const plantingId = route.params.id
 
@@ -63,6 +65,19 @@ const formData = ref({
   water_supply: '',
   land_type: '',
 })
+
+// Farmer search state
+const farmerSearch = ref('')
+const farmerSearchInput = ref('')
+
+// Debounced search
+const setFarmerSearch = utils.debounce(
+  (val) => {
+    farmerSearch.value = val
+  },
+  400,
+  'farmer-search',
+)
 
 // Data fetching and state management
 const { data: planting, isLoading: isLoadingPlanting } = useQuery({
@@ -108,17 +123,18 @@ watch(
   { immediate: true },
 )
 
-// Fetch farmers for dropdown with infinite loading
+// Update infinite query to use search
 const {
   data: farmersData,
   fetchNextPage: fetchNextFarmers,
   hasNextPage: hasMoreFarmers,
   isFetchingNextPage: isLoadingMoreFarmers,
+  refetch: refetchFarmers,
 } = useInfiniteQuery({
-  queryKey: ['farmers-infinite'],
+  queryKey: computed(() => ['farmers-infinite', farmerSearch.value]),
   queryFn: async ({ pageParam = 0 }) => {
     const response = await axiosInstance.get('/api/farmers', {
-      params: { cursor: pageParam },
+      params: { cursor: pageParam, search: farmerSearch.value },
     })
     return response.data
   },
@@ -324,7 +340,7 @@ onMounted(() => {
 
 <template>
   <!-- Sticky Header -->
-  <div class="container flex h-16 items-center">
+  <div class="flex items-center">
     <div class="flex items-center gap-4 flex-1">
       <Button @click="router.back()" variant="ghost" size="icon" class="rounded-full">
         <ArrowLeftIcon class="h-5 w-5" />
@@ -361,13 +377,41 @@ onMounted(() => {
                     <SelectValue placeholder="Select a farmer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <template v-if="allFarmers.length > 0">
+                    <div class="px-2 py-2">
+                      <Input
+                        :model-value="farmerSearchInput"
+                        @update:model-value="
+                          (val) => {
+                            farmerSearchInput = val
+                            setFarmerSearch(val)
+                          }
+                        "
+                        placeholder="Search farmer by name..."
+                        class="w-full mb-2"
+                        @keydown.stop
+                      />
+                    </div>
+                    <div
+                      v-if="farmerSearchInput && (isLoadingMoreFarmers || !farmersData)"
+                      class="p-2 text-sm text-muted-foreground text-center"
+                    >
+                      Searching...
+                    </div>
+                    <template
+                      v-if="
+                        allFarmers.length > 0 &&
+                        !(farmerSearchInput && (isLoadingMoreFarmers || !farmersData))
+                      "
+                    >
                       <SelectItem v-for="farmer in allFarmers" :key="farmer.id" :value="farmer.id">
                         {{ farmer.name }}
                       </SelectItem>
                     </template>
                     <div
-                      v-if="hasMoreFarmers"
+                      v-if="
+                        hasMoreFarmers &&
+                        !(farmerSearchInput && (isLoadingMoreFarmers || !farmersData))
+                      "
                       class="py-2 px-2 text-sm text-center text-muted-foreground"
                     >
                       <span v-if="isLoadingMoreFarmers">Loading more farmers...</span>

@@ -14,11 +14,12 @@ import {
 import { useToast } from '@/components/ui/toast/use-toast'
 import { ArrowLeftIcon, XIcon, SaveIcon, MapPinIcon, RefreshCwIcon } from 'lucide-vue-next'
 import axiosInstance from '@/lib/axios'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/vue-query'
 import 'leaflet/dist/leaflet.css'
 import { LMap, LTileLayer, LMarker } from '@vue-leaflet/vue-leaflet'
 import L from 'leaflet'
 import axios from 'axios'
+import { useUtilsStore } from '@/stores/utils'
 
 // Fix Leaflet's default icon path issues
 const fixLeafletIcon = () => {
@@ -37,6 +38,7 @@ onMounted(() => {
 const router = useRouter()
 const { toast } = useToast()
 const queryClient = useQueryClient()
+const utils = useUtilsStore()
 
 // Form errors
 const formErrors = ref({})
@@ -131,14 +133,51 @@ onBeforeUnmount(() => {
   formData.value = null
 })
 
-// Fetch farmers for dropdown
-const { data: farmers } = useQuery({
-  queryKey: ['farmers'],
-  queryFn: async () => {
-    const response = await axiosInstance.get('/api/farmers')
-    return response.data.data
+// Farmer search state
+const farmerSearch = ref('')
+const farmerSearchInput = ref('')
+
+// Debounced search
+const setFarmerSearch = utils.debounce(
+  (val) => {
+    farmerSearch.value = val
   },
+  400,
+  'farmer-search',
+)
+
+// Infinite query for farmers
+const {
+  data: farmersData,
+  fetchNextPage: fetchNextFarmers,
+  hasNextPage: hasMoreFarmers,
+  isFetchingNextPage: isLoadingMoreFarmers,
+} = useInfiniteQuery({
+  queryKey: computed(() => ['farmers-infinite', farmerSearch.value]),
+  queryFn: async ({ pageParam = 0 }) => {
+    const response = await axiosInstance.get('/api/farmers', {
+      params: { cursor: pageParam, search: farmerSearch.value },
+    })
+    return response.data
+  },
+  getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
 })
+
+const allFarmers = computed(() => {
+  if (!farmersData.value) return []
+  return farmersData.value.pages.flatMap((page) => page.data)
+})
+
+const handleFarmerSelectScroll = (e) => {
+  const target = e.target
+  if (
+    target.scrollHeight - target.scrollTop <= target.clientHeight + 50 &&
+    hasMoreFarmers.value &&
+    !isLoadingMoreFarmers.value
+  ) {
+    fetchNextFarmers()
+  }
+}
 
 // Fetch categories for dropdown
 const { data: categories } = useQuery({
@@ -375,14 +414,45 @@ const resetForm = () => {
                 <Select
                   v-model="formData.farmer_id"
                   :class="{ 'border-destructive': formErrors.farmer_id }"
+                  @scroll="handleFarmerSelectScroll"
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select farmer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="farmer in farmers" :key="farmer.id" :value="farmer.id">
-                      {{ farmer.name }}
-                    </SelectItem>
+                    <div class="px-2 py-2">
+                      <Input
+                        :model-value="farmerSearchInput"
+                        @update:model-value="(val) => { farmerSearchInput = val; setFarmerSearch(val) }"
+                        placeholder="Search farmer by name..."
+                        class="w-full mb-2"
+                        @keydown.stop
+                      />
+                    </div>
+                    <div
+                      v-if="farmerSearchInput && (isLoadingMoreFarmers || !farmersData)"
+                      class="p-2 text-sm text-muted-foreground text-center"
+                    >
+                      Searching...
+                    </div>
+                    <template v-if="allFarmers.length > 0 && !(farmerSearchInput && (isLoadingMoreFarmers || !farmersData))">
+                      <SelectItem v-for="farmer in allFarmers" :key="farmer.id" :value="farmer.id">
+                        {{ farmer.name }}
+                      </SelectItem>
+                    </template>
+                    <div
+                      v-if="hasMoreFarmers && !(farmerSearchInput && (isLoadingMoreFarmers || !farmersData))"
+                      class="py-2 px-2 text-sm text-center text-muted-foreground"
+                    >
+                      <span v-if="isLoadingMoreFarmers">Loading more farmers...</span>
+                      <button
+                        v-else
+                        @click="fetchNextFarmers()"
+                        class="text-primary hover:underline focus:outline-none"
+                      >
+                        Load more farmers
+                      </button>
+                    </div>
                   </SelectContent>
                 </Select>
                 <p v-if="formErrors.farmer_id" class="text-sm text-destructive mt-1">
