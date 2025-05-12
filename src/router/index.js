@@ -236,6 +236,15 @@ const router = createRouter({
             title: 'Example Loading States',
           },
         },
+        {
+          path: 'change-password',
+          name: 'change-password',
+          component: () => import('@/views/auth/ChangePassword.vue'),
+          meta: {
+            requiresAuth: true,
+            title: 'Change Password',
+          },
+        },
       ],
     },
     {

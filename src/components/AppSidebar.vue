@@ -68,6 +68,8 @@ const filteredNavMain = computed(() => {
               return hasRole('admin') || hasRole('technician')
             case 'Crop Plantings':
               return hasRole('admin') || hasRole('technician')
+            case 'Change Password':
+              return true
             default:
               return true
           }
@@ -213,6 +215,19 @@ const data = {
           title: 'HVC Report',
           url: '/reports/high-value',
           icon: ClipboardList,
+        },
+      ],
+    },
+
+    {
+      title: 'Settings',
+      url: '#',
+      icon: Settings,
+      items: [
+        {
+          title: 'Change Password',
+          url: '/change-password',
+          icon: UserCog,
         },
       ],
     },
