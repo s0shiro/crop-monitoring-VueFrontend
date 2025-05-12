@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loading } from '@/components/ui/loading'
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/components/ui/toast/use-toast'
 import axiosInstance from '@/lib/axios'
-import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 import {
   Dialog,
   DialogContent,
@@ -22,26 +22,12 @@ import {
 } from '@/components/ui/dialog'
 import { Card } from '@/components/ui/card'
 import { useAuthStore } from '@/stores/auth'
-import {
-  MoreHorizontal,
-  Users2,
-  User,
-  MapPin,
-  Home,
-  Building2,
-  Ruler,
-  FileText,
-  ArrowUpDown,
-  Search,
-} from 'lucide-vue-next'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { Users2, User, Building2, FileText, ArrowUpDown, Search } from 'lucide-vue-next'
 import { useFarmerManagement } from '@/composables/useFarmerManagement'
 import { useUtilsStore } from '@/stores/utils'
+import FarmerViewToggle from '@/components/FarmerViewToggle.vue'
+import FarmerCardList from '@/components/FarmerCardList.vue'
+import { useWindowSize } from '@vueuse/core'
 
 const showAddFarmerDialog = ref(false)
 const formErrors = ref({})
@@ -59,6 +45,10 @@ const formData = ref({
   association_id: '',
   technician_id: '',
 })
+
+const isGridView = ref(true)
+const { width } = useWindowSize()
+const isSmallScreen = computed(() => width.value < 640)
 
 const { toast } = useToast()
 const authStore = useAuthStore()
@@ -187,10 +177,16 @@ const resetForm = () => {
           Farmer Management
         </h1>
       </div>
-      <Button @click="showAddFarmerDialog = true" variant="default" class="gap-2 whitespace-nowrap">
-        <User class="h-4 w-4" />
-        Add Farmer
-      </Button>
+      <div class="flex items-center gap-2">
+        <Button
+          @click="showAddFarmerDialog = true"
+          variant="default"
+          class="gap-2 whitespace-nowrap"
+        >
+          <User class="h-4 w-4" />
+          Add Farmer
+        </Button>
+      </div>
     </div>
 
     <!-- Search and Filter Section -->
@@ -236,14 +232,20 @@ const resetForm = () => {
           </SelectContent>
         </Select>
 
-        <Button
-          variant="outline"
-          class="w-full sm:w-10 p-0"
-          @click="toggleSortDirection"
-          :title="sortDirection === 'asc' ? 'Sort Ascending' : 'Sort Descending'"
+        <div
+          class="flex gap-2 w-full sm:w-auto"
+          :class="isSmallScreen ? 'justify-end mt-2 sm:mt-0' : ''"
         >
-          <ArrowUpDown class="h-4 w-4" :class="{ 'rotate-180': sortDirection === 'desc' }" />
-        </Button>
+          <Button
+            variant="outline"
+            class="w-10 p-0"
+            @click="toggleSortDirection"
+            :title="sortDirection === 'asc' ? 'Sort Ascending' : 'Sort Descending'"
+          >
+            <ArrowUpDown class="h-4 w-4" :class="{ 'rotate-180': sortDirection === 'desc' }" />
+          </Button>
+          <FarmerViewToggle :isGrid="isGridView" @toggle="isGridView = !isGridView" />
+        </div>
       </div>
     </div>
 
@@ -264,83 +266,56 @@ const resetForm = () => {
       >
         No farmers available.
       </div>
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <template v-for="page in farmersData.pages" :key="page.nextCursor">
+      <FarmerCardList :isGrid="isSmallScreen ? true : isGridView" :farmersData="farmersData">
+        <template #default="{ farmer, isGrid }">
           <Card
-            v-for="farmer in page.data"
             :key="farmer.id"
-            class="group flex flex-col p-6 hover:shadow-lg transition-all duration-300 rounded-lg border border-border/50 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20"
+            :class="[
+              'group flex transition-all duration-300 rounded-lg border border-border/50 hover:border-primary/20 bg-gradient-to-br from-background to-muted/20',
+              isGrid ? 'flex-col p-6 hover:shadow-lg' : 'flex-row items-center p-4',
+            ]"
           >
-            <div class="flex justify-between w-full">
-              <div class="flex items-start gap-3">
-                <User class="h-5 w-5 text-primary mt-1" />
-                <div>
-                  <h3 class="text-xl font-bold text-primary">{{ farmer.name }}</h3>
-                  <div class="flex items-center gap-2 mt-1">
-                    <FileText class="h-4 w-4 text-blue-500" />
-                    <p class="text-sm text-muted-foreground">
-                      RSBSA:
-                      <span class="font-medium text-foreground">{{
-                        farmer.rsbsa || 'Not available'
-                      }}</span>
-                    </p>
+            <div :class="isGrid ? 'flex justify-between w-full' : 'flex items-center gap-6 w-full'">
+              <div
+                :class="isGrid ? 'flex items-start gap-3' : 'flex items-center gap-4 min-w-[220px]'"
+              >
+                <RouterLink
+                  :to="{ name: 'farmer-details', params: { id: farmer.id } }"
+                  class="flex items-center gap-2 cursor-pointer group"
+                  style="text-decoration: none"
+                >
+                  <User
+                    class="h-5 w-5 text-primary mt-1 group-hover:text-blue-600 transition-colors"
+                  />
+                  <div>
+                    <h3 class="text-xl font-bold text-primary group-hover:underline">
+                      {{ farmer.name }}
+                    </h3>
+                    <div class="flex items-center gap-2 mt-1">
+                      <FileText class="h-4 w-4 text-blue-500" />
+                      <p class="text-sm text-muted-foreground">
+                        RSBSA:
+                        <span class="font-medium text-foreground">
+                          {{ farmer.rsbsa || 'Not available' }}
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    class="p-2 -mt-1 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <MoreHorizontal class="h-5 w-5 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent class="w-56">
-                  <RouterLink :to="{ name: 'farmer-details', params: { id: farmer.id } }">
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                  </RouterLink>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-4">
-              <div class="flex items-center gap-2">
-                <MapPin class="h-4 w-4 text-green-500" />
-                <div class="text-sm">
-                  <p class="text-muted-foreground">Barangay</p>
-                  <p class="font-medium">{{ farmer.barangay }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <Home class="h-4 w-4 text-orange-500" />
-                <div class="text-sm">
-                  <p class="text-muted-foreground">Municipality</p>
-                  <p class="font-medium">{{ farmer.municipality }}</p>
-                </div>
+                </RouterLink>
               </div>
             </div>
-
             <div class="flex items-center gap-2 mt-4">
               <Building2 class="h-4 w-4 text-purple-500" />
               <p class="text-sm">
                 <span class="text-muted-foreground">Association:</span>
-                <span class="font-medium ml-1">{{
-                  farmer.association?.name || 'Not assigned'
-                }}</span>
-              </p>
-            </div>
-
-            <div v-if="farmer.landsize" class="flex items-center gap-2 mt-2">
-              <Ruler class="h-4 w-4 text-yellow-500" />
-              <p class="text-sm">
-                <span class="text-muted-foreground">Land Size:</span>
-                <span class="font-medium ml-1">{{ farmer.landsize }} hectares</span>
+                <span class="font-medium ml-1">
+                  {{ farmer.association?.name || 'Not assigned' }}
+                </span>
               </p>
             </div>
           </Card>
         </template>
-      </div>
+      </FarmerCardList>
 
       <div class="text-center mt-6">
         <Button
