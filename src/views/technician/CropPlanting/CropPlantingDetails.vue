@@ -152,7 +152,7 @@ onMounted(() => {
           </p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2" v-if="planting?.status !== 'harvested'">
         <Button
           @click="router.push({ name: 'crop-planting-edit', params: { id: plantingId } })"
           variant="outline"
