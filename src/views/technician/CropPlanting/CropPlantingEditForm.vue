@@ -134,7 +134,7 @@ const {
   queryKey: computed(() => ['farmers-infinite', farmerSearch.value]),
   queryFn: async ({ pageParam = 0 }) => {
     const response = await axiosInstance.get('/api/farmers', {
-      params: { cursor: pageParam, search: farmerSearch.value },
+      params: { cursor: pageParam, search: farmerSearch.value, dropdown: 1 },
     })
     return response.data
   },

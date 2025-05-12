@@ -156,7 +156,7 @@ const {
   queryKey: computed(() => ['farmers-infinite', farmerSearch.value]),
   queryFn: async ({ pageParam = 0 }) => {
     const response = await axiosInstance.get('/api/farmers', {
-      params: { cursor: pageParam, search: farmerSearch.value },
+      params: { cursor: pageParam, search: farmerSearch.value, dropdown: 1 },
     })
     return response.data
   },
@@ -165,7 +165,14 @@ const {
 
 const allFarmers = computed(() => {
   if (!farmersData.value) return []
-  return farmersData.value.pages.flatMap((page) => page.data)
+  // Defensive: handle both paginated and non-paginated (array) responses
+  if (Array.isArray(farmersData.value)) {
+    return farmersData.value
+  }
+  if (Array.isArray(farmersData.value.pages)) {
+    return farmersData.value.pages.flatMap((page) => page.data)
+  }
+  return []
 })
 
 const handleFarmerSelectScroll = (e) => {
@@ -423,7 +430,12 @@ const resetForm = () => {
                     <div class="px-2 py-2">
                       <Input
                         :model-value="farmerSearchInput"
-                        @update:model-value="(val) => { farmerSearchInput = val; setFarmerSearch(val) }"
+                        @update:model-value="
+                          (val) => {
+                            farmerSearchInput = val
+                            setFarmerSearch(val)
+                          }
+                        "
                         placeholder="Search farmer by name..."
                         class="w-full mb-2"
                         @keydown.stop
@@ -435,13 +447,21 @@ const resetForm = () => {
                     >
                       Searching...
                     </div>
-                    <template v-if="allFarmers.length > 0 && !(farmerSearchInput && (isLoadingMoreFarmers || !farmersData))">
+                    <template
+                      v-if="
+                        allFarmers.length > 0 &&
+                        !(farmerSearchInput && (isLoadingMoreFarmers || !farmersData))
+                      "
+                    >
                       <SelectItem v-for="farmer in allFarmers" :key="farmer.id" :value="farmer.id">
                         {{ farmer.name }}
                       </SelectItem>
                     </template>
                     <div
-                      v-if="hasMoreFarmers && !(farmerSearchInput && (isLoadingMoreFarmers || !farmersData))"
+                      v-if="
+                        hasMoreFarmers &&
+                        !(farmerSearchInput && (isLoadingMoreFarmers || !farmersData))
+                      "
                       class="py-2 px-2 text-sm text-center text-muted-foreground"
                     >
                       <span v-if="isLoadingMoreFarmers">Loading more farmers...</span>
