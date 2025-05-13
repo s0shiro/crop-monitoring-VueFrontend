@@ -1,6 +1,6 @@
 <script setup>
 import { Card } from '@/components/ui/card'
-import { Users, Activity, Building2, ChartBar, Sprout, Scale } from 'lucide-vue-next'
+import { Users, Activity, Building2, ChartBar, Sprout, Scale, Globe2 } from 'lucide-vue-next'
 import { Bar, Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -14,6 +14,7 @@ import {
   Legend,
 } from 'chart.js'
 import { computed } from 'vue'
+import MarinduqueHeatmap from './MarinduqueHeatmap.vue'
 
 // Register ChartJS components
 ChartJS.register(
@@ -336,5 +337,17 @@ const barChartOptions = {
         </div>
       </Card>
     </div>
+
+    <!-- Marinduque Heatmap Section -->
+    <div v-if="stats?.analytics?.marinduque_heatmap" class="w-full overflow-hidden">
+      <MarinduqueHeatmap :heatmap-data="stats.analytics.marinduque_heatmap" />
+    </div>
   </div>
 </template>
+
+<style scoped>
+/* Ensure no horizontal scrolling on mobile */
+:deep(.leaflet-container) {
+  max-width: 100%;
+}
+</style>

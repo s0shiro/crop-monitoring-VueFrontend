@@ -21,8 +21,10 @@ import {
   Ruler,
   MessageSquare,
   User,
+  Globe2,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
+import MarinduqueHeatmap from './MarinduqueHeatmap.vue'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
@@ -332,5 +334,17 @@ const processedChartData = computed(() => {
         </div>
       </Card>
     </div>
+
+    <!-- Marinduque Heatmap Section -->
+    <div v-if="stats?.marinduque_heatmap" class="w-full overflow-hidden">
+      <MarinduqueHeatmap :heatmap-data="stats.marinduque_heatmap" />
+    </div>
   </div>
 </template>
+
+<style scoped>
+/* Ensure no horizontal scrolling on mobile */
+:deep(.leaflet-container) {
+  max-width: 100%;
+}
+</style>
